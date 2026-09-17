@@ -951,6 +951,7 @@
       const reasonsHtml = it.reasons.map(rs => `· ${rs.text}`).join('<br>');
       const bullets = (it.news || []).map(n => ({
         text: n.headline, source: n.source, date: fmtShortDate(n.published_at), url: n.url,
+        image: n.image, korean_summary: n.korean_summary || null,
       }));
       const newsHtml = bullets.length
         ? bullets.map(b => newsItemHtml(b, 'radar-' + idx)).join('')
