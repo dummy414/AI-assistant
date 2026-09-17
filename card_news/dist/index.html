@@ -157,6 +157,27 @@
   .qmetric-value { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-variant-numeric: tabular-nums; }
   .qcard-note { font-size: 12.5px; line-height: 1.55; color: var(--ink-2); border-top: 1px dashed var(--line); padding-top: 10px; }
 
+  /* ---- 종목 알아보기: 채팅형 Q&A ---- */
+  .ask-chat { display: flex; flex-direction: column; gap: 12px; max-width: 640px; margin-bottom: 14px; min-height: 40px; }
+  .ask-msg { padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.6; max-width: 88%; white-space: pre-line; }
+  .ask-msg.user { align-self: flex-end; background: var(--accent-soft); color: var(--accent); border-bottom-right-radius: 4px; }
+  .ask-msg.bot { align-self: flex-start; background: var(--surface-2); color: var(--ink); border-bottom-left-radius: 4px; }
+  .ask-msg.bot.loading { color: var(--ink-3); font-style: italic; }
+  .ask-msg.bot.err { color: var(--down); }
+  .ask-input-row { display: flex; gap: 8px; max-width: 640px; }
+  .ask-input-row input {
+    flex: 1; min-width: 0; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink); font-size: 14px; font-family: inherit;
+  }
+  .ask-input-row input:disabled { opacity: .5; }
+  .ask-input-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .ask-input-row button {
+    padding: 10px 18px; border-radius: 12px; border: none; background: var(--accent);
+    color: #fff; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  .ask-input-row button:disabled { opacity: .5; cursor: default; }
+  .ask-input-row button:hover:not(:disabled) { filter: brightness(1.05); }
+
   .overview { padding: 20px 2px 18px; max-width: 760px; }
   .overview .date { font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
   .overview p { font-family: 'Newsreader', serif; font-size: 18px; line-height: 1.5; margin: 8px 0 0; text-wrap: balance; }
@@ -390,6 +411,7 @@
     <button class="tab-btn" id="tabQuality">우량주</button>
     <button class="tab-btn" id="tabCombo">🐰🐰 두 마리 토끼</button>
     <button class="tab-btn" id="tabRadar">📡 레이더 포착</button>
+    <button class="tab-btn" id="tabAsk">🔎 종목 알아보기</button>
   </div>
 
   <div class="overview">
@@ -433,6 +455,24 @@
       매수·매도 신호가 아니라 "평소와 다르다"는 사실 하나입니다.
     </div>
     <div class="quality-grid" id="radarGrid"></div>
+  </section>
+
+  <section class="quality-view hide" id="askView">
+    <div class="quality-note">
+      특정 종목의 실제 가격·변동성·거래량·재무지표·최근 뉴스를 찾아서 사실대로만 답합니다.
+      "지금 사도 될까요?"처럼 오를지 내릴지 예측하거나 매수·매도를 추천하는 답은 하지 않습니다.
+    </div>
+    <form class="add-ticker" id="askSymbolForm" style="max-width:220px;margin-bottom:14px">
+      <input id="askSymbolInput" placeholder="티커 입력 (예: AAPL)" maxlength="8" autocomplete="off">
+      <button type="submit" aria-label="조회">→</button>
+    </form>
+    <div class="add-ticker-err" id="askSymbolErr"></div>
+    <div id="askSymbolLabel" style="font-size:13px;color:var(--ink-3);margin:2px 0 10px"></div>
+    <div class="ask-chat" id="askChat"></div>
+    <form class="ask-input-row" id="askForm">
+      <input id="askInput" placeholder="종목을 먼저 조회하세요" autocomplete="off" disabled>
+      <button type="submit" id="askSendBtn" disabled>보내기</button>
+    </form>
   </section>
 </div>
 
@@ -870,11 +910,13 @@
   const tabQuality = document.getElementById('tabQuality');
   const tabCombo = document.getElementById('tabCombo');
   const tabRadar = document.getElementById('tabRadar');
+  const tabAsk = document.getElementById('tabAsk');
   const overviewEl = document.querySelector('.overview');
   const layoutEl = document.querySelector('.layout');
   const qualityViewEl = document.getElementById('qualityView');
   const comboViewEl = document.getElementById('comboView');
   const radarViewEl = document.getElementById('radarView');
+  const askViewEl = document.getElementById('askView');
   let qualityData = null;
 
   function showTab(name) {
@@ -882,20 +924,24 @@
     const isQuality = name === 'quality';
     const isCombo = name === 'combo';
     const isRadar = name === 'radar';
+    const isAsk = name === 'ask';
     overviewEl.classList.toggle('hide', !isToday);
     layoutEl.classList.toggle('hide', !isToday);
     qualityViewEl.classList.toggle('hide', !isQuality);
     comboViewEl.classList.toggle('hide', !isCombo);
     radarViewEl.classList.toggle('hide', !isRadar);
+    askViewEl.classList.toggle('hide', !isAsk);
     tabToday.classList.toggle('active', isToday);
     tabQuality.classList.toggle('active', isQuality);
     tabCombo.classList.toggle('active', isCombo);
     tabRadar.classList.toggle('active', isRadar);
+    tabAsk.classList.toggle('active', isAsk);
   }
   tabToday.addEventListener('click', () => showTab('today'));
   tabQuality.addEventListener('click', () => showTab('quality'));
   tabCombo.addEventListener('click', () => showTab('combo'));
   tabRadar.addEventListener('click', () => showTab('radar'));
+  tabAsk.addEventListener('click', () => showTab('ask'));
 
   function renderCombo() {
     if (!data || !qualityData) return;
@@ -996,6 +1042,82 @@
     }).join('');
     wireNewsItems(grid);
   }
+
+  // ---- 종목 알아보기: 특정 종목에 대한 정량적 Q&A 챗봇 (매수/매도 추천 없음) ----
+  const askSymbolForm = document.getElementById('askSymbolForm');
+  const askSymbolInput = document.getElementById('askSymbolInput');
+  const askSymbolErr = document.getElementById('askSymbolErr');
+  const askSymbolLabel = document.getElementById('askSymbolLabel');
+  const askChatEl = document.getElementById('askChat');
+  const askForm = document.getElementById('askForm');
+  const askInput = document.getElementById('askInput');
+  const askSendBtn = document.getElementById('askSendBtn');
+  let askSymbol = null;
+  let askHistory = [];
+
+  function addAskMsg(role, text, cls) {
+    const div = document.createElement('div');
+    div.className = 'ask-msg ' + (role === 'user' ? 'user' : 'bot') + (cls ? ' ' + cls : '');
+    div.textContent = text;
+    askChatEl.appendChild(div);
+    askChatEl.scrollTop = askChatEl.scrollHeight;
+    return div;
+  }
+
+  askSymbolForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const raw = askSymbolInput.value.trim().toUpperCase();
+    if (!raw) return;
+    if (!/^[A-Z.]{1,8}$/.test(raw)) { showErr(askSymbolErr, '올바른 티커 형식이 아닙니다.'); return; }
+    hideErr(askSymbolErr);
+    askSymbol = raw;
+    askHistory = [];
+    askChatEl.innerHTML = '';
+    askSymbolInput.value = '';
+    askSymbolLabel.textContent = `${raw} 종목에 대해 물어보는 중`;
+    askInput.disabled = false;
+    askInput.placeholder = `${raw}에 대해 궁금한 걸 물어보세요`;
+    askSendBtn.disabled = false;
+    addAskMsg('bot', `${raw}에 대해 실제 가격·변동성·재무·최근 뉴스를 찾아서 사실대로 답해드릴게요. 오를지 내릴지 예측이나 매수 추천은 하지 않아요.`);
+    askInput.focus();
+  });
+
+  askForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = askInput.value.trim();
+    if (!q || !askSymbol) return;
+    addAskMsg('user', q);
+    const historyForRequest = askHistory.slice();
+    askHistory.push({ role: 'user', content: q });
+    askInput.value = '';
+    askInput.disabled = true;
+    askSendBtn.disabled = true;
+    const loadingEl = addAskMsg('bot', '조사하는 중…', 'loading');
+    fetch('/.netlify/functions/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol: askSymbol, question: q, history: historyForRequest }),
+    })
+      .then(r => r.json())
+      .then(res => {
+        loadingEl.remove();
+        if (res.error) {
+          addAskMsg('bot', '답변을 가져오지 못했습니다: ' + res.error, 'err');
+        } else {
+          addAskMsg('bot', res.answer);
+          askHistory.push({ role: 'assistant', content: res.answer });
+        }
+      })
+      .catch(() => {
+        loadingEl.remove();
+        addAskMsg('bot', '답변을 가져오지 못했습니다. 잠시 후 다시 시도해주세요.', 'err');
+      })
+      .finally(() => {
+        askInput.disabled = false;
+        askSendBtn.disabled = false;
+        askInput.focus();
+      });
+  });
 
   fetch('quality.json')
     .then(r => r.json())
