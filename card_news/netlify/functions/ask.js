@@ -4,20 +4,30 @@
 // 거래량·재무지표·최근 뉴스를 모아서 Claude에게 넘기고, 그 데이터로만
 // 답하도록 시스템 프롬프트에서 강하게 제한한다 — 예측/매수·매도 추천 금지.
 //
+// 준비된 데이터로 부족하면 Claude가 web_search 도구로 직접 검색할 수 있다.
+// 검색 1회당 $0.01 고정 요금 + 검색 결과가 통째로 컨텍스트에 들어가면서 붙는 토큰 비용
+// (Haiku는 결과 필터링 없이 원문을 그대로 받기 때문에, 실측 기준 검색 1회당 약 $0.02 수준)
+// — 그래서 답변 1건당 최대 2회(max_uses)로 캡을 걸어둔다 (대화 하나 기준 대략 $0.10 예산).
+//
 // 필요한 환경변수: ALPACA_API_KEY, ALPACA_SECRET_KEY, ANTHROPIC_API_KEY
 // FMP_API_KEY는 선택 (없으면 재무데이터 없이 답변)
 
 const SYSTEM_PROMPT = `당신은 '오늘의 관심종목' 사이트의 종목 리서치 도우미입니다.
-아래 [실제 데이터]로 제공되는 가격·변동성·거래량·재무지표·최근 뉴스만 근거로 한국어로 답하세요.
+[실제 데이터]로 제공되는 가격·변동성·거래량·재무지표·최근 뉴스가 기본 근거입니다.
+그것만으로 부족하면 주저하지 말고 web_search 도구를 사용해 직접 찾아보세요 — 애널리스트 의견,
+최신 뉴스, 업계 비교처럼 [실제 데이터]에 없는 정보를 물어보면 검색해서 답하세요
+(검색은 비용이 들므로 한 번의 답변에 최대 2회까지만 사용).
 
 절대 하지 말아야 할 것:
 - 이 종목을 지금 사야 하는지/팔아야 하는지 추천하지 마세요.
 - 주가가 오를지 내릴지 예측하지 마세요.
 - "지금이 매수 타이밍" 같은 뉘앙스도 피하세요.
+- 웹 검색으로 애널리스트 목표주가나 제3자 의견을 찾았더라도, 그걸 본인의 추천처럼 포장하지 말고
+  "누가 이렇게 말했다"는 사실로만 전달하세요.
 
 이런 질문을 받으면: 예측이나 투자 추천은 제공하지 않는다고 짧게 설명하고,
-대신 제공된 데이터 중 질문과 관련된 사실을 요약해서 알려주세요.
-제공된 데이터에 없는 내용은 절대 지어내지 말고 "확인되지 않았습니다"라고 답하세요.
+대신 제공된 데이터(필요하면 검색 결과 포함) 중 질문과 관련된 사실을 요약해서 알려주세요.
+데이터에도 검색에도 없는 내용은 절대 지어내지 말고 "확인되지 않았습니다"라고 답하세요.
 답변은 3~6문장 정도로 간결하게 하세요.`;
 
 function clip(s) { return String(s || "").slice(0, 4000); }
@@ -183,9 +193,10 @@ exports.handler = async function (event) {
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 500,
+        max_tokens: 700,
         system: SYSTEM_PROMPT,
         messages,
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2 }],
       }),
     });
 
@@ -194,12 +205,29 @@ exports.handler = async function (event) {
       return { statusCode: 502, body: JSON.stringify({ error: "AI 응답 실패: " + errText.slice(0, 200) }) };
     }
     const claudeJson = await claudeRes.json();
-    const answer = (claudeJson.content || []).map((c) => c.text || "").join("").trim() || "답변을 생성하지 못했습니다.";
+    const blocks = claudeJson.content || [];
+    let answer = blocks.map((c) => c.text || "").join("").trim();
+
+    // 검색을 실제로 했다면 어느 페이지를 참고했는지 짧게 붙여준다 (출처 명시)
+    const sources = [];
+    const seen = new Set();
+    blocks.forEach((b) => {
+      (b.citations || []).forEach((c) => {
+        if (c.url && !seen.has(c.url)) { seen.add(c.url); sources.push({ url: c.url, title: c.title || c.url }); }
+      });
+    });
+    if (!answer && claudeJson.stop_reason === "pause_turn") {
+      answer = "검색이 오래 걸려 답변을 완성하지 못했습니다. 질문을 좀 더 구체적으로 다시 해주세요.";
+    }
+    if (!answer) answer = "답변을 생성하지 못했습니다.";
+    if (sources.length) {
+      answer += "\n\n출처: " + sources.slice(0, 3).map((s) => s.title).join(" · ");
+    }
 
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-      body: JSON.stringify({ answer, symbol }),
+      body: JSON.stringify({ answer, symbol, sources }),
     };
   } catch (err) {
     return { statusCode: 500, body: JSON.stringify({ error: String(err) }) };
