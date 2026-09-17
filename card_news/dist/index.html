@@ -370,6 +370,8 @@
   <div class="tabbar">
     <button class="tab-btn active" id="tabToday">오늘의 관심종목</button>
     <button class="tab-btn" id="tabQuality">우량주</button>
+    <button class="tab-btn" id="tabCombo">🐰🐰 두 마리 토끼</button>
+    <button class="tab-btn" id="tabRadar">📡 레이더 포착</button>
   </div>
 
   <div class="overview">
@@ -396,6 +398,23 @@
       "이 종목이 계속 오른다"는 걸 예측하거나 보장하지 않습니다. 재무제표는 분기 단위라 매일 크게 바뀌지 않습니다.
     </div>
     <div class="quality-grid" id="qualityGrid"></div>
+  </section>
+
+  <section class="quality-view hide" id="comboView">
+    <div class="quality-note">
+      "오늘 화제인 종목"과 "우량주" 두 리스트에 <b>동시에</b> 들어있는 종목만 모았습니다.
+      매수 신호가 아니라, 두 조건이 우연히 겹쳤다는 사실만 보여줍니다. 겹치는 종목이 없는 날도 있습니다.
+    </div>
+    <div class="quality-grid" id="comboGrid"></div>
+  </section>
+
+  <section class="quality-view hide" id="radarView">
+    <div class="quality-note">
+      오를지 내릴지를 예측하지 않습니다. 각 종목을 그 종목 자신의 최근 흐름과 비교해서,
+      오늘의 등락·거래량·연속성·52주 고점저점 근접 여부가 평소와 통계적으로 다른지만 보여줍니다.
+      매수·매도 신호가 아니라 "평소와 다르다"는 사실 하나입니다.
+    </div>
+    <div class="quality-grid" id="radarGrid"></div>
   </section>
 </div>
 
@@ -777,7 +796,7 @@
       .then(live => {
         if (live.error) return Promise.reject(new Error(live.error));
         mergeLive(live);
-        renderNav(); renderDetail(); renderRelated();
+        renderNav(); renderDetail(); renderRelated(); renderCombo();
         liveStatusEl.textContent = '실시간 · ' + fmtClock(live.fetched_at);
         liveDotEl.classList.add('on');
       })
@@ -823,20 +842,68 @@
   // ---- 우량주 탭 (실제 재무데이터, 예측 아님) ----
   const tabToday = document.getElementById('tabToday');
   const tabQuality = document.getElementById('tabQuality');
+  const tabCombo = document.getElementById('tabCombo');
+  const tabRadar = document.getElementById('tabRadar');
   const overviewEl = document.querySelector('.overview');
   const layoutEl = document.querySelector('.layout');
   const qualityViewEl = document.getElementById('qualityView');
+  const comboViewEl = document.getElementById('comboView');
+  const radarViewEl = document.getElementById('radarView');
+  let qualityData = null;
 
   function showTab(name) {
     const isToday = name === 'today';
+    const isQuality = name === 'quality';
+    const isCombo = name === 'combo';
+    const isRadar = name === 'radar';
     overviewEl.classList.toggle('hide', !isToday);
     layoutEl.classList.toggle('hide', !isToday);
-    qualityViewEl.classList.toggle('hide', isToday);
+    qualityViewEl.classList.toggle('hide', !isQuality);
+    comboViewEl.classList.toggle('hide', !isCombo);
+    radarViewEl.classList.toggle('hide', !isRadar);
     tabToday.classList.toggle('active', isToday);
-    tabQuality.classList.toggle('active', !isToday);
+    tabQuality.classList.toggle('active', isQuality);
+    tabCombo.classList.toggle('active', isCombo);
+    tabRadar.classList.toggle('active', isRadar);
   }
   tabToday.addEventListener('click', () => showTab('today'));
   tabQuality.addEventListener('click', () => showTab('quality'));
+  tabCombo.addEventListener('click', () => showTab('combo'));
+  tabRadar.addEventListener('click', () => showTab('radar'));
+
+  function renderCombo() {
+    if (!data || !qualityData) return;
+    const qMap = {};
+    qualityData.companies.forEach(c => { qMap[c.symbol] = c; });
+    const overlap = data.cards.filter(c => qMap[c.symbol]);
+    const grid = document.getElementById('comboGrid');
+    if (!overlap.length) {
+      grid.innerHTML = '<div class="news-empty">오늘은 두 리스트에 겹치는 종목이 없습니다.</div>';
+      return;
+    }
+    grid.innerHTML = overlap.map(t => {
+      const q = qMap[t.symbol];
+      const dirClass = t.day_return >= 0 ? 'up' : 'down';
+      const arrow = t.day_return >= 0 ? '▲' : '▼';
+      return `
+        <div class="qcard">
+          <div><span class="qcard-sym">${t.symbol}</span><span class="qcard-name">${t.name}</span></div>
+          <div class="qcard-industry">${q.industry || ''}</div>
+          <div class="qcard-price-row">
+            <span class="price">$${t.price.toFixed(2)}</span>
+            <span class="chg ${dirClass}">${arrow} ${pct(t.day_return)}</span>
+          </div>
+          <div class="hook" style="font-size:14px">${t.hook}</div>
+          <div class="qcard-metrics">
+            <div><span class="qmetric-label">시가총액</span><span class="qmetric-value">${fmtMarketCap(q.market_cap)}</span></div>
+            <div><span class="qmetric-label">PER</span><span class="qmetric-value">${q.per != null ? q.per.toFixed(1) : '—'}</span></div>
+            <div><span class="qmetric-label">매출성장률(YoY)</span><span class="qmetric-value">${q.revenue_growth != null ? pct(q.revenue_growth) : '—'}</span></div>
+            <div><span class="qmetric-label">순이익률</span><span class="qmetric-value">${q.net_margin != null ? pct(q.net_margin) : '—'}</span></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 
   function fmtMarketCap(n) {
     if (n == null) return '—';
@@ -871,12 +938,53 @@
     }).join('');
   }
 
-  fetch('quality.json').then(r => r.json()).then(renderQuality).catch(() => {});
+  function renderRadar(r) {
+    const grid = document.getElementById('radarGrid');
+    const items = r.items || [];
+    if (!items.length) {
+      grid.innerHTML = '<div class="news-empty">오늘은 평소와 다르게 움직이는 종목이 포착되지 않았습니다.</div>';
+      return;
+    }
+    grid.innerHTML = items.map((it, idx) => {
+      const dirClass = it.day_return >= 0 ? 'up' : 'down';
+      const arrow = it.day_return >= 0 ? '▲' : '▼';
+      const reasonsHtml = it.reasons.map(rs => `· ${rs.text}`).join('<br>');
+      const bullets = (it.news || []).map(n => ({
+        text: n.headline, source: n.source, date: fmtShortDate(n.published_at), url: n.url,
+      }));
+      const newsHtml = bullets.length
+        ? bullets.map(b => newsItemHtml(b, 'radar-' + idx)).join('')
+        : '<div class="news-empty">관련 뉴스가 확인되지 않았습니다.</div>';
+      return `
+        <div class="qcard">
+          <div><span class="qcard-sym">${it.symbol}</span><span class="qcard-name">${it.name}</span></div>
+          <div class="qcard-price-row">
+            <span class="price">$${it.price.toFixed(2)}</span>
+            <span class="chg ${dirClass}">${arrow} ${pct(it.day_return)}</span>
+          </div>
+          <div class="qcard-note" style="border-top:none;padding-top:0">${reasonsHtml}</div>
+          <div class="news-list">${newsHtml}</div>
+        </div>
+      `;
+    }).join('');
+    wireNewsItems(grid);
+  }
+
+  fetch('quality.json')
+    .then(r => r.json())
+    .then(q => { qualityData = q; renderQuality(q); renderCombo(); })
+    .catch(() => {});
+
+  fetch('radar.json')
+    .then(r => r.json())
+    .then(renderRadar)
+    .catch(() => {});
 
   fetch('data.json')
     .then(r => r.json())
     .then(d => {
       render(d);
+      renderCombo();
       pollLive();
       setInterval(pollLive, LIVE_INTERVAL_MS);
     })

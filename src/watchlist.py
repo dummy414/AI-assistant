@@ -106,6 +106,104 @@ def screen(top_n: int = 10, min_price: float = 5.0) -> pd.DataFrame:
     return table
 
 
+def screen_anomalies(top_n: int = 8, lookback_days: int = 260, min_price: float = 5.0) -> list[dict]:
+    """
+    "레이더 포착" — 오를지 내릴지를 예측하지 않고, 각 종목이 '자기 자신의 평소 패턴'과
+    비교해 통계적으로 이례적인지만 판단한다. 방향성 예측이 아니라 기술 서술이다.
+
+    종목별로 자기 자신의 과거 분포와 비교해 아래 네 가지를 체크한다:
+      1. return_z  : 오늘 등락률이 최근 변동폭(표준편차) 대비 몇 배 이례적인가
+      2. vol_z     : 오늘 거래량이 평소 대비 몇 배 이례적인가
+      3. streak    : 같은 방향으로 며칠 연속 움직였는가
+      4. 52주 고점/저점 근접 여부
+
+    이 중 하나라도 임계값을 넘으면 "심상치 않음" 후보에 올린다.
+    """
+    symbols = list(UNIVERSE.keys())
+    bars = _fetch_batch_bars(symbols, lookback_days=lookback_days)
+
+    candidates = []
+    for sym in symbols:
+        if sym not in bars.index.get_level_values(0):
+            continue
+        df = bars.loc[sym].sort_index()
+        if len(df) < 30:
+            continue
+        close = df["close"].values
+        volume = df["volume"].values
+        last_close = close[-1]
+        if last_close < min_price:
+            continue
+
+        rets = close[1:] / close[:-1] - 1
+        today_ret = rets[-1]
+        baseline_rets = rets[:-1]
+        ret_std = baseline_rets.std()
+        return_z = (today_ret - baseline_rets.mean()) / ret_std if ret_std > 0 else 0.0
+
+        today_vol = volume[-1]
+        baseline_vol = volume[:-1]
+        vol_std = baseline_vol.std()
+        vol_z = (today_vol - baseline_vol.mean()) / vol_std if vol_std > 0 else 0.0
+
+        sign_today = np.sign(today_ret)
+        streak = 1
+        i = len(rets) - 2
+        while i >= 0 and sign_today != 0 and np.sign(rets[i]) == sign_today:
+            streak += 1
+            i -= 1
+
+        window_close = close[-252:] if len(close) >= 252 else close
+        high_w = window_close.max()
+        low_w = window_close.min()
+        near_high = last_close >= high_w * 0.98
+        near_low = last_close <= low_w * 1.02
+
+        reasons = []
+        if abs(return_z) >= 2.5:
+            direction = "급등" if today_ret > 0 else "급락"
+            reasons.append({
+                "type": "return_z", "value": round(float(return_z), 2),
+                "text": f"오늘 {direction}이 최근 {lookback_days}일 평소 변동폭 대비 {abs(return_z):.1f}배로 통계적으로 이례적입니다.",
+            })
+        if vol_z >= 3.0:
+            reasons.append({
+                "type": "vol_z", "value": round(float(vol_z), 2),
+                "text": f"오늘 거래량이 평소 평균보다 {vol_z:.1f}표준편차만큼 이례적으로 많습니다.",
+            })
+        if streak >= 5:
+            direction = "상승" if sign_today > 0 else "하락"
+            reasons.append({
+                "type": "streak", "value": streak,
+                "text": f"{streak}일 연속으로 {direction} 흐름이 이어지고 있어 우연으로 보기엔 드문 패턴입니다.",
+            })
+        if near_high:
+            reasons.append({
+                "type": "near_high", "value": round(float(last_close / high_w), 4),
+                "text": "52주 최고가 근처에 바짝 붙어 있습니다.",
+            })
+        if near_low:
+            reasons.append({
+                "type": "near_low", "value": round(float(last_close / low_w), 4),
+                "text": "52주 최저가 근처에 바짝 붙어 있습니다.",
+            })
+
+        if not reasons:
+            continue
+
+        anomaly_score = abs(return_z) + max(vol_z, 0) / 2 + (streak >= 5) * 2 + (near_high or near_low) * 1.5
+        candidates.append({
+            "symbol": sym, "name": UNIVERSE[sym], "price": round(float(last_close), 2),
+            "day_return": round(float(today_ret), 4), "return_z": round(float(return_z), 2),
+            "vol_z": round(float(vol_z), 2), "streak": int(streak),
+            "near_high": bool(near_high), "near_low": bool(near_low),
+            "reasons": reasons, "anomaly_score": round(float(anomaly_score), 2),
+        })
+
+    candidates.sort(key=lambda c: c["anomaly_score"], reverse=True)
+    return candidates[:top_n]
+
+
 if __name__ == "__main__":
     t = screen()
     print(t[["symbol", "name", "price", "day_return", "return_5d", "volume_ratio"]]
