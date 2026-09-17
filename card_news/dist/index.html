@@ -500,6 +500,12 @@
 
   function pct(x) { return (x >= 0 ? '+' : '') + (x * 100).toFixed(2) + '%'; }
 
+  // 외부 뉴스(헤드라인·이미지·URL)는 우리가 통제할 수 없는 데이터이므로, innerHTML에
+  // 꽂아넣기 전에 반드시 이스케이프한다 (XSS 방지). href/src에는 http(s) URL만 허용.
+  const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ESCAPE_MAP[c]); }
+  function safeUrl(u) { return typeof u === 'string' && /^https?:\/\//i.test(u) ? u : ''; }
+
   function fmtUpdated(iso) {
     try {
       const d = new Date(iso);
@@ -559,8 +565,8 @@
     const meta = metaBits.join(' · ');
     const hasSummary = !!n.korean_summary;
     const inner = `
-      <div class="news-text">${n.text}</div>
-      <div class="news-meta">${meta ? `<span>${meta}</span>` : ''}${hasSummary ? '<span class="ext">자세히 보기 ↗</span>' : (n.url ? '<span class="ext">열기 ↗</span>' : '')}</div>
+      <div class="news-text">${escapeHtml(n.text)}</div>
+      <div class="news-meta">${meta ? `<span>${escapeHtml(meta)}</span>` : ''}${hasSummary ? '<span class="ext">자세히 보기 ↗</span>' : (n.url ? '<span class="ext">열기 ↗</span>' : '')}</div>
     `;
     if (hasSummary) {
       // 한국어 요약이 있으면 페이지 이동 대신 모달을 연다
@@ -568,8 +574,9 @@
       newsLookup[key] = n;
       return `<button type="button" class="news-item" data-key="${encodeURIComponent(key)}">${inner}</button>`;
     }
-    return n.url
-      ? `<a class="news-item" href="${n.url}" target="_blank" rel="noopener noreferrer">${inner}</a>`
+    const url = safeUrl(n.url);
+    return url
+      ? `<a class="news-item" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
       : `<div class="news-item">${inner}</div>`;
   }
 
@@ -592,14 +599,15 @@
   const modalCloseBtn = document.getElementById('modalClose');
 
   function openNewsModal(n) {
-    modalImgWrap.innerHTML = n.image ? `<img class="modal-img" src="${n.image}" alt="" loading="lazy">` : '';
+    const imgUrl = safeUrl(n.image);
+    modalImgWrap.innerHTML = imgUrl ? `<img class="modal-img" src="${escapeHtml(imgUrl)}" alt="" loading="lazy">` : '';
     const metaBits = [];
     if (n.source) metaBits.push(n.source);
     if (n.date) metaBits.push(n.date);
     modalMeta.textContent = metaBits.join(' · ');
     modalHeadlineEl.textContent = n.text;
     modalSummaryEl.textContent = n.korean_summary || '';
-    modalLinkEl.href = n.url || '#';
+    modalLinkEl.href = safeUrl(n.url) || '#';
     modalEl.classList.add('open');
     modalBackdropEl.classList.add('open');
     modalEl.setAttribute('aria-hidden', 'false');
@@ -628,9 +636,9 @@
       const fav = isFavorite(c.symbol);
       return `
         <button class="nav-item${i === active ? ' active' : ''}" data-i="${i}">
-          <span class="star-btn${fav ? ' on' : ''}" data-star="${c.symbol}" role="button" aria-label="즐겨찾기">${fav ? '★' : '☆'}</span>
-          <span class="nav-sym">${c.symbol}</span>
-          <span class="nav-name">${c.name}</span>
+          <span class="star-btn${fav ? ' on' : ''}" data-star="${escapeHtml(c.symbol)}" role="button" aria-label="즐겨찾기">${fav ? '★' : '☆'}</span>
+          <span class="nav-sym">${escapeHtml(c.symbol)}</span>
+          <span class="nav-name">${escapeHtml(c.name)}</span>
           <span class="nav-chg ${c.day_return >= 0 ? 'up' : 'down'}">${pct(c.day_return)}</span>
         </button>
       `;
@@ -668,7 +676,7 @@
       : '실시간 시세 · 직접 추가한 종목이라 5일 추이 데이터는 없습니다';
     detailEl.innerHTML = `
       <div class="detail-head">
-        <span class="tag">${c.tag}</span>
+        <span class="tag">${escapeHtml(c.tag)}</span>
         <div class="head-right">
           <button class="star-btn detail-star${fav ? ' on' : ''}" id="starBtn" aria-label="즐겨찾기">${fav ? '★' : '☆'}</button>
           ${c.custom ? '<button class="remove-btn" id="removeBtn" aria-label="제거" title="관심종목에서 제거">✕</button>' : ''}
@@ -680,8 +688,8 @@
         </div>
       </div>
       <div>
-        <div class="ticker-row"><span class="ticker">${c.symbol}</span><span class="cname">${c.name}</span></div>
-        <div class="sector">${c.sector}</div>
+        <div class="ticker-row"><span class="ticker">${escapeHtml(c.symbol)}</span><span class="cname">${escapeHtml(c.name)}</span></div>
+        <div class="sector">${escapeHtml(c.sector)}</div>
       </div>
       <div class="price-row">
         <span class="price">$${c.price.toFixed(2)}</span>
@@ -689,8 +697,8 @@
       </div>
       <div class="substats">${substatsText}</div>
       <div class="chart-row">${sparklineSvg(c.spark)}${relBadgeHtml(c)}</div>
-      <div class="hook">${c.hook}</div>
-      <div class="body-text">${c.body}</div>
+      <div class="hook">${escapeHtml(c.hook)}</div>
+      <div class="body-text">${escapeHtml(c.body)}</div>
       <div class="inline-news">
         <div class="news-label" style="margin-bottom:8px">관련 뉴스</div>
         <div class="news-list">${newsHtml}</div>
@@ -721,7 +729,7 @@
       ? c.bullets.map(b => newsItemHtml(b, 'related-' + active)).join('')
       : '<div class="news-empty">관련 뉴스가 확인되지 않았습니다.</div>';
     relatedEl.innerHTML = `
-      <div class="related-head">관련 뉴스 · <b>${c.symbol}</b></div>
+      <div class="related-head">관련 뉴스 · <b>${escapeHtml(c.symbol)}</b></div>
       <div class="news-list">${newsHtml}</div>
     `;
     wireNewsItems(relatedEl);
@@ -905,13 +913,13 @@
       const arrow = t.day_return >= 0 ? '▲' : '▼';
       return `
         <div class="qcard">
-          <div><span class="qcard-sym">${t.symbol}</span><span class="qcard-name">${t.name}</span></div>
-          <div class="qcard-industry">${q.industry || ''}</div>
+          <div><span class="qcard-sym">${escapeHtml(t.symbol)}</span><span class="qcard-name">${escapeHtml(t.name)}</span></div>
+          <div class="qcard-industry">${escapeHtml(q.industry || '')}</div>
           <div class="qcard-price-row">
             <span class="price">$${t.price.toFixed(2)}</span>
             <span class="chg ${dirClass}">${arrow} ${pct(t.day_return)}</span>
           </div>
-          <div class="hook" style="font-size:14px">${t.hook}</div>
+          <div class="hook" style="font-size:14px">${escapeHtml(t.hook)}</div>
           <div class="qcard-metrics">
             <div><span class="qmetric-label">시가총액</span><span class="qmetric-value">${fmtMarketCap(q.market_cap)}</span></div>
             <div><span class="qmetric-label">PER</span><span class="qmetric-value">${q.per != null ? q.per.toFixed(1) : '—'}</span></div>
@@ -937,8 +945,8 @@
       const arrow = c.day_return >= 0 ? '▲' : '▼';
       return `
         <div class="qcard">
-          <div><span class="qcard-sym">${c.symbol}</span><span class="qcard-name">${c.name}</span></div>
-          <div class="qcard-industry">${c.industry || ''}</div>
+          <div><span class="qcard-sym">${escapeHtml(c.symbol)}</span><span class="qcard-name">${escapeHtml(c.name)}</span></div>
+          <div class="qcard-industry">${escapeHtml(c.industry || '')}</div>
           <div class="qcard-price-row">
             <span class="price">$${c.price.toFixed(2)}</span>
             <span class="chg ${dirClass}">${arrow} ${pct(c.day_return)}</span>
@@ -950,7 +958,7 @@
             <div><span class="qmetric-label">순이익률</span><span class="qmetric-value">${c.net_margin != null ? pct(c.net_margin) : '—'}</span></div>
             <div><span class="qmetric-label">부채비율</span><span class="qmetric-value">${c.debt_to_equity != null ? c.debt_to_equity.toFixed(2) : '—'}</span></div>
           </div>
-          <div class="qcard-note">${c.note || ''}</div>
+          <div class="qcard-note">${escapeHtml(c.note || '')}</div>
         </div>
       `;
     }).join('');
@@ -976,7 +984,7 @@
         : '<div class="news-empty">관련 뉴스가 확인되지 않았습니다.</div>';
       return `
         <div class="qcard">
-          <div><span class="qcard-sym">${it.symbol}</span><span class="qcard-name">${it.name}</span></div>
+          <div><span class="qcard-sym">${escapeHtml(it.symbol)}</span><span class="qcard-name">${escapeHtml(it.name)}</span></div>
           <div class="qcard-price-row">
             <span class="price">$${it.price.toFixed(2)}</span>
             <span class="chg ${dirClass}">${arrow} ${pct(it.day_return)}</span>
