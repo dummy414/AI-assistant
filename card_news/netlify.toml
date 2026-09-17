@@ -1,0 +1,8 @@
+[build]
+  publish = "dist"
+  functions = "netlify/functions"
+
+[[headers]]
+  for = "/data.json"
+  [headers.values]
+    Cache-Control = "no-store"

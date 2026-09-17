@@ -1,0 +1,460 @@
+{
+  "generated_at": "2026-09-17T03:27:11+00:00",
+  "market_date": "2026년 9월 16일",
+  "overview": "연준이 2023년 이후 처음으로 기준금리를 0.25%p 인상하면서 뉴욕증시가 전반적으로 하락했습니다 (다우 -1.2%). 금융·에너지·산업재가 특히 부진했고, 이번 스크리닝 10종목 중 상승한 건 허니웰 하나뿐이었습니다.",
+  "cards": [
+    {
+      "symbol": "BA",
+      "name": "Boeing",
+      "sector": "항공/방산",
+      "price": 202.0,
+      "day_return": -0.0363,
+      "return_5d": -0.0217,
+      "volume_ratio": 3.45,
+      "tag": "시장 약세 + 개별 호재",
+      "hook": "금리인상發 시장 전체 하락에 동반했지만, 항공기 수주는 역대급",
+      "body": "연준의 0.25%p 금리인상(2023년 이후 첫 인상) 발표로 시장 전체가 흔들린 날, 보잉도 함께 하락했습니다. 다만 대한항공으로부터 777-9, 787 드림라이너, 737-10을 포함한 103대 규모의 역대급 주문을 따내는 등 회사 자체 소식은 나쁘지 않습니다.",
+      "bullets": [
+        {
+          "text": "대한항공, 보잉에 103대 규모 역대급 항공기 주문",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/markets/large-cap/26/09/61815440/boeing-lands-record-103-jet-korean-air-order"
+        },
+        {
+          "text": "연준 금리인상 발표 후 반도체·자산운용·소비재 업종 동반 하락",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/markets/large-cap/26/09/61829461/10-stocks-falling-most-after-warsh-press-conference-fed-hawkish-dot-plot"
+        },
+        {
+          "text": "$205 지지선 부근 기술적 주의 신호",
+          "source": "Benzinga",
+          "date": "9/14",
+          "url": "https://www.benzinga.com/markets/large-cap/26/09/61769329/whats-going-on-with-boeing-stock-monday-6"
+        }
+      ],
+      "spark": [
+        207.75,
+        205.57,
+        208.82,
+        210.54,
+        212.2,
+        210.74,
+        206.49,
+        204.95,
+        210.48,
+        210.3,
+        209.62,
+        202.0
+      ],
+      "rel_strength": -0.0319
+    },
+    {
+      "symbol": "GS",
+      "name": "Goldman Sachs",
+      "sector": "투자은행",
+      "price": 938.46,
+      "day_return": -0.0383,
+      "return_5d": -0.0882,
+      "volume_ratio": 2.11,
+      "tag": "금융업종 약세",
+      "hook": "BofA의 부진한 실적 전망이 업종 전체를 끌어내렸다",
+      "body": "뱅크오브아메리카 CEO가 3분기 투자은행 수수료·트레이딩 수익 전망을 부진하게 제시하면서 금융주 전반이 흔들렸고, 골드만삭스도 동반 하락했습니다. 다만 신규 사모펀드로 117억 달러를 조달하며 미드마켓 딜 확대에는 계속 나서고 있습니다.",
+      "bullets": [
+        {
+          "text": "BofA CEO, 3분기 IB 수수료 10%+ 감소 전망 — 금융주 전반 부담",
+          "source": "Benzinga",
+          "date": "9/14",
+          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61777356/quick-spark-big-bank-stocks-tumble-after-moynihans-grim-outlook"
+        },
+        {
+          "text": "골드만삭스, 신규 사모펀드로 117억 달러 조달",
+          "source": "Benzinga",
+          "date": "9/15",
+          "url": "https://www.benzinga.com/markets/private-markets/26/09/61800661/goldman-sachs-targets-middle-market-deals-after-raising-11-7b"
+        },
+        {
+          "text": "옵션시장에서 대규모 매매('고래 알림') 포착",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/markets/options/26/09/61823879/10-financials-stocks-whale-alerts-today-s-session"
+        }
+      ],
+      "spark": [
+        1026.14,
+        1001.76,
+        1004.59,
+        1037.36,
+        1037.91,
+        1036.5,
+        1029.18,
+        1019.68,
+        1028.89,
+        988.3,
+        975.8,
+        938.46
+      ],
+      "rel_strength": -0.0338
+    },
+    {
+      "symbol": "IBM",
+      "name": "IBM",
+      "sector": "IT서비스",
+      "price": 237.62,
+      "day_return": -0.0434,
+      "return_5d": -0.0098,
+      "volume_ratio": 1.4,
+      "tag": "차익실현",
+      "hook": "빅테크 랠리 속 유일한 하락 — 급등 후 되돌림 성격",
+      "body": "기술주 전반이 오른 날 IBM만 하락했는데, 최근 며칠간 $239 저항선 돌파를 시도하며 급등했던 데 따른 차익실현으로 보입니다. 10억 달러 규모 CHIPS Act 반도체 지원금 확보 소식도 있었습니다.",
+      "bullets": [
+        {
+          "text": "며칠 전 상승삼각형 패턴으로 $239 돌파 시도 후 되돌림",
+          "source": "Benzinga",
+          "date": "9/15",
+          "url": "https://www.benzinga.com/trading-ideas/technicals/26/09/61789316/stock-of-the-day-did-ibm-just-break-out"
+        },
+        {
+          "text": "10억 달러 규모 CHIPS Act 지원금 확보",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/markets/large-cap/26/09/61824915/why-is-ibm-stock-falling-wednesday"
+        },
+        {
+          "text": "이번주 FOMC 결정, AI 변동성이 다우지수 핵심 변수로 지목",
+          "source": "Benzinga",
+          "date": "9/13",
+          "url": "https://www.benzinga.com/markets/equities/26/09/61755472/dow-jones-index-outlook-top-3-stock-market-news-this-week"
+        }
+      ],
+      "spark": [
+        233.77,
+        231.35,
+        231.57,
+        234.56,
+        234.8,
+        232.09,
+        239.96,
+        234.02,
+        243.36,
+        249.03,
+        248.4,
+        237.62
+      ],
+      "rel_strength": -0.0389
+    },
+    {
+      "symbol": "AXP",
+      "name": "American Express",
+      "sector": "카드/결제",
+      "price": 312.66,
+      "day_return": -0.0358,
+      "return_5d": -0.0286,
+      "volume_ratio": 1.68,
+      "tag": "금융업종 동반 하락",
+      "hook": "개별 재료보다는 업종 전반 약세에 연동",
+      "body": "이번 스크리닝 기간 중 AXP 관련 뉴스는 많지 않았습니다. 금융주 전반의 약세 흐름에 동반 하락한 것으로 보이며, 최근에는 워런 버핏과 트럼프 대통령의 포트폴리오에 공통으로 담긴 17개 종목 중 하나로 소개되기도 했습니다.",
+      "bullets": [
+        {
+          "text": "버핏(버크셔)·트럼프 포트폴리오 공통 보유 종목 17개 중 하나로 소개",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/news/politics/26/09/61821505/warren-buffett-donald-trump-bet-on-same-17-stocks-some-might-surprise-you"
+        },
+        {
+          "text": "개별 이슈보다 금융업종 전반 약세에 연동된 하락으로 추정",
+          "source": null,
+          "date": null,
+          "url": null
+        }
+      ],
+      "spark": [
+        330.29,
+        324.19,
+        330.0,
+        329.77,
+        326.15,
+        326.05,
+        321.86,
+        320.73,
+        324.78,
+        327.77,
+        324.27,
+        312.66
+      ],
+      "rel_strength": -0.0314
+    },
+    {
+      "symbol": "COP",
+      "name": "ConocoPhillips",
+      "sector": "에너지",
+      "price": 132.56,
+      "day_return": -0.0614,
+      "return_5d": -0.0296,
+      "volume_ratio": 1.32,
+      "tag": "유가 되돌림 · 오늘의 최대 낙폭",
+      "hook": "중동發 유가 급등이 하루 만에 되돌림",
+      "body": "걸프 지역 공급 차질 우려로 브렌트유가 배럴당 107달러를 넘어섰다가, 사우디 파이프라인 재가동과 예상보다 적은 미국 원유 재고 감소로 다시 밀리면서 에너지주 중 가장 크게 하락했습니다.",
+      "bullets": [
+        {
+          "text": "브렌트유 $107 돌파 후 사우디 파이프라인 재가동에 되돌림",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/markets/market-summary/26/09/61822672/oil-sinks-below-103-optics-stocks-rip-fed-first-hike-since-2023-markets-wednesday"
+        },
+        {
+          "text": "미국 원유 재고 감소폭 예상보다 작아 유가 상승 동력 약화",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61823140/conocophillips-stock-falls-as-oil-prices-retreat"
+        },
+        {
+          "text": "최근 5년간 연평균 17.4% 수익률로 시장 평균 상회했다는 분석도 소개",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/news/26/09/61829337/here-s-how-much-you-would-have-made-owning-conocophillips-stock-last-5-years"
+        }
+      ],
+      "spark": [
+        132.5,
+        136.17,
+        137.18,
+        135.67,
+        134.25,
+        134.99,
+        136.6,
+        137.07,
+        137.41,
+        136.66,
+        141.22,
+        132.56
+      ],
+      "rel_strength": -0.0569
+    },
+    {
+      "symbol": "XOM",
+      "name": "ExxonMobil",
+      "sector": "에너지",
+      "price": 163.36,
+      "day_return": -0.0349,
+      "return_5d": -0.0049,
+      "volume_ratio": 1.4,
+      "tag": "유가 되돌림",
+      "hook": "ConocoPhillips와 같은 이유로 에너지 섹터 동반 하락",
+      "body": "유가 되돌림에 따라 엑슨모빌도 하락했습니다. 자회사가 21억 달러 규모 채권 조기상환(텐더오퍼)을 완료했다는 소식도 있었지만, 호르무즈·걸프 지역 지정학적 긴장은 여전히 유가 변동성의 핵심 변수로 남아 있습니다.",
+      "bullets": [
+        {
+          "text": "유가 되돌림에 따른 에너지 섹터 전반 약세 동참",
+          "source": "Benzinga",
+          "date": "9/15",
+          "url": "https://www.benzinga.com/markets/commodities/26/09/61800450/oil-crisis-worsens-diesel-hits-record-high-heres-how-to-trade-it"
+        },
+        {
+          "text": "자회사, 21억 달러 규모 채권 텐더오퍼 완료",
+          "source": "Benzinga",
+          "date": "9/15",
+          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61790637/exxonmobil-trending-after-subsidiary-completes-2-1-billion-debt-tender"
+        },
+        {
+          "text": "호르무즈 해협 공급 차질 우려 지속",
+          "source": "Benzinga",
+          "date": "9/15",
+          "url": "https://www.benzinga.com/news/politics/26/09/61781104/gavin-newsom-trump-iran-war-hormuz-disruptions-skyrocketing-costs"
+        }
+      ],
+      "spark": [
+        161.01,
+        164.52,
+        164.14,
+        162.23,
+        159.46,
+        160.7,
+        164.16,
+        165.27,
+        165.98,
+        165.05,
+        169.27,
+        163.36
+      ],
+      "rel_strength": -0.0305
+    },
+    {
+      "symbol": "BAC",
+      "name": "Bank of America",
+      "sector": "상업은행",
+      "price": 57.89,
+      "day_return": -0.0268,
+      "return_5d": -0.0766,
+      "volume_ratio": 1.76,
+      "tag": "실적 가이던스 경고",
+      "hook": "자사 CEO의 경고성 전망이 금융주 전반을 끌어내렸다",
+      "body": "CEO 브라이언 모이니핸이 3분기 투자은행 수수료가 10% 넘게 줄고 트레이딩 수익은 보합에 그칠 것이라는 전망을 내놓으면서, 골드만삭스·아멕스 등 다른 금융주 하락에도 영향을 미쳤습니다.",
+      "bullets": [
+        {
+          "text": "모이니핸 CEO, 3분기 IB 수수료 10%+ 감소·트레이딩 보합 전망",
+          "source": "Benzinga",
+          "date": "9/15",
+          "url": "https://www.benzinga.com/markets/large-cap/26/09/61784400/why-is-bank-of-america-stock-falling-tuesday"
+        },
+        {
+          "text": "이 발언이 GS·AXP 등 금융업종 전반 하락 촉발",
+          "source": "Benzinga",
+          "date": "9/14",
+          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61777356/quick-spark-big-bank-stocks-tumble-after-moynihans-grim-outlook"
+        },
+        {
+          "text": "옵션시장 대규모 매매 포착",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/markets/options/26/09/61823879/10-financials-stocks-whale-alerts-today-s-session"
+        }
+      ],
+      "spark": [
+        61.94,
+        62.01,
+        62.61,
+        63.06,
+        62.68,
+        62.39,
+        62.7,
+        62.58,
+        62.69,
+        59.46,
+        59.48,
+        57.89
+      ],
+      "rel_strength": -0.0224
+    },
+    {
+      "symbol": "CSCO",
+      "name": "Cisco",
+      "sector": "네트워크장비",
+      "price": 107.72,
+      "day_return": -0.0217,
+      "return_5d": -0.0158,
+      "volume_ratio": 2.06,
+      "tag": "뉴스 없음",
+      "hook": "개별 재료 없이 거래량만 2배 급증",
+      "body": "이번에 수집된 기간 동안 시스코와 직접 관련된 뉴스는 확인되지 않았습니다. 거래량이 평소의 2배 이상으로 늘며 하락한 것으로 보아 연준 금리인상에 따른 기술주 전반의 약세에 동반된 것으로 추정되지만, 확인된 개별 재료는 없습니다.",
+      "bullets": [
+        {
+          "text": "개별 뉴스 없음 — 거래량만 평소의 2.06배로 급증",
+          "source": null,
+          "date": null,
+          "url": null
+        },
+        {
+          "text": "같은 날 시장 전체가 연준 금리인상 여파로 하락",
+          "source": null,
+          "date": null,
+          "url": null
+        }
+      ],
+      "spark": [
+        110.46,
+        109.73,
+        109.47,
+        108.68,
+        109.15,
+        109.17,
+        109.45,
+        107.43,
+        112.19,
+        110.07,
+        110.12,
+        107.72
+      ],
+      "rel_strength": -0.0173
+    },
+    {
+      "symbol": "COIN",
+      "name": "Coinbase",
+      "sector": "가상자산거래소",
+      "price": 164.46,
+      "day_return": -0.0441,
+      "return_5d": -0.0584,
+      "volume_ratio": 1.24,
+      "tag": "규제 리스크",
+      "hook": "가상자산 규제법 상원 통과 실패 여파",
+      "body": "가상자산 시장구조를 규정하는 'CLARITY Act'가 상원에서 통과에 실패하면서 전날 10% 급락했고, 이날은 약보합으로 마감했습니다. 다만 애널리스트들은 코인베이스의 기관 비즈니스(결제·스테이블코인·토큰화자산)를 저평가된 성장동력으로 보고 있습니다.",
+      "bullets": [
+        {
+          "text": "CLARITY Act 상원 통과 실패로 전일 10% 급락",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61814847/whats-going-on-with-coinbase-stock-wednesday"
+        },
+        {
+          "text": "SEC·CFTC가 대신 자체 규정을 신속 추진할 것이란 전망",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/crypto/cryptocurrency/26/09/61820404/sec-cftc-rulemaking-will-be-aggressive-and-swift-after-clarity-act-failure-bernstein-says"
+        },
+        {
+          "text": "BTIG, 코인베이스 기관 비즈니스를 '저평가된 성장동력'으로 평가",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/analyst-stock-ratings/analyst-color/26/09/61819807/coinbase-institutional-business-is-an-increasingly-important-contributor-to-growth-says-bullish-analyst"
+        }
+      ],
+      "spark": [
+        188.04,
+        176.81,
+        174.88,
+        192.76,
+        184.63,
+        178.96,
+        174.66,
+        172.21,
+        175.31,
+        191.37,
+        172.04,
+        164.46
+      ],
+      "rel_strength": -0.0396
+    },
+    {
+      "symbol": "HON",
+      "name": "Honeywell",
+      "sector": "산업/항공전자",
+      "price": 207.71,
+      "day_return": 0.0208,
+      "return_5d": 0.0138,
+      "volume_ratio": 1.99,
+      "tag": "저평가 매수세 · 유일한 상승",
+      "hook": "이번 스크리닝에서 유일하게 오른 종목",
+      "body": "최근 시장 랠리에서 소외된 저평가 S&P500 종목 중 하나로 소개된 바 있어, 이날 저가 매수세가 유입된 것으로 보입니다. 거래량도 평소의 약 2배로 늘었습니다.",
+      "bullets": [
+        {
+          "text": "'랠리에서 소외된 저평가 S&P500 종목' 기사에 소개",
+          "source": "Benzinga",
+          "date": "9/13",
+          "url": "https://www.benzinga.com/markets/equities/26/09/61755151/top-3-undervalued-sp-500-stocks-the-market-rally-left-behind"
+        },
+        {
+          "text": "거래량 평소의 1.99배로 증가하며 반등",
+          "source": null,
+          "date": null,
+          "url": null
+        }
+      ],
+      "spark": [
+        213.6,
+        210.07,
+        206.06,
+        207.46,
+        209.59,
+        208.26,
+        204.88,
+        202.13,
+        202.27,
+        201.3,
+        203.48,
+        207.71
+      ],
+      "rel_strength": 0.0252
+    }
+  ],
+  "spy_day_return": -0.004449314779118585
+}

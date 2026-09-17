@@ -1,0 +1,23 @@
+# 비밀 키 — 절대 커밋하지 말 것
+.env
+
+# 파이썬
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# 생성물
+data/*.png
+data/*.csv
+data/*.json
+models/*.npz
+
+# OS / 에디터
+.DS_Store
+.idea/
+*.log
+
+# Netlify 로컬 연결 상태 (사이트 ID 등, 기기별)
+.netlify/

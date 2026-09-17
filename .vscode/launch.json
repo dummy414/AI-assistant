@@ -1,0 +1,46 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "1. DQN 학습 + 백테스트 (train.py)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/train.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "2. HMM 국면탐지 + 변동성타겟팅 (train_regime.py)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/train_regime.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "3. 데이터 확인 (data.py)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.data",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "4. HMM 자체 검증 (regime.py)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.regime",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "5. 실시간 페이퍼 트레이딩 (live_trade.py)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.live_trade",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": { "DATA_SOURCE": "alpaca" }
+    }
+  ]
+}
