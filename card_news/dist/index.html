@@ -122,6 +122,36 @@
   .drawer-list .nav-name { display: block; }
   @media (min-width: 900px) { .drawer, .drawer-backdrop { display: none; } }
 
+  .hide { display: none !important; }
+
+  .tabbar { display: flex; gap: 8px; padding: 14px 2px 0; }
+  .tab-btn {
+    font-family: 'Archivo', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 14px;
+    border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); cursor: pointer;
+  }
+  .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab-btn:hover:not(.active) { background: var(--surface-2); }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .quality-view { padding: 8px 2px 100px; }
+  .quality-note {
+    font-size: 12.5px; color: var(--ink-3); background: var(--surface-2); border-radius: 10px;
+    padding: 10px 14px; margin-bottom: 16px; line-height: 1.5;
+  }
+  .quality-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .qcard {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px;
+    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px;
+  }
+  .qcard-sym { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 17px; }
+  .qcard-name { font-family: 'Newsreader', serif; font-size: 14px; color: var(--ink-2); margin-left: 6px; }
+  .qcard-industry { font-size: 11px; color: var(--ink-3); margin-top: -6px; }
+  .qcard-price-row { display: flex; align-items: center; gap: 8px; }
+  .qcard-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; font-size: 12px; }
+  .qmetric-label { color: var(--ink-3); display: block; margin-bottom: 2px; }
+  .qmetric-value { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .qcard-note { font-size: 12.5px; line-height: 1.55; color: var(--ink-2); border-top: 1px dashed var(--line); padding-top: 10px; }
+
   .overview { padding: 20px 2px 18px; max-width: 760px; }
   .overview .date { font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
   .overview p { font-family: 'Newsreader', serif; font-size: 18px; line-height: 1.5; margin: 8px 0 0; text-wrap: balance; }
@@ -136,15 +166,47 @@
   .ticker-nav { display: none; }
   @media (min-width: 900px) {
     .ticker-nav {
-      display: flex; flex-direction: column; gap: 8px;
+      display: flex; flex-direction: column; gap: 10px;
       position: sticky; top: calc(64px + env(safe-area-inset-top, 0px));
-      max-height: calc(100vh - 96px); overflow-y: auto;
+      max-height: calc(100vh - 96px);
     }
   }
+  .nav-scroll { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+
+  /* 종목 직접 추가 폼 */
+  .add-ticker { display: flex; gap: 6px; }
+  .add-ticker input {
+    flex: 1; min-width: 0; font-size: 12.5px; font-family: 'IBM Plex Mono', monospace;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); color: var(--ink);
+  }
+  .add-ticker input::placeholder { color: var(--ink-3); font-family: 'Archivo', sans-serif; }
+  .add-ticker input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .add-ticker button {
+    flex: 0 0 auto; width: 34px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--accent-soft); color: var(--accent); font-size: 16px; font-weight: 700; cursor: pointer;
+  }
+  .add-ticker button:hover { filter: brightness(0.97); }
+  .add-ticker-err { font-size: 11px; color: var(--down); margin-top: -4px; display: none; }
+  .add-ticker-err.show { display: block; }
+
+  .star-btn {
+    flex: 0 0 auto; width: 20px; height: 20px; border: none; background: transparent; cursor: pointer;
+    font-size: 15px; line-height: 1; color: var(--ink-3); padding: 0; display: flex; align-items: center; justify-content: center;
+  }
+  .star-btn.on { color: var(--gold); }
+  .star-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .detail-star { width: 30px; height: 30px; font-size: 18px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); }
+  .remove-btn {
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink-3); font-size: 13px; cursor: pointer;
+  }
+  .remove-btn:hover { color: var(--down); background: var(--down-soft); }
+
   .nav-item {
-    flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+    flex: 0 0 auto; display: flex; align-items: center; gap: 6px;
     border: 1px solid var(--line); background: var(--surface);
-    border-radius: 12px; padding: 9px 12px; cursor: pointer;
+    border-radius: 12px; padding: 9px 10px 9px 6px; cursor: pointer;
     font-family: inherit; color: var(--ink); text-align: left;
   }
   @media (min-width: 900px) { .nav-item { width: 100%; } }
@@ -296,20 +358,45 @@
     <span>종목 목록</span>
     <button class="drawer-close" id="drawerClose" aria-label="닫기">✕</button>
   </div>
-  <div class="drawer-list" id="drawerList"></div>
+  <form class="add-ticker" id="addTickerFormMobile">
+    <input id="addTickerInputMobile" placeholder="+ 티커 추가 (예: AAPL)" maxlength="8" autocomplete="off">
+    <button type="submit" aria-label="추가">+</button>
+  </form>
+  <div class="add-ticker-err" id="addTickerErrMobile"></div>
+  <div class="drawer-list" id="drawerList" style="margin-top:10px"></div>
 </aside>
 
 <div class="wrap">
+  <div class="tabbar">
+    <button class="tab-btn active" id="tabToday">오늘의 관심종목</button>
+    <button class="tab-btn" id="tabQuality">우량주</button>
+  </div>
+
   <div class="overview">
     <div class="date" id="marketDate">—</div>
     <p id="overviewText">데이터를 불러오는 중입니다…</p>
   </div>
 
   <div class="layout">
-    <nav class="ticker-nav" id="tickerNav" aria-label="종목 목록"></nav>
+    <nav class="ticker-nav" aria-label="종목 목록">
+      <form class="add-ticker" id="addTickerFormDesktop">
+        <input id="addTickerInputDesktop" placeholder="+ 티커 추가 (예: AAPL)" maxlength="8" autocomplete="off">
+        <button type="submit" aria-label="추가">+</button>
+      </form>
+      <div class="add-ticker-err" id="addTickerErrDesktop"></div>
+      <div class="nav-scroll" id="tickerNav"></div>
+    </nav>
     <main class="detail" id="detail"></main>
     <aside class="related" id="related"></aside>
   </div>
+
+  <section class="quality-view hide" id="qualityView">
+    <div class="quality-note">
+      실제 재무데이터(Financial Modeling Prep) 기준입니다. 매출·이익·부채 현황을 사실대로 보여줄 뿐,
+      "이 종목이 계속 오른다"는 걸 예측하거나 보장하지 않습니다. 재무제표는 분기 단위라 매일 크게 바뀌지 않습니다.
+    </div>
+    <div class="quality-grid" id="qualityGrid"></div>
+  </section>
 </div>
 
 <footer class="disclaimer">
@@ -341,6 +428,21 @@
   const relatedEl = document.getElementById('related');
   let data = null;
   let active = 0;
+
+  // ---- 즐겨찾기·직접추가 종목 (브라우저 로컬 저장, 서버에는 안 감) ----
+  function loadLS(key) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { return []; } }
+  function saveLS(key, arr) { try { localStorage.setItem(key, JSON.stringify(arr)); } catch (e) {} }
+  let favorites = loadLS('wl_favorites');
+  let customSymbols = loadLS('wl_custom');
+  function isFavorite(sym) { return favorites.includes(sym); }
+  function toggleFavorite(sym) {
+    const i = favorites.indexOf(sym);
+    if (i === -1) favorites.push(sym); else favorites.splice(i, 1);
+    saveLS('wl_favorites', favorites);
+    renderNav(); renderDetail();
+  }
+  function showErr(el, msg) { if (el) { el.textContent = msg; el.classList.add('show'); } }
+  function hideErr(el) { if (el) el.classList.remove('show'); }
 
   function openDrawer() {
     drawerEl.classList.add('open');
@@ -474,21 +576,42 @@
   modalBackdropEl.addEventListener('click', closeNewsModal);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeNewsModal(); });
 
+  function sortedIndices() {
+    return data.cards.map((c, i) => i).sort((a, b) => {
+      const fa = isFavorite(data.cards[a].symbol) ? 0 : 1;
+      const fb = isFavorite(data.cards[b].symbol) ? 0 : 1;
+      return fa - fb; // 안정 정렬: 즐겨찾기만 위로, 나머지는 원래 순서 유지
+    });
+  }
+
   function renderNav() {
-    const itemsHtml = data.cards.map((c, i) => `
-      <button class="nav-item${i === active ? ' active' : ''}" data-i="${i}" aria-pressed="${i === active}">
-        <span class="nav-sym">${c.symbol}</span>
-        <span class="nav-name">${c.name}</span>
-        <span class="nav-chg ${c.day_return >= 0 ? 'up' : 'down'}">${pct(c.day_return)}</span>
-      </button>
-    `).join('');
+    const order = sortedIndices();
+    const itemsHtml = order.map(i => {
+      const c = data.cards[i];
+      const fav = isFavorite(c.symbol);
+      return `
+        <button class="nav-item${i === active ? ' active' : ''}" data-i="${i}">
+          <span class="star-btn${fav ? ' on' : ''}" data-star="${c.symbol}" role="button" aria-label="즐겨찾기">${fav ? '★' : '☆'}</span>
+          <span class="nav-sym">${c.symbol}</span>
+          <span class="nav-name">${c.name}</span>
+          <span class="nav-chg ${c.day_return >= 0 ? 'up' : 'down'}">${pct(c.day_return)}</span>
+        </button>
+      `;
+    }).join('');
     navEl.innerHTML = itemsHtml;
     drawerListEl.innerHTML = itemsHtml;
     [navEl, drawerListEl].forEach(container => {
       container.querySelectorAll('.nav-item').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+          if (e.target.closest('.star-btn')) return;
           select(Number(btn.dataset.i));
           closeDrawer();
+        });
+      });
+      container.querySelectorAll('.star-btn').forEach(star => {
+        star.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleFavorite(star.dataset.star);
         });
       });
     });
@@ -498,13 +621,20 @@
     const c = data.cards[active];
     const dirClass = c.day_return >= 0 ? 'up' : 'down';
     const arrow = c.day_return >= 0 ? '▲' : '▼';
+    const fav = isFavorite(c.symbol);
     const newsHtml = c.bullets.length
       ? c.bullets.map(b => newsItemHtml(b, 'detail-' + active)).join('')
       : '<div class="news-empty">관련 뉴스가 확인되지 않았습니다.</div>';
+    const hasExtra = c.return_5d != null && c.volume_ratio != null;
+    const substatsText = hasExtra
+      ? `5일 ${pct(c.return_5d)} · 거래량 평소 대비 ${c.volume_ratio.toFixed(2)}배`
+      : '실시간 시세 · 직접 추가한 종목이라 5일 추이 데이터는 없습니다';
     detailEl.innerHTML = `
       <div class="detail-head">
         <span class="tag">${c.tag}</span>
         <div class="head-right">
+          <button class="star-btn detail-star${fav ? ' on' : ''}" id="starBtn" aria-label="즐겨찾기">${fav ? '★' : '☆'}</button>
+          ${c.custom ? '<button class="remove-btn" id="removeBtn" aria-label="제거" title="관심종목에서 제거">✕</button>' : ''}
           <span class="idx">${String(active + 1).padStart(2, '0')} / ${String(data.cards.length).padStart(2, '0')}</span>
           <div class="arrows">
             <button class="arrow-btn" id="prevBtn" aria-label="이전 종목" ${active === 0 ? 'disabled' : ''}>‹</button>
@@ -520,7 +650,7 @@
         <span class="price">$${c.price.toFixed(2)}</span>
         <span class="chg ${dirClass}">${arrow} ${pct(c.day_return)}</span>
       </div>
-      <div class="substats">5일 ${pct(c.return_5d)} · 거래량 평소 대비 ${c.volume_ratio.toFixed(2)}배</div>
+      <div class="substats">${substatsText}</div>
       <div class="chart-row">${sparklineSvg(c.spark)}${relBadgeHtml(c)}</div>
       <div class="hook">${c.hook}</div>
       <div class="body-text">${c.body}</div>
@@ -531,7 +661,21 @@
     `;
     detailEl.querySelector('#prevBtn').addEventListener('click', () => select(active - 1));
     detailEl.querySelector('#nextBtn').addEventListener('click', () => select(active + 1));
+    detailEl.querySelector('#starBtn').addEventListener('click', () => toggleFavorite(c.symbol));
+    if (c.custom) {
+      detailEl.querySelector('#removeBtn').addEventListener('click', () => removeCustom(c.symbol));
+    }
     wireNewsItems(detailEl);
+  }
+
+  function removeCustom(sym) {
+    customSymbols = customSymbols.filter(s => s !== sym);
+    saveLS('wl_custom', customSymbols);
+    const idx = data.cards.findIndex(c => c.symbol === sym);
+    if (idx !== -1) data.cards.splice(idx, 1);
+    if (active >= data.cards.length) active = data.cards.length - 1;
+    if (active < 0) active = 0;
+    renderNav(); renderDetail(); renderRelated();
   }
 
   function renderRelated() {
@@ -592,15 +736,43 @@
           c.rel_strength = c.day_return - live.spy_day_return;
         }
       }
-      const liveNews = (live.news || {})[c.symbol];
-      if (liveNews && liveNews.length) {
-        c.bullets = liveNews.map(n => ({ text: n.text, source: n.source, date: fmtShortDate(n.published_at), url: n.url }));
+      // 주의: 매일 자동 작성된 카드(c.custom이 아닌 것)의 bullets는 한국어 요약(korean_summary)과
+      // 이미지가 붙어있다. 실시간 뉴스로 덮어쓰면 그게 사라지므로, 직접 추가한 종목(custom)만
+      // 실시간 뉴스로 갱신한다.
+      if (c.custom) {
+        const liveNews = (live.news || {})[c.symbol];
+        if (liveNews && liveNews.length) {
+          c.bullets = liveNews.map(n => ({ text: n.text, source: n.source, date: fmtShortDate(n.published_at), url: n.url }));
+        }
       }
+    });
+
+    // 사용자가 직접 추가했지만 아직 카드가 없는 종목 — 실시간 응답이 오면 새 카드로 만든다
+    customSymbols.forEach(sym => {
+      if (data.cards.some(c => c.symbol === sym)) return;
+      const q = quoteMap[sym];
+      if (!q) return;
+      const liveNews = (live.news || {})[sym] || [];
+      data.cards.push({
+        symbol: sym, name: q.name || sym, sector: '직접 추가한 관심종목',
+        price: q.price, day_return: q.day_return,
+        return_5d: null, volume_ratio: null, spark: null,
+        rel_strength: live.spy_day_return != null ? q.day_return - live.spy_day_return : null,
+        tag: '관심종목',
+        hook: '직접 추가한 종목입니다 — 실시간 시세·뉴스만 제공되고 AI 해설은 없습니다.',
+        body: '',
+        bullets: liveNews.map(n => ({ text: n.text, source: n.source, date: fmtShortDate(n.published_at), url: n.url })),
+        custom: true,
+      });
     });
   }
 
+  function liveUrl() {
+    return LIVE_ENDPOINT + (customSymbols.length ? ('?extra=' + encodeURIComponent(customSymbols.join(','))) : '');
+  }
+
   function pollLive() {
-    fetch(LIVE_ENDPOINT, { cache: 'no-store' })
+    return fetch(liveUrl(), { cache: 'no-store' })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error('bad status'))))
       .then(live => {
         if (live.error) return Promise.reject(new Error(live.error));
@@ -614,6 +786,92 @@
         liveDotEl.classList.remove('on');
       });
   }
+
+  // ---- 종목 직접 추가 폼 ----
+  function addTickerFromInput(inputEl, errEl) {
+    const raw = inputEl.value.trim().toUpperCase();
+    if (!raw) return;
+    if (!/^[A-Z.]{1,8}$/.test(raw)) { showErr(errEl, '올바른 티커 형식이 아닙니다.'); return; }
+    if (customSymbols.includes(raw) || data.cards.some(c => c.symbol === raw)) {
+      showErr(errEl, '이미 목록에 있습니다.'); inputEl.value = ''; return;
+    }
+    customSymbols.push(raw);
+    saveLS('wl_custom', customSymbols);
+    inputEl.value = '';
+    hideErr(errEl);
+    pollLive().then(() => {
+      const idx = data.cards.findIndex(c => c.symbol === raw);
+      if (idx !== -1) {
+        select(idx);
+        closeDrawer();
+      } else {
+        customSymbols = customSymbols.filter(s => s !== raw);
+        saveLS('wl_custom', customSymbols);
+        showErr(errEl, `'${raw}' 종목을 찾을 수 없습니다.`);
+      }
+    });
+  }
+  function wireAddTicker(formId, inputId, errId) {
+    const form = document.getElementById(formId);
+    const input = document.getElementById(inputId);
+    const err = document.getElementById(errId);
+    form.addEventListener('submit', (e) => { e.preventDefault(); addTickerFromInput(input, err); });
+  }
+  wireAddTicker('addTickerFormDesktop', 'addTickerInputDesktop', 'addTickerErrDesktop');
+  wireAddTicker('addTickerFormMobile', 'addTickerInputMobile', 'addTickerErrMobile');
+
+  // ---- 우량주 탭 (실제 재무데이터, 예측 아님) ----
+  const tabToday = document.getElementById('tabToday');
+  const tabQuality = document.getElementById('tabQuality');
+  const overviewEl = document.querySelector('.overview');
+  const layoutEl = document.querySelector('.layout');
+  const qualityViewEl = document.getElementById('qualityView');
+
+  function showTab(name) {
+    const isToday = name === 'today';
+    overviewEl.classList.toggle('hide', !isToday);
+    layoutEl.classList.toggle('hide', !isToday);
+    qualityViewEl.classList.toggle('hide', isToday);
+    tabToday.classList.toggle('active', isToday);
+    tabQuality.classList.toggle('active', !isToday);
+  }
+  tabToday.addEventListener('click', () => showTab('today'));
+  tabQuality.addEventListener('click', () => showTab('quality'));
+
+  function fmtMarketCap(n) {
+    if (n == null) return '—';
+    if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
+    if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
+    return '$' + (n / 1e6).toFixed(0) + 'M';
+  }
+
+  function renderQuality(q) {
+    const grid = document.getElementById('qualityGrid');
+    grid.innerHTML = (q.companies || []).map(c => {
+      const dirClass = c.day_return >= 0 ? 'up' : 'down';
+      const arrow = c.day_return >= 0 ? '▲' : '▼';
+      return `
+        <div class="qcard">
+          <div><span class="qcard-sym">${c.symbol}</span><span class="qcard-name">${c.name}</span></div>
+          <div class="qcard-industry">${c.industry || ''}</div>
+          <div class="qcard-price-row">
+            <span class="price">$${c.price.toFixed(2)}</span>
+            <span class="chg ${dirClass}">${arrow} ${pct(c.day_return)}</span>
+          </div>
+          <div class="qcard-metrics">
+            <div><span class="qmetric-label">시가총액</span><span class="qmetric-value">${fmtMarketCap(c.market_cap)}</span></div>
+            <div><span class="qmetric-label">PER</span><span class="qmetric-value">${c.per != null ? c.per.toFixed(1) : '—'}</span></div>
+            <div><span class="qmetric-label">매출성장률(YoY)</span><span class="qmetric-value">${c.revenue_growth != null ? pct(c.revenue_growth) : '—'}</span></div>
+            <div><span class="qmetric-label">순이익률</span><span class="qmetric-value">${c.net_margin != null ? pct(c.net_margin) : '—'}</span></div>
+            <div><span class="qmetric-label">부채비율</span><span class="qmetric-value">${c.debt_to_equity != null ? c.debt_to_equity.toFixed(2) : '—'}</span></div>
+          </div>
+          <div class="qcard-note">${c.note || ''}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  fetch('quality.json').then(r => r.json()).then(renderQuality).catch(() => {});
 
   fetch('data.json')
     .then(r => r.json())

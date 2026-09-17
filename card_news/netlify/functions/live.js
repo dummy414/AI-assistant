@@ -4,8 +4,12 @@
 // 절대 클라이언트로 내려가지 않는다 — 키를 페이지 소스에 넣으면 누구나 훔쳐갈 수 있어서
 // 반드시 이렇게 중계해야 한다.
 //
-// 한 번 호출로: 10개 종목의 최신가·당일등락(snapshot) + 최근 뉴스를 함께 반환한다.
+// 한 번 호출로: 오늘의 10개 종목 + 사용자가 직접 추가한 종목(있으면)의
+// 최신가·당일등락(snapshot) + 최근 뉴스를 함께 반환한다.
 // 클라이언트가 이 함수를 30~60초마다 다시 호출하면 화면이 계속 갱신된다("실시간처럼").
+//
+// 쿼리 파라미터: ?extra=AAPL,NVDA  — 오늘 스크리닝 10종목 외에 사용자가 즐겨찾기로
+// 직접 추가한 티커. 유효하지 않은 티커는 quotes에서 ok:false로 내려간다.
 //
 // 필요한 환경변수 (Netlify 대시보드 또는 `netlify env:set`으로 설정):
 //   ALPACA_API_KEY, ALPACA_SECRET_KEY
@@ -18,7 +22,16 @@ const NAMES = {
   CSCO: "Cisco", COIN: "Coinbase", HON: "Honeywell",
 };
 
-exports.handler = async function () {
+function parseExtraSymbols(event) {
+  const raw = (event.queryStringParameters && event.queryStringParameters.extra) || "";
+  return raw
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter((s) => /^[A-Z.]{1,8}$/.test(s)) // 티커 형식만 허용 (임의 문자열 주입 방지)
+    .slice(0, 15); // 남용 방지 — 한 번에 최대 15개
+}
+
+exports.handler = async function (event) {
   const API_KEY = process.env.ALPACA_API_KEY;
   const SECRET_KEY = process.env.ALPACA_SECRET_KEY;
 
@@ -26,9 +39,12 @@ exports.handler = async function () {
     return { statusCode: 500, body: JSON.stringify({ error: "서버에 ALPACA API 키가 설정되지 않았습니다." }) };
   }
 
+  const extraSymbols = parseExtraSymbols(event).filter((s) => !SYMBOLS.includes(s));
+  const ALL_SYMBOLS = [...SYMBOLS, ...extraSymbols];
+
   const headers = { "APCA-API-KEY-ID": API_KEY, "APCA-API-SECRET-KEY": SECRET_KEY };
   const BENCHMARK = "SPY";
-  const symbolsParam = SYMBOLS.join(",");
+  const symbolsParam = ALL_SYMBOLS.join(",");
 
   try {
     // 1) 실시간 시세 스냅샷 (최신 체결가 + 당일봉 + 직전봉 — 등락률 계산용)
@@ -40,18 +56,18 @@ exports.handler = async function () {
     const snapData = await snapRes.json();
 
     function toQuote(sym, s) {
-      if (!s) return { symbol: sym, name: NAMES[sym], ok: false };
+      if (!s) return { symbol: sym, name: NAMES[sym] || sym, ok: false };
       const price = s.latestTrade ? s.latestTrade.p : (s.dailyBar ? s.dailyBar.c : null);
       const prevClose = s.prevDailyBar ? s.prevDailyBar.c : null;
       const dayReturn = price != null && prevClose ? price / prevClose - 1 : null;
       return {
-        symbol: sym, name: NAMES[sym], ok: price != null,
+        symbol: sym, name: NAMES[sym] || sym, ok: price != null,
         price, prev_close: prevClose, day_return: dayReturn,
         as_of: s.latestTrade ? s.latestTrade.t : null,
       };
     }
 
-    const quotes = SYMBOLS.map((sym) => toQuote(sym, snapData[sym]));
+    const quotes = ALL_SYMBOLS.map((sym) => toQuote(sym, snapData[sym]));
     const spyQuote = toQuote(BENCHMARK, snapData[BENCHMARK]);
     const spyDayReturn = spyQuote.ok ? spyQuote.day_return : null;
 
@@ -65,7 +81,7 @@ exports.handler = async function () {
     const items = (newsJson.news || []);
 
     const newsBySymbol = {};
-    SYMBOLS.forEach((s) => (newsBySymbol[s] = []));
+    ALL_SYMBOLS.forEach((s) => (newsBySymbol[s] = []));
     for (const n of items) {
       for (const sym of n.symbols || []) {
         if (newsBySymbol[sym] && newsBySymbol[sym].length < 3) {

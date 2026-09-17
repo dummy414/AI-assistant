@@ -44,6 +44,7 @@ ALPACA_SECRET_KEY = os.environ.get("ALPACA_SECRET_KEY", "YOUR_ALPACA_PAPER_SECRE
 # 무료 계정에서 sip을 쓰면 "subscription does not permit..." 오류가 난다.
 ALPACA_FEED = os.environ.get("ALPACA_FEED", "iex")
 MASSIVE_API_KEY = os.environ.get("MASSIVE_API_KEY", "YOUR_MASSIVE_KEY")
+FMP_API_KEY = os.environ.get("FMP_API_KEY", "YOUR_FMP_KEY")  # financialmodelingprep.com — 우량주 탭 재무데이터
 
 # ---- 강화학습 하이퍼파라미터 ----
 RL_EPISODES = 120
