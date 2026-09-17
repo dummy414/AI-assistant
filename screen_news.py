@@ -16,28 +16,54 @@ screen_news.py — 오늘의 관심종목 스크리닝 + 뉴스 수집
 """
 
 import os
+import re
 import json
 from datetime import datetime, timedelta, timezone
 
 from src import config, watchlist
 
 
+def _strip_html(html: str) -> str:
+    """뉴스 본문(content)은 HTML로 온다. 의존성 추가 없이 태그만 정규식으로 제거해
+    사람이 읽을 수 있는 평문으로 바꾼다 (완벽한 파서는 아니지만 요약 작성엔 충분하다)."""
+    if not html:
+        return ""
+    text = re.sub(r"<[^>]+>", " ", html)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
 def fetch_news_batch(symbols: list[str], limit_per_symbol: int = 4, lookback_days: int = 7) -> dict:
+    """종목별 뉴스를 헤드라인/요약뿐 아니라 본문 전문(content)과 대표 이미지까지 가져온다.
+    본문은 카드뉴스에서 "한국어로 자세히 보기"를 만들 때 쓰고, 이 함수 자체는 번역/요약을
+    하지 않는다 (screen_news.py의 원칙: 수집만 하고 해석은 사람/LLM이 별도로 한다)."""
     from alpaca.data.historical.news import NewsClient
     from alpaca.data.requests import NewsRequest
 
     client = NewsClient(config.ALPACA_API_KEY, config.ALPACA_SECRET_KEY)
     start = datetime.now(timezone.utc) - timedelta(days=lookback_days)
-    req = NewsRequest(symbols=",".join(symbols), start=start, limit=50)
+    req = NewsRequest(symbols=",".join(symbols), start=start, limit=50, include_content=True)
     items = client.get_news(req).data["news"]
 
     by_symbol = {s: [] for s in symbols}
     for n in items:
+        # 이미지 사이즈 중 "small"을 대표 이미지로 쓴다 (large는 너무 무겁고 thumb은 너무 작음)
+        image = None
+        for img in (n.images or []):
+            size = getattr(img.size, "value", img.size)
+            if size == "small":
+                image = img.url
+                break
+        if image is None and n.images:
+            image = n.images[0].url
+
         for s in n.symbols:
             if s in by_symbol and len(by_symbol[s]) < limit_per_symbol:
                 by_symbol[s].append({
                     "headline": n.headline,
                     "summary": n.summary,
+                    "content_text": _strip_html(n.content)[:4000],
+                    "image": image,
                     "url": n.url,
                     "source": n.source,
                     "published_at": n.created_at.isoformat(),
