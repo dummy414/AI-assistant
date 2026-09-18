@@ -98,9 +98,24 @@ def main():
         else:
             print(f"  {sym}: 데이터 조회 실패 (건너뜀)")
 
-    out = {"generated_at": datetime.now(timezone.utc).isoformat(), "companies": companies}
     path = os.path.join(config.DATA_DIR, "..", "card_news", "quality.json")
     path = os.path.normpath(path)
+
+    # API 한도 초과(429) 등으로 조회가 대부분 실패한 날, 빈 결과로 덮어쓰면 우량주 탭이
+    # 통째로 사라진다. 이전 파일보다 종목이 크게 줄었으면 쓰지 않고 그대로 둔다.
+    previous = []
+    try:
+        with open(path, encoding="utf-8") as f:
+            previous = json.load(f).get("companies", [])
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+
+    if previous and len(companies) < max(3, len(previous) // 2):
+        print(f"\n조회 성공 {len(companies)}개 < 기존 {len(previous)}개의 절반 — "
+              f"기존 데이터를 유지하고 덮어쓰지 않습니다 (API 한도 초과로 추정).")
+        raise SystemExit(1)
+
+    out = {"generated_at": datetime.now(timezone.utc).isoformat(), "companies": companies}
     with open(path, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
     print(f"\n저장 완료: {path} ({len(companies)}개 종목)")
