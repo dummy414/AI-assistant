@@ -303,6 +303,24 @@
   .streak-badge .since.down { color: var(--down); }
   .nav-streak { font-size: 10px; color: var(--gold); font-weight: 700; margin-left: 2px; }
 
+  /* 카드 맥락: 자기 과거 대비·52주 위치·다음 실적일 — 전부 관측된 사실만 */
+  .context-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ctx {
+    font-size: 11.5px; color: var(--ink-2); background: var(--surface-2);
+    border-radius: 8px; padding: 5px 9px; white-space: nowrap;
+  }
+  .ctx b { color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+  .range52 { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--ink-3); }
+  .range52 .bar {
+    position: relative; flex: 1; min-width: 90px; height: 4px;
+    background: var(--surface-2); border-radius: 2px;
+  }
+  .range52 .dot {
+    position: absolute; top: -3px; width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent); transform: translateX(-50%);
+  }
+  .range52 .edge { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+
   .chart-row { display: flex; align-items: center; gap: 14px; padding: 4px 0 2px; flex-wrap: wrap; }
   .spark-svg { flex: 0 0 auto; display: block; }
   .rel-badge {
@@ -803,6 +821,47 @@
     fill('moversDown', down);
   }
 
+  function fmtEarningsDate(d) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || '');
+    return m ? `${Number(m[2])}/${Number(m[3])}` : null;
+  }
+
+  // 관측된 사실만 담는다 — "평소 대비 몇 배 움직였나", "52주 범위 어디쯤인가",
+  // "유니버스에서 몇 번째로 크게 움직였나", "다음 실적일은 언제인가".
+  function contextRowHtml(c) {
+    const st = c.stats || {};
+    const bits = [];
+    if (st.move_vs_normal != null) {
+      bits.push(`<span class="ctx">평소 변동폭의 <b>${st.move_vs_normal}배</b></span>`);
+    }
+    if (st.streak >= 3 && st.streak_direction) {
+      bits.push(`<span class="ctx"><b>${st.streak}일</b> 연속 ${escapeHtml(st.streak_direction)}</span>`);
+    }
+    if (c.movement_rank && c.movement_rank.rank) {
+      bits.push(`<span class="ctx">오늘 변동폭 <b>${c.movement_rank.rank}위</b> / ${c.movement_rank.of}</span>`);
+    }
+    const ed = fmtEarningsDate(c.next_earnings);
+    if (ed) bits.push(`<span class="ctx">다음 실적 <b>${ed}</b></span>`);
+    if (st.annual_volatility != null) {
+      bits.push(`<span class="ctx">연변동성 <b>${(st.annual_volatility * 100).toFixed(0)}%</b></span>`);
+    }
+    if (!bits.length) return '';
+    return `<div class="context-row">${bits.join('')}</div>`;
+  }
+
+  function range52Html(c) {
+    const st = c.stats || {};
+    if (st.pct_in_52w_range == null || st.low_52w == null || st.high_52w == null) return '';
+    const p = Math.max(0, Math.min(1, st.pct_in_52w_range)) * 100;
+    return `
+      <div class="range52">
+        <span class="edge">$${st.low_52w.toFixed(2)}</span>
+        <span class="bar"><span class="dot" style="left:${p.toFixed(1)}%"></span></span>
+        <span class="edge">$${st.high_52w.toFixed(2)}</span>
+        <span>52주 범위 ${p.toFixed(0)}% 지점</span>
+      </div>`;
+  }
+
   function renderDetail() {
     const c = data.cards[active];
     const dirClass = c.day_return >= 0 ? 'up' : 'down';
@@ -839,6 +898,8 @@
       <div class="substats">${substatsText}</div>
       ${streakBadgeHtml(c.symbol) ? `<div>${streakBadgeHtml(c.symbol)}</div>` : ''}
       <div class="chart-row">${sparklineSvg(c.spark)}${relBadgeHtml(c)}</div>
+      ${range52Html(c)}
+      ${contextRowHtml(c)}
       <div class="hook">${escapeHtml(c.hook)}</div>
       <div class="body-text">${escapeHtml(c.body)}</div>
       <div class="inline-news">

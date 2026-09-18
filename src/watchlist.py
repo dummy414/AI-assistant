@@ -135,6 +135,60 @@ def screen(top_n: int = 10, min_price: float = 5.0) -> pd.DataFrame:
     return table
 
 
+def stock_stats(symbols: list[str], lookback_days: int = 260) -> dict[str, dict]:
+    """선정된 종목들의 '자기 과거 대비' 통계를 계산한다.
+
+    레이더 포착과 같은 지표지만, 여기서는 이례성 랭킹이 아니라 카드에 붙일 맥락으로 쓴다.
+    "오늘 등락이 평소 변동폭의 몇 배인가", "52주 범위의 어디쯤인가" 같은 건 예측이 아니라
+    관측된 사실이라 카드에 넣어도 정직하다.
+    """
+    bars = _fetch_batch_bars(symbols, lookback_days=lookback_days)
+    if bars.empty:
+        return {}
+    available = set(bars.index.get_level_values(0))
+
+    out: dict[str, dict] = {}
+    for sym in symbols:
+        if sym not in available:
+            continue
+        df = bars.loc[sym].sort_index()
+        if len(df) < 30:
+            continue
+        close = df["close"].values
+        volume = df["volume"].values
+        rets = close[1:] / close[:-1] - 1
+        today_ret = float(rets[-1])
+        base = rets[:-1]
+        ret_std = float(base.std())
+        vol_base = volume[:-1]
+        vol_std = float(vol_base.std())
+
+        sign_today = np.sign(today_ret)
+        streak, i = 1, len(rets) - 2
+        while i >= 0 and sign_today != 0 and np.sign(rets[i]) == sign_today:
+            streak += 1
+            i -= 1
+
+        window = close[-252:] if len(close) >= 252 else close
+        high, low = float(window.max()), float(window.min())
+        last = float(close[-1])
+
+        out[sym] = {
+            # 오늘 등락이 평소 하루 변동폭의 몇 배인지 (절대값)
+            "move_vs_normal": round(abs(today_ret) / ret_std, 1) if ret_std > 0 else None,
+            "return_z": round((today_ret - float(base.mean())) / ret_std, 2) if ret_std > 0 else None,
+            "vol_z": round((float(volume[-1]) - float(vol_base.mean())) / vol_std, 2) if vol_std > 0 else None,
+            "streak": int(streak),
+            "streak_direction": "상승" if sign_today > 0 else ("하락" if sign_today < 0 else None),
+            "high_52w": round(high, 2),
+            "low_52w": round(low, 2),
+            # 52주 범위에서 현재가의 위치 (0=최저가, 1=최고가)
+            "pct_in_52w_range": round((last - low) / (high - low), 3) if high > low else None,
+            "annual_volatility": round(ret_std * (252 ** 0.5), 3),
+        }
+    return out
+
+
 def screen_anomalies(top_n: int = 8, lookback_days: int = 260, min_price: float = 5.0) -> list[dict]:
     """
     "레이더 포착" — 오를지 내릴지를 예측하지 않고, 각 종목이 '자기 자신의 평소 패턴'과

@@ -154,6 +154,41 @@ def fetch_finnhub_news(symbols: list[str], lookback_days: int = 5,
     return out
 
 
+def fetch_earnings_dates(symbols: list[str], ahead_days: int = 90) -> dict[str, str]:
+    """다음 실적 발표 예정일을 가져온다 (Finnhub 무료).
+
+    "다음에 뭘 지켜봐야 하나"는 실제로 쓸 때 가장 자주 궁금한 정보인데, 지금까지는
+    카드에 그런 게 전혀 없었다. 예정일은 사실이고 예측이 아니므로 넣어도 된다.
+    """
+    import urllib.request
+    import urllib.parse
+
+    if not config.FINNHUB_API_KEY:
+        return {}
+
+    today = datetime.now(timezone.utc).date()
+    params = {"from": today.isoformat(),
+              "to": (today + timedelta(days=ahead_days)).isoformat(),
+              "token": config.FINNHUB_API_KEY}
+    url = "https://finnhub.io/api/v1/calendar/earnings?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=25) as r:
+            data = json.loads(r.read())
+    except Exception as e:
+        print(f"   ! 실적 일정 조회 실패: {e}")
+        return {}
+
+    wanted = set(symbols)
+    out: dict[str, str] = {}
+    for item in data.get("earningsCalendar", []):
+        sym = item.get("symbol")
+        date = item.get("date")
+        if sym in wanted and date and (sym not in out or date < out[sym]):
+            out[sym] = date
+    return out
+
+
 def _norm_headline(h: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", (h or "").lower()).strip()
 
@@ -199,8 +234,8 @@ def main():
     # 유니버스가 1,000종목으로 넓어지면 무명 종목이 상위에 올 수 있다. 넉넉히 뽑아서
     # 뉴스가 있는 종목을 우선 채우고, 모자라면 점수 순으로 마저 채운다
     # (뉴스 없는 카드가 여러 장이면 읽을 게 없어지므로).
-    SHORTLIST = 24
-    FINAL = 10
+    SHORTLIST = 36
+    FINAL = 16
     shortlist = watchlist.screen(top_n=SHORTLIST)
     print(shortlist[["symbol", "name", "price", "day_return", "volume_ratio"]].head(SHORTLIST)
           .to_string(index=False, formatters={
@@ -257,6 +292,23 @@ def main():
     spark_map, spy_day_return = compute_spark_and_relative(symbols)
     print(f"   SPY 당일: {spy_day_return:+.2%}")
 
+    print("\n" + "=" * 60)
+    print("5) 카드 맥락 — 자기 과거 대비 / 유니버스 내 순위 / 다음 실적일")
+    print("=" * 60)
+    stats_map = watchlist.stock_stats(symbols)
+    earnings_map = fetch_earnings_dates(symbols)
+
+    # 오늘 유니버스 전체에서 이 종목의 등락이 어느 위치인지 (상위 몇 %)
+    all_returns = shortlist["day_return"].abs().tolist()
+    universe_n = len(shortlist)
+
+    for s in symbols[:6]:
+        st = stats_map.get(s, {})
+        ed = earnings_map.get(s)
+        print(f"   {s:6s} 평소 대비 {st.get('move_vs_normal', '—')}배 · "
+              f"52주 위치 {st.get('pct_in_52w_range', '—')} · "
+              f"실적일 {ed or '미정'}")
+
     snapshot = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "spy_day_return": spy_day_return,
@@ -268,16 +320,21 @@ def main():
     for _, row in table.iterrows():
         sym = row["symbol"]
         c = catalysts[sym]
+        day_ret = float(row["day_return"])
+        rank = sum(1 for r in all_returns if r > abs(day_ret)) + 1
         snapshot["stocks"].append({
             "symbol": sym,
             "name": row["name"],
             "price": round(float(row["price"]), 2),
-            "day_return": float(row["day_return"]),
+            "day_return": day_ret,
             "return_5d": float(row["return_5d"]),
             "volume_ratio": float(row["volume_ratio"]),
             "catalyst_tier": c["tier"],
             "catalyst_label": CATALYST_LABEL[c["tier"]],
             "catalyst_event_type": c["event_type"],
+            "stats": stats_map.get(sym, {}),
+            "next_earnings": earnings_map.get(sym),
+            "movement_rank": {"rank": rank, "of": universe_n},
             "spark": spark_map[sym]["spark"],
             "rel_strength": spark_map[sym]["rel_strength"],
             "news": news_map.get(sym, []),
