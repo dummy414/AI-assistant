@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="dark">
 <title>오늘의 관심종목</title>
 <meta name="description" content="오늘 유동성 높은 대형주 중 변동이 컸던 10종목을 실제 뉴스와 함께 정리한 카드뉴스">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%B0%3C/text%3E%3C/svg%3E">
@@ -11,43 +11,33 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;1,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
+  /* 다크가 기본. 밝은 테마는 data-theme="light"를 줄 때만 적용된다. */
   :root {
-    --paper: #F6F6F3;
-    --surface: #FFFFFF;
-    --surface-2: #EEEEEA;
-    --ink: #15171D;
-    --ink-2: #5C5F68;
-    --ink-3: #8C8F98;
-    --line: #E3E3DE;
-    --accent: #2C3A73;
-    --accent-soft: #E8EAF3;
-    --up: #1D7A57;
-    --up-soft: #E2F2EA;
-    --down: #B03F27;
-    --down-soft: #FBE8E2;
-    --gold: #A9791F;
-    --gold-soft: #F5EBD6;
+    --paper: #131314;
+    --surface: #1E1F20;
+    --surface-2: #282A2C;
+    --ink: #E3E3E3;
+    --ink-2: #9AA0A6;
+    --ink-3: #6F7479;
+    --line: #303134;
+    --accent: #8AB4F8;
+    --accent-soft: #1F2A3D;
+    --up: #34C77B;
+    --up-soft: #16281F;
+    --down: #F2685C;
+    --down-soft: #2E1A18;
+    --gold: #E2B64F;
+    --gold-soft: #2E2616;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 20px -12px rgba(0,0,0,.6);
+  }
+  :root[data-theme="light"] {
+    --paper: #F6F6F3; --surface: #FFFFFF; --surface-2: #EEEEEA;
+    --ink: #15171D; --ink-2: #5C5F68; --ink-3: #8C8F98; --line: #E3E3DE;
+    --accent: #2C3A73; --accent-soft: #E8EAF3;
+    --up: #1D7A57; --up-soft: #E2F2EA;
+    --down: #B03F27; --down-soft: #FBE8E2;
+    --gold: #A9791F; --gold-soft: #F5EBD6;
     --shadow: 0 1px 2px rgba(20,20,15,.04), 0 10px 24px -12px rgba(20,20,15,.16);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper: #0F1013; --surface: #191B20; --surface-2: #212329;
-      --ink: #EEEEF0; --ink-2: #A4A7B0; --ink-3: #74777F; --line: #2B2D34;
-      --accent: #8B9BE8; --accent-soft: #232842;
-      --up: #55C495; --up-soft: #172C24;
-      --down: #E2836A; --down-soft: #35211B;
-      --gold: #D9AE64; --gold-soft: #33291A;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 24px -12px rgba(0,0,0,.5);
-    }
-  }
-  :root[data-theme="dark"] {
-    --paper: #0F1013; --surface: #191B20; --surface-2: #212329;
-    --ink: #EEEEF0; --ink-2: #A4A7B0; --ink-3: #74777F; --line: #2B2D34;
-    --accent: #8B9BE8; --accent-soft: #232842;
-    --up: #55C495; --up-soft: #172C24;
-    --down: #E2836A; --down-soft: #35211B;
-    --gold: #D9AE64; --gold-soft: #33291A;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 24px -12px rgba(0,0,0,.5);
   }
 
   * { box-sizing: border-box; }
@@ -145,8 +135,8 @@
   }
   .quality-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
   .qcard {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px;
-    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
   }
   .qcard-sym { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 17px; }
   .qcard-name { font-family: 'Newsreader', serif; font-size: 14px; color: var(--ink-2); margin-left: 6px; }
@@ -177,6 +167,32 @@
   }
   .ask-input-row button:disabled { opacity: .5; cursor: default; }
   .ask-input-row button:hover:not(:disabled) { filter: brightness(1.05); }
+
+  /* ---- 구글 파이낸스풍 밀집 리스트 (가장 활동적인 / 상승 / 하락) ---- */
+  .movers { display: grid; grid-template-columns: 1fr; gap: 26px; padding: 6px 2px 20px; }
+  @media (min-width: 720px) { .movers { grid-template-columns: repeat(3, 1fr); gap: 22px; } }
+  .movers-col h3 {
+    font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 600;
+    margin: 0 0 6px; color: var(--ink);
+  }
+  .movers-col .sub { font-size: 11.5px; color: var(--ink-3); margin-bottom: 8px; }
+  .mrow {
+    display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; align-items: center;
+    padding: 9px 8px; border-radius: 8px; cursor: pointer; border: none;
+    background: transparent; color: inherit; width: 100%; text-align: left; font: inherit;
+  }
+  .mrow:hover { background: var(--surface-2); }
+  .mrow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mrow-sym { font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; font-weight: 600; }
+  .mrow-name { font-size: 11.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mrow-right { text-align: right; display: flex; align-items: center; gap: 10px; }
+  .mrow-px { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .mrow-chg {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600;
+    font-variant-numeric: tabular-nums; padding: 2px 6px; border-radius: 6px; min-width: 66px; text-align: right;
+  }
+  .mrow-chg.up { color: var(--up); background: var(--up-soft); }
+  .mrow-chg.down { color: var(--down); background: var(--down-soft); }
 
   .overview { padding: 20px 2px 18px; max-width: 760px; }
   .overview .date { font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
@@ -231,8 +247,8 @@
 
   .nav-item {
     flex: 0 0 auto; display: flex; align-items: center; gap: 6px;
-    border: 1px solid var(--line); background: var(--surface);
-    border-radius: 12px; padding: 9px 10px 9px 6px; cursor: pointer;
+    border: 1px solid transparent; background: transparent;
+    border-radius: 8px; padding: 8px 8px 8px 4px; cursor: pointer;
     font-family: inherit; color: var(--ink); text-align: left;
   }
   @media (min-width: 900px) { .nav-item { width: 100%; } }
@@ -248,8 +264,8 @@
 
   /* 중앙: 상세 */
   .detail {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
-    box-shadow: var(--shadow); padding: 24px 24px 22px; display: flex; flex-direction: column; gap: 14px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 13px;
   }
   .detail-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .tag { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: var(--gold-soft); color: var(--gold); }
@@ -296,8 +312,8 @@
 
   /* 우측: 관련 뉴스 */
   .related {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
-    box-shadow: var(--shadow); padding: 20px 18px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 16px;
   }
   @media (min-width: 900px) {
     .related { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 96px); overflow-y: auto; }
@@ -419,6 +435,24 @@
     <p id="overviewText">데이터를 불러오는 중입니다…</p>
   </div>
 
+  <section class="movers" id="movers" aria-label="오늘의 종목 요약">
+    <div class="movers-col">
+      <h3>가장 활동적인</h3>
+      <div class="sub">거래량이 평소 대비 많은 순</div>
+      <div id="moversActive"></div>
+    </div>
+    <div class="movers-col">
+      <h3>상승 종목</h3>
+      <div class="sub">오늘 등락률 상위</div>
+      <div id="moversUp"></div>
+    </div>
+    <div class="movers-col">
+      <h3>하락 종목</h3>
+      <div class="sub">오늘 등락률 하위</div>
+      <div id="moversDown"></div>
+    </div>
+  </section>
+
   <div class="layout">
     <nav class="ticker-nav" aria-label="종목 목록">
       <form class="add-ticker" id="addTickerFormDesktop">
@@ -460,7 +494,8 @@
   <section class="quality-view hide" id="askView">
     <div class="quality-note">
       특정 종목의 실제 가격·변동성·거래량·재무지표·최근 뉴스를 찾아서 사실대로만 답합니다.
-      "지금 사도 될까요?"처럼 오를지 내릴지 예측하거나 매수·매도를 추천하는 답은 하지 않습니다.
+      갖고 있는 데이터로 부족하면 AI가 직접 웹 검색도 합니다. "지금 사도 될까요?"처럼
+      오를지 내릴지 예측하거나 매수·매도를 추천하는 답은 하지 않습니다.
     </div>
     <form class="add-ticker" id="askSymbolForm" style="max-width:220px;margin-bottom:14px">
       <input id="askSymbolInput" placeholder="티커 입력 (예: AAPL)" maxlength="8" autocomplete="off">
@@ -702,6 +737,41 @@
     });
   }
 
+  // 구글 파이낸스풍 밀집 리스트 — 같은 data.cards를 정렬만 달리해서 3열로 보여준다
+  function moversRowHtml(c) {
+    const dir = c.day_return >= 0 ? 'up' : 'down';
+    const i = data.cards.indexOf(c);
+    return `
+      <button class="mrow" data-i="${i}">
+        <span style="min-width:0">
+          <span class="mrow-sym">${escapeHtml(c.symbol)}</span>
+          <span class="mrow-name">${escapeHtml(c.name)}</span>
+        </span>
+        <span class="mrow-right">
+          <span class="mrow-px">$${c.price.toFixed(2)}</span>
+          <span class="mrow-chg ${dir}">${pct(c.day_return)}</span>
+        </span>
+      </button>`;
+  }
+
+  function renderMovers() {
+    if (!data) return;
+    const cards = data.cards.filter(c => c.price != null && c.day_return != null);
+    const byVol = [...cards].sort((a, b) => (b.volume_ratio || 0) - (a.volume_ratio || 0)).slice(0, 5);
+    const up = [...cards].sort((a, b) => b.day_return - a.day_return).slice(0, 5);
+    const down = [...cards].sort((a, b) => a.day_return - b.day_return).slice(0, 5);
+    const fill = (id, rows) => {
+      const el = document.getElementById(id);
+      el.innerHTML = rows.map(moversRowHtml).join('');
+      el.querySelectorAll('.mrow').forEach(btn => {
+        btn.addEventListener('click', () => select(Number(btn.dataset.i)));
+      });
+    };
+    fill('moversActive', byVol);
+    fill('moversUp', up);
+    fill('moversDown', down);
+  }
+
   function renderDetail() {
     const c = data.cards[active];
     const dirClass = c.day_return >= 0 ? 'up' : 'down';
@@ -792,6 +862,7 @@
     renderNav();
     renderDetail();
     renderRelated();
+    renderMovers();
   }
 
   document.addEventListener('keydown', (e) => {
@@ -862,7 +933,7 @@
       .then(live => {
         if (live.error) return Promise.reject(new Error(live.error));
         mergeLive(live);
-        renderNav(); renderDetail(); renderRelated(); renderCombo();
+        renderNav(); renderDetail(); renderRelated(); renderCombo(); renderMovers();
         liveStatusEl.textContent = '실시간 · ' + fmtClock(live.fetched_at);
         liveDotEl.classList.add('on');
       })
@@ -913,6 +984,7 @@
   const tabAsk = document.getElementById('tabAsk');
   const overviewEl = document.querySelector('.overview');
   const layoutEl = document.querySelector('.layout');
+  const moversEl = document.getElementById('movers');
   const qualityViewEl = document.getElementById('qualityView');
   const comboViewEl = document.getElementById('comboView');
   const radarViewEl = document.getElementById('radarView');
@@ -927,6 +999,7 @@
     const isAsk = name === 'ask';
     overviewEl.classList.toggle('hide', !isToday);
     layoutEl.classList.toggle('hide', !isToday);
+    moversEl.classList.toggle('hide', !isToday);
     qualityViewEl.classList.toggle('hide', !isQuality);
     comboViewEl.classList.toggle('hide', !isCombo);
     radarViewEl.classList.toggle('hide', !isRadar);
