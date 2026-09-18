@@ -366,6 +366,29 @@
   }
   .range52 .edge { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
 
+  /* 기간별 수익률 + 예상 변동폭 표 */
+  .stat-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .stat-table th {
+    text-align: right; font-weight: 600; color: var(--ink-3); font-size: 11px;
+    padding: 4px 6px; border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  .stat-table th:first-child { text-align: left; }
+  .stat-table td {
+    padding: 6px; text-align: right; font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--line);
+  }
+  .stat-table td:first-child {
+    text-align: left; font-family: 'Archivo', sans-serif; color: var(--ink-2);
+  }
+  .stat-table tr:last-child td { border-bottom: none; }
+  .stat-table .up { color: var(--up); }
+  .stat-table .down { color: var(--down); }
+  .stat-table .band { color: var(--ink-3); }
+  .stat-caption {
+    font-size: 11px; color: var(--ink-3); line-height: 1.55; margin-top: 8px;
+    padding-top: 8px; border-top: 1px dashed var(--line);
+  }
+
   .chart-row { display: flex; align-items: center; gap: 14px; padding: 4px 0 2px; flex-wrap: wrap; }
   .spark-svg { flex: 0 0 auto; display: block; }
   .rel-badge {
@@ -944,6 +967,51 @@
     return `<div class="context-row">${bits.join('')}</div>`;
   }
 
+  // 기간별 수익률 + 변동성에서 나온 예상 변동폭.
+  // 예상 변동폭은 '방향'이 아니라 '폭'이다 — 오를지 내릴지는 말하지 않는다.
+  function statTableHtml(c) {
+    const st = c.stats || {};
+    const p = st.periods;
+    if (!p) return '';
+    const e = st.expected_move || {};
+    const rows = [
+      ['1일', p['1d'], e['1d']],
+      ['5일', p['5d'], e['5d']],
+      ['1개월', p['1m'], e['1m']],
+      ['3개월', p['3m'], null],
+      ['1년', p['1y'], null],
+    ];
+    const body = rows.map(([label, ret, band]) => {
+      const cls = ret == null ? '' : (ret >= 0 ? 'up' : 'down');
+      return `
+        <tr>
+          <td>${label}</td>
+          <td class="${cls}">${ret == null ? '—' : pct(ret)}</td>
+          <td class="band">${band == null ? '—' : '±' + (band * 100).toFixed(1) + '%'}</td>
+        </tr>`;
+    }).join('');
+
+    const up = st.up_day_ratio;
+    const upLine = up == null ? '' :
+      `<div class="stat-caption">지난 ${st.up_day_sample}거래일 중 <b>상승 마감 ${(up * 100).toFixed(0)}%</b>`
+      + ` — 과거에 그랬다는 기록이지 앞으로의 확률이 아닙니다.</div>`;
+
+    return `
+      <div>
+        <table class="stat-table">
+          <thead><tr><th>기간</th><th>실제 등락</th><th>예상 변동폭</th></tr></thead>
+          <tbody>${body}</tbody>
+        </table>
+        <div class="stat-caption">
+          '예상 변동폭'은 이 종목의 과거 변동성으로 계산한 <b>움직임의 크기</b>입니다.
+          해당 기간 등락이 이 범위 안에 들어올 가능성이 대략 3분의 2 정도라는 뜻이고,
+          <b>오를지 내릴지는 말하지 않습니다.</b> 실제로는 이 범위를 벗어나는 날이
+          계산보다 자주 나옵니다(급등락은 정규분포보다 잦습니다).
+        </div>
+        ${upLine}
+      </div>`;
+  }
+
   function range52Html(c) {
     const st = c.stats || {};
     if (st.pct_in_52w_range == null || st.low_52w == null || st.high_52w == null) return '';
@@ -995,6 +1063,7 @@
       <div class="chart-row">${sparklineSvg(c.spark)}${relBadgeHtml(c)}</div>
       ${range52Html(c)}
       ${contextRowHtml(c)}
+      ${statTableHtml(c)}
       ${primerHtml(c.symbol)}
       <div class="hook">${escapeHtml(c.hook)}</div>
       <div class="body-text">${escapeHtml(c.body)}</div>

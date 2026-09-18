@@ -135,7 +135,7 @@ def screen(top_n: int = 10, min_price: float = 5.0) -> pd.DataFrame:
     return table
 
 
-def stock_stats(symbols: list[str], lookback_days: int = 260) -> dict[str, dict]:
+def stock_stats(symbols: list[str], lookback_days: int = 400) -> dict[str, dict]:
     """선정된 종목들의 '자기 과거 대비' 통계를 계산한다.
 
     레이더 포착과 같은 지표지만, 여기서는 이례성 랭킹이 아니라 카드에 붙일 맥락으로 쓴다.
@@ -173,7 +173,42 @@ def stock_stats(symbols: list[str], lookback_days: int = 260) -> dict[str, dict]
         high, low = float(window.max()), float(window.min())
         last = float(close[-1])
 
+        # ---- 기간별 수익률 (1일/5일/1개월/3개월/1년) ----
+        def ret_over(days: int):
+            if len(close) <= days:
+                return None
+            return round(float(close[-1] / close[-1 - days] - 1), 4)
+
+        periods = {
+            "1d": round(today_ret, 4),
+            "5d": ret_over(5),
+            "1m": ret_over(21),
+            "3m": ret_over(63),
+            "1y": ret_over(252),
+        }
+
+        # ---- 변동성 기반 예상 범위 ----
+        # 방향이 아니라 '폭'이다. 일간 변동성 σ를 기간 길이의 제곱근으로 스케일링하면
+        # 그 기간 등락이 ±σ 안에 들어올 확률이 대략 68%, ±2σ면 약 95%다.
+        # (정규분포 가정이라 실제로는 꼬리가 더 두껍다 — 화면에 그 한계를 같이 적는다.)
+        expected = None
+        if ret_std > 0:
+            expected = {
+                "1d": round(ret_std, 4),
+                "5d": round(ret_std * (5 ** 0.5), 4),
+                "1m": round(ret_std * (21 ** 0.5), 4),
+            }
+
+        # ---- 과거 상승일 비율 (예측이 아니라 관측된 빈도) ----
+        recent = rets[-252:] if len(rets) >= 252 else rets
+        up_days = int((recent > 0).sum())
+        up_day_ratio = round(up_days / len(recent), 3) if len(recent) else None
+
         out[sym] = {
+            "periods": periods,
+            "expected_move": expected,
+            "up_day_ratio": up_day_ratio,
+            "up_day_sample": int(len(recent)),
             # 오늘 등락이 평소 하루 변동폭의 몇 배인지 (절대값)
             "move_vs_normal": round(abs(today_ret) / ret_std, 1) if ret_std > 0 else None,
             "return_z": round((today_ret - float(base.mean())) / ret_std, 2) if ret_std > 0 else None,
