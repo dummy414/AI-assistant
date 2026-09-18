@@ -106,6 +106,71 @@ def fetch_news_batch(symbols: list[str], limit_per_symbol: int = 4, lookback_day
     return by_symbol
 
 
+def fetch_finnhub_news(symbols: list[str], lookback_days: int = 5,
+                       limit_per_symbol: int = 8) -> dict:
+    """Finnhub로 종목별 뉴스를 보강한다.
+
+    Alpaca는 벤징가 한 곳만 물어와서 종목에 따라 뉴스가 0건인 날이 있다. Finnhub는
+    Yahoo·SeekingAlpha·ChartMill 등 여러 매체를 모아줘서 그 구멍을 메운다.
+    대신 본문 전문(content_text)은 주지 않으므로, 한국어 상세 요약은 Alpaca 기사로 쓰고
+    Finnhub 기사는 '무슨 일이 있었나'(촉매 판단)와 커버리지 보강에 쓴다.
+    """
+    import urllib.request
+    import urllib.parse
+
+    if not config.FINNHUB_API_KEY:
+        return {s: [] for s in symbols}
+
+    today = datetime.now(timezone.utc).date()
+    frm = (today - timedelta(days=lookback_days)).isoformat()
+    out = {}
+    for sym in symbols:
+        params = {"symbol": sym, "from": frm, "to": today.isoformat(),
+                  "token": config.FINNHUB_API_KEY}
+        url = "https://finnhub.io/api/v1/company-news?" + urllib.parse.urlencode(params)
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                articles = json.loads(r.read())
+        except Exception as e:
+            print(f"   ! Finnhub {sym} 실패: {e}")
+            out[sym] = []
+            continue
+        items = []
+        for a in (articles if isinstance(articles, list) else [])[:limit_per_symbol]:
+            published = datetime.fromtimestamp(a.get("datetime", 0), timezone.utc).isoformat()
+            items.append({
+                "headline": a.get("headline", ""),
+                "summary": a.get("summary", ""),
+                "content_text": "",          # Finnhub는 본문을 주지 않는다
+                "image": a.get("image") or None,
+                "url": a.get("url"),
+                "source": a.get("source"),
+                "published_at": published,
+            })
+        out[sym] = items
+    return out
+
+
+def _norm_headline(h: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", (h or "").lower()).strip()
+
+
+def merge_news(primary: dict, extra: dict, limit_per_symbol: int = 6) -> dict:
+    """Alpaca(본문 있음)를 앞에 두고 Finnhub 기사를 뒤에 붙인다. 제목이 같으면 버린다."""
+    merged = {}
+    for sym in set(primary) | set(extra):
+        items = list(primary.get(sym, []))
+        seen = {_norm_headline(n.get("headline", "")) for n in items}
+        for n in extra.get(sym, []):
+            key = _norm_headline(n.get("headline", ""))
+            if key and key not in seen:
+                seen.add(key)
+                items.append(n)
+        merged[sym] = items[:limit_per_symbol]
+    return merged
+
+
 def compute_spark_and_relative(symbols: list[str], lookback_days: int = 25) -> tuple[dict, float]:
     """종목별 최근 종가(spark)와 SPY 대비 당일 상대강도(rel_strength)를 계산한다."""
     bars = watchlist._fetch_batch_bars(symbols + ["SPY"], lookback_days=lookback_days)
@@ -146,7 +211,17 @@ def main():
     print("2) 뉴스 수집 (Alpaca News API)")
     print("=" * 60)
     shortlist_symbols = shortlist["symbol"].tolist()
-    news_map = fetch_news_batch(shortlist_symbols)
+    alpaca_news = fetch_news_batch(shortlist_symbols)
+    print(f"   Alpaca: {sum(len(v) for v in alpaca_news.values())}건 "
+          f"(뉴스 없는 종목 {sum(1 for v in alpaca_news.values() if not v)}개)")
+
+    finnhub_news = fetch_finnhub_news(shortlist_symbols)
+    print(f"   Finnhub: {sum(len(v) for v in finnhub_news.values())}건 "
+          f"(뉴스 없는 종목 {sum(1 for v in finnhub_news.values() if not v)}개)")
+
+    news_map = merge_news(alpaca_news, finnhub_news)
+    print(f"   병합 후: {sum(len(v) for v in news_map.values())}건 "
+          f"(뉴스 없는 종목 {sum(1 for v in news_map.values() if not v)}개)")
 
     print("\n" + "=" * 60)
     print("3) 촉매 분류 — 무슨 일이 있었는지로 한 번 더 거르기")

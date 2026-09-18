@@ -45,6 +45,9 @@ ALPACA_SECRET_KEY = os.environ.get("ALPACA_SECRET_KEY", "YOUR_ALPACA_PAPER_SECRE
 ALPACA_FEED = os.environ.get("ALPACA_FEED", "iex")
 MASSIVE_API_KEY = os.environ.get("MASSIVE_API_KEY", "YOUR_MASSIVE_KEY")
 FMP_API_KEY = os.environ.get("FMP_API_KEY", "YOUR_FMP_KEY")  # financialmodelingprep.com — 우량주 탭 재무데이터
+# finnhub.io — 뉴스 보강용(무료: 분당 60회, 일일 상한 없음). Alpaca는 벤징가 단일 소스라
+# 커버리지가 얇은 종목이 생기는데, Finnhub가 그 빈자리를 메운다 (대신 본문 전문은 없다).
+FINNHUB_API_KEY = os.environ.get("FINNHUB_API_KEY", "")
 
 # ---- 강화학습 하이퍼파라미터 ----
 RL_EPISODES = 120
