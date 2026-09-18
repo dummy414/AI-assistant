@@ -303,6 +303,39 @@
   .streak-badge .since.down { color: var(--down); }
   .nav-streak { font-size: 10px; color: var(--gold); font-weight: 700; margin-left: 2px; }
 
+  /* 히스토리 탭 */
+  .hist-section-title {
+    font-size: 14px; font-weight: 600; color: var(--ink); margin: 22px 0 10px;
+  }
+  .hist-section-title:first-child { margin-top: 0; }
+  .hist-table { display: flex; flex-direction: column; gap: 2px; }
+  .hist-row {
+    display: grid; grid-template-columns: 72px minmax(0,1fr) auto; gap: 10px; align-items: center;
+    padding: 9px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line);
+  }
+  .hist-row .sym { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 13.5px; }
+  .hist-row .meta { font-size: 11.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; }
+  .hist-row .num {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 600;
+    font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap;
+  }
+  .hist-row .num.up { color: var(--up); }
+  .hist-row .num.down { color: var(--down); }
+  .hist-day { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 14px; }
+  .hist-day-head {
+    font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .hist-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .hist-chip {
+    font-size: 11.5px; padding: 4px 9px; border-radius: 999px;
+    background: var(--surface-2); color: var(--ink-2);
+  }
+  .hist-chip b { font-family: 'IBM Plex Mono', monospace; color: var(--ink); }
+  .hist-chip .c { margin-left: 4px; font-variant-numeric: tabular-nums; }
+  .hist-chip .c.up { color: var(--up); }
+  .hist-chip .c.down { color: var(--down); }
+
   /* 카드 맥락: 자기 과거 대비·52주 위치·다음 실적일 — 전부 관측된 사실만 */
   .context-row { display: flex; flex-wrap: wrap; gap: 8px; }
   .ctx {
@@ -457,6 +490,7 @@
     <button class="tab-btn" id="tabCombo">🐰🐰 두 마리 토끼</button>
     <button class="tab-btn" id="tabRadar">📡 레이더 포착</button>
     <button class="tab-btn" id="tabAsk">🔎 종목 알아보기</button>
+    <button class="tab-btn" id="tabHistory">📅 히스토리</button>
   </div>
 
   <div class="overview">
@@ -537,6 +571,15 @@
       <input id="askInput" placeholder="종목을 먼저 조회하세요" autocomplete="off" disabled>
       <button type="submit" id="askSendBtn" disabled>보내기</button>
     </form>
+  </section>
+
+  <section class="quality-view hide" id="historyView">
+    <div class="quality-note">
+      매일 선정된 종목을 기록해둡니다. 어떤 종목이 반복해서 올라오는지, 처음 등장했을 때와
+      지금 가격이 어떻게 다른지를 사실 그대로 보여줍니다. 최근 30일치만 보관하며,
+      과거에 올랐다고 앞으로도 오른다는 뜻은 아닙니다.
+    </div>
+    <div id="historyBody"></div>
   </section>
 </div>
 
@@ -1075,6 +1118,7 @@
   const tabCombo = document.getElementById('tabCombo');
   const tabRadar = document.getElementById('tabRadar');
   const tabAsk = document.getElementById('tabAsk');
+  const tabHistory = document.getElementById('tabHistory');
   const overviewEl = document.querySelector('.overview');
   const layoutEl = document.querySelector('.layout');
   const moversEl = document.getElementById('movers');
@@ -1082,6 +1126,7 @@
   const comboViewEl = document.getElementById('comboView');
   const radarViewEl = document.getElementById('radarView');
   const askViewEl = document.getElementById('askView');
+  const historyViewEl = document.getElementById('historyView');
   let qualityData = null;
 
   function showTab(name) {
@@ -1090,6 +1135,7 @@
     const isCombo = name === 'combo';
     const isRadar = name === 'radar';
     const isAsk = name === 'ask';
+    const isHistory = name === 'history';
     overviewEl.classList.toggle('hide', !isToday);
     layoutEl.classList.toggle('hide', !isToday);
     moversEl.classList.toggle('hide', !isToday);
@@ -1097,17 +1143,20 @@
     comboViewEl.classList.toggle('hide', !isCombo);
     radarViewEl.classList.toggle('hide', !isRadar);
     askViewEl.classList.toggle('hide', !isAsk);
+    historyViewEl.classList.toggle('hide', !isHistory);
     tabToday.classList.toggle('active', isToday);
     tabQuality.classList.toggle('active', isQuality);
     tabCombo.classList.toggle('active', isCombo);
     tabRadar.classList.toggle('active', isRadar);
     tabAsk.classList.toggle('active', isAsk);
+    tabHistory.classList.toggle('active', isHistory);
   }
   tabToday.addEventListener('click', () => showTab('today'));
   tabQuality.addEventListener('click', () => showTab('quality'));
   tabCombo.addEventListener('click', () => showTab('combo'));
   tabRadar.addEventListener('click', () => showTab('radar'));
   tabAsk.addEventListener('click', () => showTab('ask'));
+  tabHistory.addEventListener('click', () => showTab('history'));
 
   function renderCombo() {
     if (!data || !qualityData) return;
@@ -1174,6 +1223,66 @@
         </div>
       `;
     }).join('');
+  }
+
+  // ---- 히스토리 탭: 반복 등장 종목 + 날짜별 기록 ----
+  let historyData = null;
+
+  function renderHistory() {
+    const el = document.getElementById('historyBody');
+    if (!historyData || !(historyData.days || []).length) {
+      el.innerHTML = '<div class="news-empty">아직 기록이 없습니다. 매일 갱신될 때마다 하루치씩 쌓입니다.</div>';
+      return;
+    }
+    const days = historyData.days;
+    const stats = historyData.stats || {};
+
+    // 이름은 가장 최근 기록에서 가져온다
+    const names = {};
+    days.forEach(d => (d.stocks || []).forEach(s => { names[s.symbol] = s.name || s.symbol; }));
+
+    const repeats = Object.entries(stats)
+      .filter(([, st]) => st.count >= 2)
+      .sort((a, b) => b[1].count - a[1].count || b[1].streak - a[1].streak)
+      .slice(0, 15);
+
+    let html = '';
+    html += '<div class="hist-section-title">반복해서 올라온 종목</div>';
+    if (repeats.length) {
+      html += '<div class="hist-table">' + repeats.map(([sym, st]) => {
+        const chg = st.change_since_first;
+        const cls = chg == null ? '' : (chg >= 0 ? 'up' : 'down');
+        const chgText = chg == null ? '—' : pct(chg);
+        const streakText = st.streak >= 2 ? `${st.streak}일 연속 · ` : '';
+        return `
+          <div class="hist-row">
+            <span class="sym">${escapeHtml(sym)}</span>
+            <span class="meta">${escapeHtml(names[sym] || '')} · ${streakText}${st.count}회 등장 (최근 7일 ${st.count_7d}회)</span>
+            <span class="num ${cls}">${chgText}</span>
+          </div>`;
+      }).join('') + '</div>';
+      html += '<div class="quality-note" style="margin-top:10px">'
+            + '오른쪽 숫자는 <b>처음 등장한 날의 종가 대비 가장 최근 등장일의 종가</b> 변화입니다. '
+            + '실제 매매 결과가 아니고, 등장 사이 기간의 움직임은 반영되지 않습니다.</div>';
+    } else {
+      html += '<div class="news-empty">아직 두 번 이상 등장한 종목이 없습니다 (기록이 쌓이면 나타납니다).</div>';
+    }
+
+    html += '<div class="hist-section-title">날짜별 기록</div>';
+    html += [...days].reverse().map(d => {
+      const chips = (d.stocks || []).map(s => {
+        const cls = s.day_return == null ? '' : (s.day_return >= 0 ? 'up' : 'down');
+        const ret = s.day_return == null ? '' : `<span class="c ${cls}">${pct(s.day_return)}</span>`;
+        return `<span class="hist-chip" title="${escapeHtml(s.tag || '')}"><b>${escapeHtml(s.symbol)}</b>${ret}</span>`;
+      }).join('');
+      return `
+        <div class="hist-day">
+          <div class="hist-day-head">${escapeHtml(d.market_date || d.date || '')} · ${(d.stocks || []).length}종목</div>
+          <div class="hist-chips">${chips}</div>
+        </div>`;
+    }).join('');
+
+    el.innerHTML = html;
   }
 
   function renderRadar(r) {
@@ -1299,8 +1408,13 @@
   // 없거나 실패해도(첫 배포 등) 배지만 생략되고 나머지는 정상 동작한다.
   const historyReady = fetch('history.json')
     .then(r => (r.ok ? r.json() : null))
-    .then(h => { if (h && h.stats) historyStats = h.stats; })
-    .catch(() => {});
+    .then(h => {
+      if (!h) return;
+      historyData = h;
+      if (h.stats) historyStats = h.stats;
+      renderHistory();
+    })
+    .catch(() => { renderHistory(); });
 
   Promise.all([fetch('data.json').then(r => r.json()), historyReady])
     .then(([d]) => {
