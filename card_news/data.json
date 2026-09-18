@@ -1,506 +1,538 @@
 {
-  "generated_at": "2026-09-17T03:27:11+00:00",
-  "market_date": "2026년 9월 16일",
-  "overview": "연준이 2023년 이후 처음으로 기준금리를 0.25%p 인상하면서 뉴욕증시가 전반적으로 하락했습니다 (다우 -1.2%). 금융·에너지·산업재가 특히 부진했고, 이번 스크리닝 10종목 중 상승한 건 허니웰 하나뿐이었습니다.",
+  "generated_at": "2026-09-18T00:31:52.671925+00:00",
+  "market_date": "2026년 9월 17일",
+  "overview": "수요일 연준이 2023년 이후 첫 금리인상을 단행했지만, 목요일 국제유가와 국채금리가 동반 하락하며 뉴욕증시는 큰 폭으로 반등했습니다(S&P500 +1.1%, 나스닥100 +1.8%). 이번 스크리닝에서는 제네락이 아마존과 최대 80억 달러 규모의 데이터센터 백업 발전기 공급계약을 공시하며 18% 넘게 급등했고, 바이코 역시 AI 전력칩 라이선스 계약으로 함께 강세를 보이며 '데이터센터 전력' 테마가 부각됐습니다. 반면 파라마운트 스카이댄스는 워너브러더스디스커버리와의 1100억 달러 합병 우려를 지목한 애널리스트 리포트로, 코어위브는 추가 자금조달 부담이 부각되며 하락했습니다. 본 콘텐츠는 투자 조언이 아닌 정보 제공 목적입니다.",
+  "spy_day_return": 0.011391817518732195,
   "cards": [
     {
-      "symbol": "BA",
-      "name": "Boeing",
-      "sector": "항공/방산",
-      "price": 202.0,
-      "day_return": -0.0363,
-      "return_5d": -0.0217,
-      "volume_ratio": 3.45,
-      "tag": "시장 약세 + 개별 호재",
-      "hook": "금리인상發 시장 전체 하락에 동반했지만, 항공기 수주는 역대급",
-      "body": "연준의 0.25%p 금리인상(2023년 이후 첫 인상) 발표로 시장 전체가 흔들린 날, 보잉도 함께 하락했습니다. 다만 대한항공으로부터 777-9, 787 드림라이너, 737-10을 포함한 103대 규모의 역대급 주문을 따내는 등 회사 자체 소식은 나쁘지 않습니다.",
+      "symbol": "GNRC",
+      "name": "GENERAC HOLDINGS INC",
+      "sector": "전력 설비",
+      "price": 207.36,
+      "day_return": 0.1836292025800561,
+      "return_5d": 0.14056269079508277,
+      "volume_ratio": 5.193569094503649,
+      "tag": "계약 수주",
+      "hook": "아마존과 최대 80억 달러 규모 데이터센터 백업 발전기 공급계약을 체결하며 사상 최대 상승폭 기록",
+      "body": "제네락은 9월 16일 아마존 데이터센터용 산업용 백업 발전기를 공급하는 장기 계약을 공시했습니다. 2027~2028년 초기 납품 규모만 24억 달러이며, 계약 전체 규모는 최대 80억 달러에 이를 수 있습니다. 아마존은 대가로 제네락 주식 최대 169만 주를 주당 200.93달러에 매수할 수 있는 워런트를 받았고, 이 소식에 캐너코드 지뉴이티는 목표주가를 275달러에서 375달러로 상향했습니다.",
       "bullets": [
         {
-          "text": "대한항공, 보잉에 103대 규모 역대급 항공기 주문",
+          "text": "QUICK SPARK: 제네락, 아마존과 80억 달러 데이터센터 계약으로 20% 급등",
           "source": "Benzinga",
-          "date": "9/16",
-          "url": "https://www.benzinga.com/markets/large-cap/26/09/61815440/boeing-lands-record-103-jet-korean-air-order",
-          "korean_summary": "대한항공이 2025년 8월 발주 계획을 확정지으며 보잉 여객기 103대를 정식 계약했습니다. 777-9 20대, 787-10 드림라이너 25대, 737-10 50대, 777-8 화물기 8대로 구성되며, 서울에서 열린 행사에서 조원태 회장과 보잉 상업기 부문 CEO 스테파니 포프가 함께 발표했습니다. 보잉 측은 이번 계약이 한미 산업 협력 강화를 보여주는 사례라고 밝혔습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/Boeing.jpg?width=1024&height=768"
+          "date": "9/17",
+          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61849239/generac-gnrc-stock-amazon-deal",
+          "korean_summary": "제네락 주가가 장 초반 27.8% 급등 후 상승폭을 일부 반납하며 19.1%로 마감했습니다. 아마존 데이터센터용 산업용 백업 발전기 장기 공급계약이 계기로, 2027~2028년 초기 납품분만 24억 달러이며 계약 전체 규모는 최대 80억 달러에 달할 수 있습니다. 아마존 자회사는 제네락 주식 최대 169만 주를 주당 200.93달러에 살 수 있는 워런트를 받았고, 이 중 약 30만8000주는 즉시 행사 가능 상태가 됐습니다. 회사는 종전까지 가정·상업용 백업 발전기 업체로 인식됐으나, 이번 계약으로 AI 데이터센터 전력 공급망의 핵심 업체로 재평가받고 있습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/17/Benzinga-Quick-Spark.jpg?width=1024&height=768"
         },
         {
-          "text": "연준 금리인상 발표 후 반도체·자산운용·소비재 업종 동반 하락",
+          "text": "바이코·암홀딩스·마이크론 등 목요일 급등 종목 목록에 제네락도 포함",
           "source": "Benzinga",
-          "date": "9/16",
-          "url": "https://www.benzinga.com/markets/large-cap/26/09/61829461/10-stocks-falling-most-after-warsh-press-conference-fed-hawkish-dot-plot",
-          "korean_summary": "신임 연준 의장 케빈 워시의 첫 기자회견 후 점도표가 추가 금리인상과 높은 인플레이션 전망을 시사하면서, 반도체·자산운용사·소비재 관련주가 집중적으로 하락했습니다. 보잉은 이 여파로 다우지수 내 낙폭이 큰 종목 중 하나로 꼽혔습니다(-3.70%, $197.66). 이코노미스트들 사이에서는 이번 발표가 예상보다 매파적이라는 평가와, 새 긴축 사이클의 시작은 아니라는 해석이 엇갈리고 있습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/fed-ai6.png?width=1024&height=768"
+          "date": "9/17",
+          "url": "https://www.benzinga.com/news/26/09/61849074/vicor-arm-holdings-micron-technology-and-other-big-stocks-moving-higher-on-thursday",
+          "korean_summary": "목요일 나스닥 종합지수가 약 400포인트 오른 가운데, 제네락은 아마존과의 데이터센터 백업 발전기 장기 공급계약 발표로 19.6% 오른 209.50달러를 기록했습니다. 같은 날 캐너코드 지뉴이티는 제네락 목표주가를 275달러에서 375달러로 상향했습니다. 바이코(+13.5%), 인텔(+9.2%), 슈퍼마이크로컴퓨터(+9.2%) 등 다른 반도체·전력 관련주도 함께 상승했습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/17/Display-Of-Stock-Market-Quotes.jpg?width=1024&height=768"
         },
         {
-          "text": "$205 지지선 부근 기술적 주의 신호",
+          "text": "데이터센터 전력 테마 부각, 블룸에너지도 동반 강세",
           "source": "Benzinga",
-          "date": "9/14",
-          "url": "https://www.benzinga.com/markets/large-cap/26/09/61769329/whats-going-on-with-boeing-stock-monday-6",
-          "korean_summary": "보잉 주가가 월요일 시장 전반의 위험회피 심리 속에 소폭 하락했습니다. S&P500(-0.63%)·나스닥(-1.04%) 대비 낙폭은 적었고, 산업재 섹터 전체가 약 1.9% 하락하는 등 개별 재료보다는 업종 전반 약세로 보입니다. 한편 보잉은 아메리칸항공과 함께 737 MAX 기종 최초의 랜딩기어 교체 프로그램을 완료했다고 발표했는데, 항공사들이 값비싼 예비 부품을 직접 보유하지 않고도 정비받을 수 있게 하는 프로그램입니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/14/Air-Force-One-Is-Modified-Boeing-747.jpg?width=1024&height=768"
+          "date": "9/17",
+          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61854379/bloom-energy-stock-climbs-on-falling-oil-and-bond-yields",
+          "korean_summary": "유가와 국채금리 하락에 힘입어 데이터센터 인프라 관련주가 전반적으로 강세를 보이는 가운데, 제네락의 아마존향 대규모 백업 발전기 계약과 바이코의 AI 칩 전력공급 라이선스 계약이 업종 전체 투자심리를 끌어올렸습니다. 두 계약 모두 블룸에너지와 직접 관련은 없지만, 하이퍼스케일러들의 자체 발전 인프라 수요가 커지고 있다는 신호로 해석되며 관련주 전반의 동반 상승을 이끌었습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/17/Bloom-Energy.jpg?width=1024&height=768"
         }
       ],
       "spark": [
-        207.75,
-        205.57,
-        208.82,
-        210.54,
-        212.2,
-        210.74,
-        206.49,
-        204.95,
-        210.48,
-        210.3,
-        209.62,
-        202.0
+        181.42,
+        180.78,
+        182.98,
+        187.45,
+        190.21,
+        186.55,
+        181.8,
+        186.86,
+        176.83,
+        175.0,
+        175.19,
+        207.36
       ],
-      "rel_strength": -0.0319
+      "rel_strength": 0.1722
     },
     {
-      "symbol": "GS",
-      "name": "Goldman Sachs",
-      "sector": "투자은행",
-      "price": 938.46,
-      "day_return": -0.0383,
-      "return_5d": -0.0882,
-      "volume_ratio": 2.11,
-      "tag": "금융업종 약세",
-      "hook": "BofA의 부진한 실적 전망이 업종 전체를 끌어내렸다",
-      "body": "뱅크오브아메리카 CEO가 3분기 투자은행 수수료·트레이딩 수익 전망을 부진하게 제시하면서 금융주 전반이 흔들렸고, 골드만삭스도 동반 하락했습니다. 다만 신규 사모펀드로 117억 달러를 조달하며 미드마켓 딜 확대에는 계속 나서고 있습니다.",
+      "symbol": "MTZ",
+      "name": "MasTec, Inc.",
+      "sector": "인프라·건설",
+      "price": 207.75,
+      "day_return": -0.08001948454521302,
+      "return_5d": -0.10479596673417502,
+      "volume_ratio": 2.986782434516803,
+      "tag": "특이 뉴스 없음",
+      "hook": "구체적인 자체 발표 없이 8% 급락 — 옵션 시장에서는 베어리시 콜 스윕 포착",
+      "body": "메스텍(MTZ) 주가는 이날 뚜렷한 자체 발표 없이 8.00% 하락했습니다. 옵션 시장에서는 2027년 1월 만기 220달러 행사가 콜옵션에 대한 베어리시 콜 스윕이 포착돼 일부 투자자들이 상단 제한 또는 하락에 베팅한 정황이 있습니다. 같은 인프라·건설 업종에서는 콴타서비시스(PWR), MYR그룹 등 피어사들의 수주잔고 호조 소식이 있었지만, 메스텍 자체를 설명하는 구체적 계약·실적 뉴스는 확인되지 않았습니다.",
       "bullets": [
         {
-          "text": "BofA CEO, 3분기 IB 수수료 10%+ 감소 전망 — 금융주 전반 부담",
-          "source": "Benzinga",
-          "date": "9/14",
-          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61777356/quick-spark-big-bank-stocks-tumble-after-moynihans-grim-outlook",
-          "korean_summary": "뱅크오브아메리카가 3분기 투자은행 수수료가 전년 대비 10% 넘게 줄어들 것이라는 전망을 내놓으면서 주가가 하락했고, 골드만삭스·씨티그룹·웰스파고 등 경쟁사들도 동반 하락했습니다. CEO 브라이언 모이니핸은 트레이딩 수익도 2분기의 급증세(+33%)에 비해 보합권에 그칠 것으로 예상했습니다. 2분기엔 투자은행 수수료 +50%, 트레이딩 수익 +33%로 깜짝 실적을 냈던 만큼, 이번 하향 가이던스가 시장에 더 크게 작용한 것으로 보입니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/14/Benzinga-Quick-Spark.jpg?width=1024&height=768"
-        },
-        {
-          "text": "골드만삭스, 신규 사모펀드로 117억 달러 조달",
+          "text": "옵션 시장, MTZ 콜옵션 베어리시 스윕 포착",
           "source": "Benzinga",
           "date": "9/15",
-          "url": "https://www.benzinga.com/markets/private-markets/26/09/61800661/goldman-sachs-targets-middle-market-deals-after-raising-11-7b",
-          "korean_summary": "골드만삭스가 새로운 사모펀드 세트를 통해 총 117억 달러를 조달했다고 밝혔습니다. 가장 큰 몫은 96억 달러를 모은 'West Street Capital Partners IX'이며, 아시아 주식 펀드가 16억 달러를 추가로 모았습니다. 얼터너티브 부문 공동대표는 기업가치 5억~30억 달러 규모의 중견기업(미드마켓)에 집중해 4~5년간 보유하는 전략이라고 설명했습니다. 이 부문 운용자산은 4590억 달러로, 2030년까지 7500억 달러 달성을 목표로 하고 있습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/15/Goldman-Sachs-Sees-Early-Warning-Signs.jpg?width=1024&height=768"
+          "url": "https://www.benzinga.com/markets/options/26/09/61799540/8-industrials-stocks-whale-alerts-today-s-session",
+          "korean_summary": "벤징가 옵션 스캐너에 따르면 메스텍(MTZ)에서 2027년 1월 15일 만기, 행사가 220달러 콜옵션에 대한 베어리시 스윕이 포착됐습니다. 12건의 계약이 8개 거래로 나뉘어 체결됐으며 총 거래대금은 3만9400달러였습니다. 이는 대형 투자자가 주가 상단이 제한적이거나 하락할 것으로 베팅했음을 시사하는 신호로 해석됩니다. 같은 날 벌컨스, GE버노바, 캐터필러 등 다른 산업재 종목에서도 다양한 옵션 활동이 포착됐습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2025/11/06/aggregated_options_3.jpg?width=1024&height=768"
         },
         {
-          "text": "옵션시장에서 대규모 매매('고래 알림') 포착",
-          "source": "Benzinga",
-          "date": "9/16",
-          "url": "https://www.benzinga.com/markets/options/26/09/61823879/10-financials-stocks-whale-alerts-today-s-session",
-          "korean_summary": "벤징가의 옵션 활동 스캐너가 포착한 대형 자금('고래') 매매 상위 10건 중 하나로 이 종목이 포함됐습니다. 대형 옵션 거래는 종종 기관 투자자의 방향성 베팅을 시사하지만, 이 자체만으로 향후 주가를 예단하기는 어렵습니다. 특정 종목에 대한 심층 분석이라기보다 당일 옵션시장 동향을 자동으로 정리한 리포트에 가깝습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2025/11/06/aggregated_options_2.jpg?width=1024&height=768"
-        }
-      ],
-      "spark": [
-        1026.14,
-        1001.76,
-        1004.59,
-        1037.36,
-        1037.91,
-        1036.5,
-        1029.18,
-        1019.68,
-        1028.89,
-        988.3,
-        975.8,
-        938.46
-      ],
-      "rel_strength": -0.0338
-    },
-    {
-      "symbol": "IBM",
-      "name": "IBM",
-      "sector": "IT서비스",
-      "price": 237.62,
-      "day_return": -0.0434,
-      "return_5d": -0.0098,
-      "volume_ratio": 1.4,
-      "tag": "차익실현",
-      "hook": "빅테크 랠리 속 유일한 하락 — 급등 후 되돌림 성격",
-      "body": "기술주 전반이 오른 날 IBM만 하락했는데, 최근 며칠간 $239 저항선 돌파를 시도하며 급등했던 데 따른 차익실현으로 보입니다. 10억 달러 규모 CHIPS Act 반도체 지원금 확보 소식도 있었습니다.",
-      "bullets": [
-        {
-          "text": "며칠 전 상승삼각형 패턴으로 $239 돌파 시도 후 되돌림",
-          "source": "Benzinga",
+          "text": "[업종 참고] MYR그룹, 2분기 수주잔고 31.6억 달러로 사상 최고",
+          "source": "Yahoo",
           "date": "9/15",
-          "url": "https://www.benzinga.com/trading-ideas/technicals/26/09/61789316/stock-of-the-day-did-ibm-just-break-out",
-          "korean_summary": "IBM 주가가 화요일 프리마켓에서 하락했지만, 차트상으로는 오히려 '돌파(breakout)' 신호로 해석될 수 있다는 분석입니다. $239 부근 저항선을 여러 차례 시험한 끝에 상승삼각형(ascending triangle) 패턴을 완성하며 매수세가 매도세를 압도하는 조짐을 보이고 있다는 설명입니다. 이런 패턴은 통상 새로운 상승추세로 이어질 가능성이 있다고 분석가는 평가했습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/15/London---May-21-Ibm-Logo-On-The-Ibm-Clie.jpg?width=1024&height=768"
+          "url": "https://finnhub.io/api/news?id=bcb47c19e906eabf21e64aac7c5eebcd14534e448c497f5e228a4848d4876b5d",
+          "korean_summary": "메스텍과 같은 전력·통신 인프라 건설 업종의 MYR그룹이 2분기 수주잔고를 31.6억 달러로 사상 최고치를 기록했다는 소식입니다. 인수합병을 통해 상업·산업용(C&I) 부문 역량과 지역 커버리지를 넓히고 있다는 내용으로, 업종 전반의 수주 호조를 보여주는 참고 자료입니다. 다만 이는 메스텍이 아닌 동종업계 경쟁사에 대한 기사입니다.",
+          "image": "https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png"
         },
         {
-          "text": "10억 달러 규모 CHIPS Act 지원금 확보",
+          "text": "나스닥100, 유가·금리 하락에 반등",
           "source": "Benzinga",
-          "date": "9/16",
-          "url": "https://www.benzinga.com/markets/large-cap/26/09/61824915/why-is-ibm-stock-falling-wednesday",
-          "korean_summary": "기술주 전반이 상승한 날(나스닥 +0.67%) IBM만 3% 넘게 하락했는데, 7월 말 이후 약 40% 급등한 데 따른 차익실현 성격이 커 보입니다. 같은 날 IBM은 자회사 Anderon을 통해 뉴욕주 올버니의 300mm 양자 웨이퍼 파운드리에 10억 달러 규모의 CHIPS Act 지원금을 확정했다고 발표했고, IBM도 별도로 10억 달러를 추가 투자한다고 밝혔습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/London---May-21-Ibm-Logo-On-The-Ibm-Clie.jpg?width=1024&height=768"
-        },
-        {
-          "text": "이번주 FOMC 결정, AI 변동성이 다우지수 핵심 변수로 지목",
-          "source": "Benzinga",
-          "date": "9/13",
-          "url": "https://www.benzinga.com/markets/equities/26/09/61755472/dow-jones-index-outlook-top-3-stock-market-news-this-week",
-          "korean_summary": "이번 주 다우지수 최대 변수로 연준의 금리 결정(0.25%p 인상 유력, 확률 87.3%)과 중동 정세(호르무즈 해협을 둘러싼 미-이란 긴장 고조)가 꼽혔습니다. 유가 상승은 셰브런 등 에너지주엔 호재지만 다른 업종엔 부담으로 작용할 수 있습니다. 앤트로픽 CEO 다리오 아모데이가 AI 개발 속도 조절을 촉구하는 등, 마이크로소프트·엔비디아·IBM 등 다우 내 기술주들의 변동성도 이어질 것으로 전망됐습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/13/Wall-Street-Sign-With-American-Flag-On-T.jpg?width=1024&height=768"
+          "date": "9/17",
+          "url": "https://www.benzinga.com/news/26/09/61851798/nasdaq-100-rallies-as-oil-slides-yields-retreat-stock-market-today",
+          "korean_summary": "목요일 국제유가와 미 국채금리가 동반 하락하며 뉴욕증시가 이틀간의 하락세를 딛고 반등했습니다. S&P500은 1.1%, 나스닥100은 1.8% 올랐습니다. 전날 연준이 2023년 이후 첫 금리인상을 단행했음에도 유가 하락이 인플레이션 우려를 낮추며 위험자산 선호 심리를 되살렸습니다. 이 기사는 메스텍을 직접 언급하지는 않으며 시장 전반의 배경으로 참고됩니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/17/3d-Render-Closeup-Of-Computer-Keyboard-W.jpg?width=1024&height=768"
         }
       ],
       "spark": [
-        233.77,
-        231.35,
-        231.57,
-        234.56,
-        234.8,
-        232.09,
-        239.96,
-        234.02,
-        243.36,
-        249.03,
-        248.4,
-        237.62
+        237.74,
+        235.3,
+        232.32,
+        237.08,
+        246.1,
+        240.68,
+        232.07,
+        240.46,
+        227.73,
+        222.66,
+        225.82,
+        207.75
       ],
-      "rel_strength": -0.0389
+      "rel_strength": -0.0914
     },
     {
-      "symbol": "AXP",
-      "name": "American Express",
-      "sector": "카드/결제",
-      "price": 312.66,
-      "day_return": -0.0358,
-      "return_5d": -0.0286,
-      "volume_ratio": 1.68,
-      "tag": "금융업종 동반 하락",
-      "hook": "개별 재료보다는 업종 전반 약세에 연동",
-      "body": "이번 스크리닝 기간 중 AXP 관련 뉴스는 많지 않았습니다. 금융주 전반의 약세 흐름에 동반 하락한 것으로 보이며, 최근에는 워런 버핏과 트럼프 대통령의 포트폴리오에 공통으로 담긴 17개 종목 중 하나로 소개되기도 했습니다.",
+      "symbol": "TSEM",
+      "name": "Tower Semiconductor Ltd. Ordinary Shares",
+      "sector": "반도체",
+      "price": 219.24,
+      "day_return": 0.0848921219319081,
+      "return_5d": 0.05436925888520183,
+      "volume_ratio": 2.5489085388925927,
+      "tag": "AI 칩 공급 개시",
+      "hook": "AI 데이터센터용 800G~1.6T 광통신 칩 대량 양산 출하 개시, NewPhotonics와 공동 발표",
+      "body": "타워세미컨덕터(TSEM)는 9월 17일 NewPhotonics와 함께 레이저 통합형 광집적회로(PIC) 대량 양산 출하를 시작했다고 밝혔습니다. 현재 800G~1.6T 데이터 전송 속도를 지원하며, 향후 6.4T 솔루션까지 양산할 계획이라고 설명했습니다. 이 소식에 주가는 전일 대비 8.49% 오른 219.24달러를 기록했습니다.",
       "bullets": [
         {
-          "text": "버핏(버크셔)·트럼프 포트폴리오 공통 보유 종목 17개 중 하나로 소개",
+          "text": "타워세미컨덕터, AI 광통신 칩 양산 출하 소식에 8% 급등",
           "source": "Benzinga",
-          "date": "9/16",
-          "url": "https://www.benzinga.com/news/politics/26/09/61821505/warren-buffett-donald-trump-bet-on-same-17-stocks-some-might-surprise-you",
-          "korean_summary": "트럼프 대통령이 지난 1년간 공개한 2만 건 이상의 주식 거래 중, 워런 버핏이 이끌던(현재는 그렉 아벨 체제) 버크셔 해서웨이의 포트폴리오와 겹치는 종목이 17개로 나타났습니다. 아멕스는 버크셔의 2번째로 큰 비중(자산의 약 17%, 513억 달러) 종목이며, 트럼프도 2026년 중 8차례(매수 5회·매도 3회) 거래한 것으로 공개됐습니다. 가장 최근 거래는 5월의 1.5만~5만 달러 규모 매수였습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/Buffett-Trump-Shutterstock.jpg?width=1024&height=768"
+          "date": "9/17",
+          "url": "https://www.benzinga.com/markets/tech/26/09/61844510/why-is-tower-semiconductor-stock-soaring-thursday",
+          "korean_summary": "타워세미컨덕터는 NewPhotonics와 함께 AI 인프라용 레이저 통합형 광집적회로(PIC)의 대량 양산 출하를 시작했다고 밝히며 주가가 8% 넘게 뛰었습니다. 현재 800G~1.6T 데이터 전송 속도를 지원하며, NewPhotonics의 NPC505 칩셋 출하는 2027년 상반기 시작될 예정입니다. 이 제품들은 타워의 PH18DA 실리콘 포토닉스 플랫폼을 기반으로 레이저·광증폭기·변조기·광검출기를 하나의 칩에 통합한 것이 특징입니다. 애널리스트들은 대체로 매수 의견을 유지하고 있으며 평균 목표주가는 320달러 수준입니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/17/Tower-Semiconductor.jpg?width=1024&height=768"
         },
         {
-          "text": "개별 이슈보다 금융업종 전반 약세에 연동된 하락으로 추정",
-          "source": null,
-          "date": null,
-          "url": null
+          "text": "타워세미컨덕터·NewPhotonics, 800G~1.6T PIC 양산 개시 공동 발표",
+          "source": "Yahoo",
+          "date": "9/17",
+          "url": "https://finnhub.io/api/news?id=ce31b342511e9c4164fc03309c024e33ae827d891621a226416a8bfacf606891",
+          "korean_summary": "타워세미컨덕터와 NewPhotonics가 스케일아웃·스케일업 AI 인터커넥트용 레이저 통합형 광집적회로(PIC)의 대량 생산 체제를 상용화했다고 공동 발표했습니다. 외장 플러거블 및 CPX MSA 규격을 준수하는 NPO 소켓 플러거블 솔루션 형태로, PH18DA 플랫폼 기반 고밀도 모놀리식 레이저 집적 기술을 활용합니다.",
+          "image": "https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png"
+        },
+        {
+          "text": "타워세미컨덕터, ECOC 2026서 실리콘 포토닉스·SiGe 솔루션 공개 예정",
+          "source": "Yahoo",
+          "date": "9/15",
+          "url": "https://finnhub.io/api/news?id=f05e39f875154e86ca11d8e54313ead1c62dbb47522835cf7551300bf649e71e",
+          "korean_summary": "타워세미컨덕터는 9월 21~23일 스페인 말라가에서 열리는 ECOC 2026에 참가해 AI 인프라·통신용 고성능 실리콘 포토닉스 및 SiGe 솔루션을 소개할 예정이라고 밝혔습니다. 현장에서는 실리콘 포토닉스 로드맵을 논의할 미팅도 진행됩니다.",
+          "image": "https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png"
         }
       ],
       "spark": [
-        330.29,
-        324.19,
-        330.0,
-        329.77,
-        326.15,
-        326.05,
-        321.86,
-        320.73,
-        324.78,
-        327.77,
-        324.27,
-        312.66
+        199.12,
+        206.75,
+        206.22,
+        222.3,
+        219.75,
+        216.56,
+        207.93,
+        211.25,
+        191.12,
+        195.0,
+        202.08,
+        219.24
       ],
-      "rel_strength": -0.0314
+      "rel_strength": 0.0735
     },
     {
-      "symbol": "COP",
-      "name": "ConocoPhillips",
-      "sector": "에너지",
-      "price": 132.56,
-      "day_return": -0.0614,
-      "return_5d": -0.0296,
-      "volume_ratio": 1.32,
-      "tag": "유가 되돌림 · 오늘의 최대 낙폭",
-      "hook": "중동發 유가 급등이 하루 만에 되돌림",
-      "body": "걸프 지역 공급 차질 우려로 브렌트유가 배럴당 107달러를 넘어섰다가, 사우디 파이프라인 재가동과 예상보다 적은 미국 원유 재고 감소로 다시 밀리면서 에너지주 중 가장 크게 하락했습니다.",
+      "symbol": "PSKY",
+      "name": "Paramount Skydance Corporation Class B Common Stock",
+      "sector": "미디어",
+      "price": 10.61,
+      "day_return": -0.04672057502246196,
+      "return_5d": 0.02215799614643532,
+      "volume_ratio": 3.0214475568727357,
+      "tag": "인수·합병",
+      "hook": "바클레이즈, 파라마운트-워너브러더스디스커버리 1100억 달러 합병에 경고하며 목표주가 8달러 제시",
+      "body": "바클레이즈 애널리스트 카난 벤카테시와르는 목요일 보고서에서 파라마운트 스카이댄스에 대해 커버리지를 재개하며 비중축소(Underweight) 의견과 목표주가 8달러를 제시했습니다. 그는 1100억 달러 규모로 거론되는 워너브러더스디스커버리와의 합병이 성장 잠재력을 키울 수는 있지만 막대한 재무적·운영적 리스크를 수반해 밸류에이션을 가늠하기 어려운 '움직이는 목표물'이 될 수 있다고 경고했습니다. 같은 날 워너브러더스디스커버리는 비중유지(Equal Weight), 목표주가 28달러를 받았습니다.",
       "bullets": [
         {
-          "text": "브렌트유 $107 돌파 후 사우디 파이프라인 재가동에 되돌림",
+          "text": "바클레이즈 \"1100억 달러 메가 합병, 밸류에이션 가늠 어려운 움직이는 목표물\"",
+          "source": "Yahoo",
+          "date": "9/17",
+          "url": "https://finnhub.io/api/news?id=17e40af79e0bf425478b864dc4fe032714dcd8b6c2fe3d175fbf07010b096274",
+          "korean_summary": "바클레이즈의 카난 벤카테시와르 애널리스트가 파라마운트 스카이댄스와 워너브러더스디스커버리 양사에 대한 커버리지를 재개했습니다. 워너브러더스디스커버리는 비중유지(Equal Weight)와 목표주가 28달러를, 파라마운트는 비중축소(Underweight)와 목표주가 8달러를 받았습니다. 그는 거론되는 1100억 달러 규모 합병이 두 스튜디오의 성장 잠재력을 키울 수 있지만 막대한 재무적·운영적 리스크를 동반해 밸류에이션을 가늠하기 힘든 '움직이는 목표물'이 될 수 있다고 경고했습니다. 이 소식에 파라마운트는 이날 S&P500 내 낙폭 상위 종목 중 하나가 됐습니다.",
+          "image": "https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png"
+        },
+        {
+          "text": "바클레이즈 커버리지 재개, 비중축소·목표가 8달러에 주가 3.2% 하락",
+          "source": "Yahoo",
+          "date": "9/17",
+          "url": "https://finnhub.io/api/news?id=33645bb361dd5f99e5074688cbf501a33d021430fb21b698fe39a2542f4256af",
+          "korean_summary": "바클레이즈가 파라마운트에 대해 비중축소 의견과 목표주가 8달러로 커버리지를 재개하면서 주가가 오후 한때 3.2% 하락했습니다. 바클레이즈는 계획된 합병이 예상만큼의 비용 절감이나 신속한 부채 감축을 이루지 못할 수 있다고 경고했습니다. 추가 자산 매각 가능성과 캘리포니아 사업에서의 철수 가능성도 리스크로 지목됐습니다.",
+          "image": "https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png"
+        },
+        {
+          "text": "파라마운트, 중간선거 앞두고 민주당 출신 인사 영입 행보",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/news/politics/26/09/61812082/americas-richest-donors-are-tilting-republican-16-of-the-top-20-billionaires-back-gop-as-crypto-ai-and-deregulation-shape-donations-report",
+          "korean_summary": "이 기사는 2026년 중간선거를 앞두고 미국 최상위 억만장자 기부자 20명 중 16명이 공화당을 지지하고 있다는 파이낸셜타임스 분석을 다룹니다. 그 안에서 파라마운트 스카이댄스와 칼시가 정부 관계 업무를 위해 전직 민주당 보좌진을 영입하고 있다는 내용이 짧게 언급되는데, 이는 트럼프 시기 연루 이력에 대비해 향후 의회 조사나 청문회 가능성에 대비하려는 행보로 해석됩니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/United-States-Midterm-Election-2026.jpg?width=1024&height=768"
+        }
+      ],
+      "spark": [
+        10.56,
+        10.96,
+        11.05,
+        10.87,
+        10.8,
+        10.2,
+        10.38,
+        10.61,
+        10.86,
+        11.01,
+        11.13,
+        10.61
+      ],
+      "rel_strength": -0.0581
+    },
+    {
+      "symbol": "CRWV",
+      "name": "CoreWeave, Inc. Class A Common Stock",
+      "sector": "AI 클라우드",
+      "price": 79.85,
+      "day_return": -0.04199160167966409,
+      "return_5d": -0.10446924241574618,
+      "volume_ratio": 3.734883544569544,
+      "tag": "계약 수주",
+      "hook": "3분기 신규 컴퓨팅 계약 단가 메가와트당 4000만 달러로 상승, 신규 고객 약정 250억 달러 이상 추가",
+      "body": "코어위브(CRWV)는 9월 17일 최대 3500만 주 규모의 시장가 발행(ATM) 프로그램을 개설했다고 밝혔습니다. 회사에 따르면 6월 30일 이후 체결한 3분기 신규 컴퓨팅 계약 단가는 연환산 기준 메가와트당 약 4000만 달러로 올랐고, 3분기 초 신규 고객 약정만 250억 달러 이상 추가돼 총 계약 전력 규모는 8월 11일 기준 4.2기가와트로 늘었습니다. 다만 추가 자금조달 필요성이 부각되며 주가는 4.20% 하락했습니다.",
+      "bullets": [
+        {
+          "text": "AI 컴퓨팅 단가 급등, 코어위브 35M주 ATM 발행 프로그램 개설",
+          "source": "Benzinga",
+          "date": "9/17",
+          "url": "https://www.benzinga.com/markets/tech/26/09/61841973/ai-compute-crunch-pays-off-for-coreweave-as-capacity-fetches-higher-prices",
+          "korean_summary": "코어위브는 최대 3500만 주의 클래스A 주식을 매도할 수 있는 시장가 발행(ATM) 프로그램을 개설했다고 발표했습니다. 회사는 이 프로그램이 자금조달 유연성을 높이고 신용등급을 투자적격 수준으로 끌어올리는 데 도움이 될 것이라고 설명했습니다. 동시에 6월 30일 이후 체결한 3분기 신규 컴퓨팅 계약 단가가 연환산 메가와트당 약 4000만 달러로 상승했다고 밝혔으며, 3분기 초에만 250억 달러 이상의 신규 고객 약정이 추가됐다고 전했습니다. 총 계약 전력은 8월 11일 기준 4.2기가와트로 6월 말 3.7기가와트에서 늘었습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/17/In-This-Photo-Illustration--The-Coreweav.jpg?width=1024&height=768"
+        },
+        {
+          "text": "코어위브, 엔비디아 베라 루빈 NVL72 클러스터 가동 시작",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/markets/large-cap/26/09/61824415/whats-going-on-with-coreweave-stock-wednesday",
+          "korean_summary": "코어위브는 수요일 자사 클라우드에 다중 랙 규모의 엔비디아 베라 루빈 NVL72 클러스터를 가동했다고 밝혔습니다. 각 랙은 루빈 GPU 72개와 베라 CPU 36개로 구성되며, 엔비디아 스펙트럼-X 이더넷 네트워킹으로 여러 랙을 연결해 대규모 AI 모델과 강화학습 워크로드를 지원합니다. 코어위브는 베라 루빈 NVL72를 가장 먼저 검증하고 가동한 AI 클라우드 업체라고 자평했습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/In-This-Photo-Illustration--The-Coreweav.jpg?width=1024&height=768"
+        },
+        {
+          "text": "코어위브·네비우스 등 AI 컴퓨팅 단가 상승세, 밸류에이션 뒷받침",
+          "source": "Benzinga",
+          "date": "9/17",
+          "url": "https://www.benzinga.com/Opinion/26/09/61851724/triple-witching-falling-oil-and-fed-hopium-drive-up-stocks-but-downside-risks-remain",
+          "korean_summary": "이 시황 분석 기사는 코어위브와 네비우스 그룹의 컴퓨팅 가격이 계속 오르고 있다는 최근 데이터를 언급하며, 이러한 가격 상승이 두 회사의 현재 밸류에이션을 뒷받침할 수 있다고 분석합니다. 트리플위칭, 유가 하락, 연준 정책 기대감 등 여러 요인이 겹치며 이날 AI 관련주 전반에 강한 매수세가 유입됐다는 점도 함께 다뤘습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/17/Donald-Trump.jpg?width=1024&height=768"
+        }
+      ],
+      "spark": [
+        81.76,
+        80.92,
+        84.58,
+        89.34,
+        99.81,
+        94.98,
+        89.16,
+        88.96,
+        82.97,
+        80.96,
+        83.35,
+        79.85
+      ],
+      "rel_strength": -0.0534
+    },
+    {
+      "symbol": "VICR",
+      "name": "Vicor Corporation Common Stock",
+      "sector": "전력반도체",
+      "price": 216.43,
+      "day_return": 0.17663368489724918,
+      "return_5d": 0.21596718916793067,
+      "volume_ratio": 3.192384223294355,
+      "tag": "AI 전력칩 라이선스",
+      "hook": "AI·네트워킹 칩 전력공급 기술 '수직전력전달(VPD)'을 미공개 OEM에 비독점 라이선스, 로열티 금액은 비공개",
+      "body": "바이코(VICR)는 9월 17일 자사의 수직전력전달(Vertical Power Delivery) 기술에 대해 이름을 밝히지 않은 AI·네트워킹 반도체 OEM과 비독점 라이선스 계약을 체결했다고 발표했습니다. 이 라이선스로 해당 업체는 바이코 특허가 걸린 VPD 모듈을 비허가 공급업체로부터도 구매할 수 있게 됐으며, 구체적인 로열티 금액은 공개되지 않았습니다. 이날 주가는 17.66% 급등했고, 최근 1년간 300% 넘게 올랐습니다.",
+      "bullets": [
+        {
+          "text": "바이코, AI 전력공급 기술 라이선스 계약 발표에 15% 급등",
+          "source": "Benzinga",
+          "date": "9/17",
+          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61845797/why-is-vicor-stock-surging-thursday",
+          "korean_summary": "바이코는 자사 특허 기술인 수직전력전달(VPD)에 대해 이름을 밝히지 않은 신규 OEM에 비독점 라이선스를 부여했다고 발표하며 주가가 15% 급등했습니다. VPD는 고성능 AI·네트워킹 프로세서에 고밀도 전력을 효율적으로 전달하는 '라스트 인치' 문제를 해결하는 기술입니다. 회사는 이번 라이선스 모델이 OEM과 하이퍼스케일러에 공급망 다변화와 확장성을 제공한다고 설명했으며, 조기 도입 업체에는 로열티 할인 혜택도 줄 수 있다고 밝혔습니다. 바이코 주가는 최근 12개월간 300% 넘게 올랐습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/17/Stock-Graph-With-Green-Candle-Spike.jpg?width=1024&height=768"
+        },
+        {
+          "text": "바이코·암홀딩스·마이크론 등 목요일 급등, 바이코 13.5% 상승",
+          "source": "Benzinga",
+          "date": "9/17",
+          "url": "https://www.benzinga.com/news/26/09/61849074/vicor-arm-holdings-micron-technology-and-other-big-stocks-moving-higher-on-thursday",
+          "korean_summary": "목요일 나스닥 종합지수가 약 400포인트 상승한 가운데, 바이코는 새로운 OEM 라이선시에게 VPD 모듈에 대한 비독점 라이선스를 부여했다는 소식에 13.5% 오른 208.73달러를 기록했습니다. 같은 날 제네락은 아마존과의 데이터센터 발전기 계약으로 19.6%, 인텔은 9.2%, 슈퍼마이크로컴퓨터는 9.2% 상승하는 등 전력·반도체 관련주가 동반 강세를 보였습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/17/Display-Of-Stock-Market-Quotes.jpg?width=1024&height=768"
+        },
+        {
+          "text": "바이코 주가 11% 상승, AI 전력공급 기술 라이선스 계약 체결",
+          "source": "Yahoo",
+          "date": "9/17",
+          "url": "https://finnhub.io/api/news?id=ebee028660ce605b9ca6595f03f173ac6bcdca47d8a56a06173a381f92ee697e",
+          "korean_summary": "바이코가 목요일 오전 자사의 수직전력전달(VPD) 기술에 대해 대형 AI OEM 업체와 비독점 라이선스 계약을 발표하며 주가가 11% 상승했습니다. 이 계약으로 해당 업체는 자체 라이선스가 없는 공급업체로부터도 바이코 특허가 걸린 VPD 모듈을 구매할 수 있게 됐습니다.",
+          "image": "https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png"
+        }
+      ],
+      "spark": [
+        176.04,
+        181.73,
+        178.77,
+        188.6,
+        192.68,
+        183.82,
+        177.99,
+        197.98,
+        184.73,
+        183.94,
+        183.94,
+        216.43
+      ],
+      "rel_strength": 0.1652
+    },
+    {
+      "symbol": "FPS",
+      "name": "Forgent Power Solutions, Inc.",
+      "sector": "전력 인프라",
+      "price": 38.07,
+      "day_return": 0.09270952927669329,
+      "return_5d": 0.30421377183967113,
+      "volume_ratio": 4.092254356149089,
+      "tag": "실적 발표",
+      "hook": "4분기 매출 94% 급증한 4억6200만 달러, 수주잔고 30억 달러로 3년치 매출 확보",
+      "body": "포전트 파워 솔루션즈(FPS)는 4분기 매출이 전년 대비 94% 증가한 4억6167만 달러, 조정 EPS는 시장 예상치를 웃도는 25센트를 기록했다고 발표했습니다. 신규 수주는 전년 대비 375% 늘어난 15억 달러로 분기 매출 규모를 넘어섰고, 수주잔고는 30억 달러(전년비 +256%)까지 쌓였습니다. TD코웬은 이 실적을 근거로 목표주가를 73달러에서 76달러로 상향했고, 회사는 티후아나 공장에 3500만 달러를 투자해 생산능력을 연 58억 달러 규모로 늘리겠다고 밝혔습니다.",
+      "bullets": [
+        {
+          "text": "포전트 파워, 사상 최대 4분기 실적에 목표주가 상향",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61817502/forgent-power-solutions-stock-rises-on-record-q4-fresh-analyst-target-hike",
+          "korean_summary": "포전트 파워 솔루션즈는 4분기 조정 EPS 25센트(예상 24센트), 매출 4억6167만 달러(예상 4억2994만 달러)로 시장 예상치를 웃도는 실적을 발표했습니다. 매출은 전년 대비 94% 늘었고, 신규 수주는 375% 급증한 15억 달러(북투빌 3.3배)를 기록했습니다. 수주잔고는 전년비 256% 늘어난 30억 달러에 달합니다. 회사는 티후아나 공장에 3500만 달러를 투자해 생산능력을 연 58억 달러 규모로 확대한다고 밝혔고, TD코웬은 목표주가를 73달러에서 76달러로 올렸습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/Stock-chartbenzingaai2023-stock-market-c.png?width=1024&height=768"
+        },
+        {
+          "text": "실적 발표 후 이틀 연속 급등, 대형주 상승률 1위",
           "source": "Benzinga",
           "date": "9/16",
           "url": "https://www.benzinga.com/markets/market-summary/26/09/61822672/oil-sinks-below-103-optics-stocks-rip-fed-first-hike-since-2023-markets-wednesday",
-          "korean_summary": "사우디아라비아가 손상된 동서 파이프라인 대신 오만을 통해 우회 공급에 나서면서 유가가 급반락(WTI -3.6%)했고, 그 덕에 증시는 연준의 금리인상(2023년 이후 첫 인상, 확률 93%)을 앞두고도 6주 최저치에서 반등했습니다. S&P500 +0.4%, 나스닥100 +0.9%. 다만 8월 소매판매(+1.2%)와 수입물가(+0.7%) 모두 예상을 웃돌아 금리인상 자체는 기정사실로 받아들여졌습니다.",
+          "korean_summary": "이 시황 기사는 포전트 파워 솔루션즈가 4분기 매출 94% 증가(4억6200만 달러), 조정 EBITDA 163% 증가(1억1300만 달러)를 기록하며 이날 대형주 중 최고 상승률(11.6%)을 보였다고 전합니다. 사상 최대 분기 수주 15억 달러 덕분에 회사는 2027 회계연도 매출 가이던스(24억~26억 달러)의 90% 이상을 이미 확보한 30억 달러 규모 수주잔고를 갖추게 됐습니다.",
           "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/fed-ai3.png?width=1024&height=768"
         },
         {
-          "text": "미국 원유 재고 감소폭 예상보다 작아 유가 상승 동력 약화",
-          "source": "Benzinga",
+          "text": "흑자전환 발표에 이틀째 11% 추가 상승",
+          "source": "Yahoo",
           "date": "9/16",
-          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61823140/conocophillips-stock-falls-as-oil-prices-retreat",
-          "korean_summary": "브렌트유가 전날 급등분을 일부 반납하며 3.3% 하락한 배럴당 105.12달러, WTI는 3.9% 하락한 101.72달러를 기록하면서 코노코필립스를 비롯한 석유 탐사·생산 기업 주가가 동반 하락했습니다. 사우디아라비아가 오만 소하르 항 인근 선박 간 환적으로 아시아에 원유를 우회 공급하며 공급 차질 우려가 완화됐고, 미 원유 재고 감소폭(약 64만 배럴)도 시장 예상치(162만 배럴)를 크게 밑돈 게 하락 요인이었습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/Kiev--Ukraine---February-18--2021-In-Thi.jpg?width=1024&height=768"
-        },
-        {
-          "text": "최근 5년간 연평균 17.4% 수익률로 시장 평균 상회했다는 분석도 소개",
-          "source": "Benzinga",
-          "date": "9/16",
-          "url": "https://www.benzinga.com/news/26/09/61829337/here-s-how-much-you-would-have-made-owning-conocophillips-stock-last-5-years",
-          "korean_summary": "코노코필립스는 지난 5년간 연평균 17.44%의 수익률로 시장 평균을 5.74%p 상회했다는 분석입니다(현재 시가총액 1614.7억 달러). 벤징가의 자동화 콘텐츠 엔진이 생성하고 편집자가 검수한 정형 리포트로, 과거 수익률 통계를 소개하는 성격이 강합니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2025/07/10/valuestock_4.jpg?width=1024&height=768"
+          "url": "https://finnhub.io/api/news?id=09d37c454162dab8f9eb8fcbd6907e7d9736a1d2972bfe3f51c8fb2b072211e7",
+          "korean_summary": "포전트 파워 솔루션즈는 수요일 11.10% 상승한 34.84달러로 마감하며 이틀 연속 급등세를 이어갔습니다. 같은 날 실적발표 콜에서 회사는 2026 회계연도 4분기에 순이익 6609만 달러로 흑자전환했다고 밝혔습니다.",
+          "image": "https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png"
         }
       ],
       "spark": [
-        132.5,
-        136.17,
-        137.18,
-        135.67,
-        134.25,
-        134.99,
-        136.6,
-        137.07,
-        137.41,
-        136.66,
-        141.22,
-        132.56
+        29.26,
+        29.39,
+        30.61,
+        31.35,
+        32.31,
+        30.98,
+        29.19,
+        31.83,
+        28.64,
+        31.35,
+        34.84,
+        38.07
       ],
-      "rel_strength": -0.0569
+      "rel_strength": 0.0813
     },
     {
-      "symbol": "XOM",
-      "name": "ExxonMobil",
-      "sector": "에너지",
-      "price": 163.36,
-      "day_return": -0.0349,
-      "return_5d": -0.0049,
-      "volume_ratio": 1.4,
-      "tag": "유가 되돌림",
-      "hook": "ConocoPhillips와 같은 이유로 에너지 섹터 동반 하락",
-      "body": "유가 되돌림에 따라 엑슨모빌도 하락했습니다. 자회사가 21억 달러 규모 채권 조기상환(텐더오퍼)을 완료했다는 소식도 있었지만, 호르무즈·걸프 지역 지정학적 긴장은 여전히 유가 변동성의 핵심 변수로 남아 있습니다.",
+      "symbol": "INIO",
+      "name": "INNIO N.V. Ordinary Shares",
+      "sector": "발전 설비",
+      "price": 20.95,
+      "day_return": 0.1203208556149733,
+      "return_5d": 0.0677879714576961,
+      "volume_ratio": 3.470488480834126,
+      "tag": "특이 뉴스 부족",
+      "hook": "12% 급등했지만 수집된 뉴스에서 구체적 계기는 확인되지 않음",
+      "body": "이니오(INIO)는 이날 거래량이 평소의 3.47배로 늘며 12.03% 상승했지만, 수집된 뉴스 중 이니오의 실적이나 계약을 직접적으로 다룬 기사는 없었습니다. 관련 기사들은 2026년 신규 상장(IPO) 종목의 반등 가능성을 다룬 일반적 시장 논평이거나 다른 회사(코히런트) 소식이어서, 이번 급등의 구체적 계기는 뉴스만으로는 확인되지 않습니다.",
       "bullets": [
         {
-          "text": "유가 되돌림에 따른 에너지 섹터 전반 약세 동참",
-          "source": "Benzinga",
-          "date": "9/15",
-          "url": "https://www.benzinga.com/markets/commodities/26/09/61800450/oil-crisis-worsens-diesel-hits-record-high-heres-how-to-trade-it",
-          "korean_summary": "사우디아라비아 에너지 시설에 대한 공격 여파로 브렌트유가 5% 가까이 급등해 배럴당 107.55달러를 기록했고, 미국 디젤 평균 가격은 갤런당 6.27달러로 사상 최고치를 경신했습니다(캘리포니아는 8.21달러). 예멘 후티 반군의 사우디 남부 군사기지 공격으로 호르무즈 해협을 대체하던 동서 파이프라인이 폐쇄되면서, 전 세계 원유 공급의 약 20%를 담당하던 호르무즈 해협 통행량도 크게 줄었습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/15/Crude-Oil-Price-Hike-Graph-Chart--Stock-.jpg?width=1024&height=768"
+          "text": "2026년 IPO 종목 중 바닥 다지기 기대되는 종목들 — 이니오 특정 언급은 확인 안 됨",
+          "source": "Yahoo",
+          "date": "9/16",
+          "url": "https://finnhub.io/api/news?id=369bb6a8a45d00d6a2da871352fe41ad931b716999ce0104b46949291f688e2e",
+          "korean_summary": "이 기사는 2026년 상장(IPO) 이후 급락했다가 월가에서 바닥을 다지고 있다고 평가받는 종목들을 소개하는 일반적인 시장 논평입니다. 다만 기사 본문이 제공되지 않아 이니오가 해당 종목으로 구체적으로 거론됐는지는 확인할 수 없었습니다.",
+          "image": "https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png"
         },
         {
-          "text": "자회사, 21억 달러 규모 채권 텐더오퍼 완료",
-          "source": "Benzinga",
-          "date": "9/15",
-          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61790637/exxonmobil-trending-after-subsidiary-completes-2-1-billion-debt-tender",
-          "korean_summary": "엑슨모빌의 자회사가 파이오니어 내추럴 리소시스가 발행한 선순위채권(21억 달러 규모, 2030년·2031년 만기)에 대한 현금 매입공개(텐더오퍼)를 완료했다고 발표했습니다. 주가는 20·50·100·200일 이동평균선을 모두 웃도는 뚜렷한 상승추세를 유지하고 있으며, 발표 시점 기준 1.25% 상승한 $167.14에 거래됐습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/15/Channahon--Illinois--Usa--June-7-2022-Ex.jpg?width=1024&height=768"
-        },
-        {
-          "text": "호르무즈 해협 공급 차질 우려 지속",
-          "source": "Benzinga",
-          "date": "9/15",
-          "url": "https://www.benzinga.com/news/politics/26/09/61781104/gavin-newsom-trump-iran-war-hormuz-disruptions-skyrocketing-costs",
-          "korean_summary": "개빈 뉴섬 캘리포니아 주지사가 트럼프 행정부와 에너지장관 크리스 라이트가 이란과의 갈등이 호르무즈 해협 혼란과 물가 급등으로 이어질 것을 알고도 대비하지 않았다고 비판했습니다. 백악관은 트럼프 대통령이 미국민 안전과 물가 안정에 집중하고 있다고 반박했습니다. 같은 날 엑슨모빌의 일리노이주 졸리엣 정유공장이 정전으로 일시 가동중단됐다가 복구됐다는 소식도 있었습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/Larkspur--Ca---April-16--2024-Governor-G.jpg?width=1024&height=768"
-        }
-      ],
-      "spark": [
-        161.01,
-        164.52,
-        164.14,
-        162.23,
-        159.46,
-        160.7,
-        164.16,
-        165.27,
-        165.98,
-        165.05,
-        169.27,
-        163.36
-      ],
-      "rel_strength": -0.0305
-    },
-    {
-      "symbol": "BAC",
-      "name": "Bank of America",
-      "sector": "상업은행",
-      "price": 57.89,
-      "day_return": -0.0268,
-      "return_5d": -0.0766,
-      "volume_ratio": 1.76,
-      "tag": "실적 가이던스 경고",
-      "hook": "자사 CEO의 경고성 전망이 금융주 전반을 끌어내렸다",
-      "body": "CEO 브라이언 모이니핸이 3분기 투자은행 수수료가 10% 넘게 줄고 트레이딩 수익은 보합에 그칠 것이라는 전망을 내놓으면서, 골드만삭스·아멕스 등 다른 금융주 하락에도 영향을 미쳤습니다.",
-      "bullets": [
-        {
-          "text": "모이니핸 CEO, 3분기 IB 수수료 10%+ 감소·트레이딩 보합 전망",
-          "source": "Benzinga",
-          "date": "9/15",
-          "url": "https://www.benzinga.com/markets/large-cap/26/09/61784400/why-is-bank-of-america-stock-falling-tuesday",
-          "korean_summary": "뱅크오브아메리카 주가가 전날(월요일) -5.14% 급락에 이어 화요일 프리마켓에서도 1% 가까이 추가 하락했습니다. CEO 브라이언 모이니핸이 업계 콘퍼런스에서 3분기 투자은행 수수료를 16억~18억 달러(시장 예상 20억 달러 하회, 전년 대비 10%+ 감소)로 예상한다고 밝힌 영향입니다. 다만 200일 이동평균선 대비 여전히 7% 높은 수준을 유지하고 있어, 장기 상승추세 자체가 꺾인 것은 아니라는 평가입니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/15/2024-11-15-Los-Angeles-Usa-Bank-Of-Ameri.jpg?width=1024&height=768"
-        },
-        {
-          "text": "이 발언이 GS·AXP 등 금융업종 전반 하락 촉발",
+          "text": "[참고, 타사 뉴스] 코히런트, S&P500 편입 소식에 상승",
           "source": "Benzinga",
           "date": "9/14",
-          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61777356/quick-spark-big-bank-stocks-tumble-after-moynihans-grim-outlook",
-          "korean_summary": "뱅크오브아메리카가 3분기 투자은행 수수료가 전년 대비 10% 넘게 줄어들 것이라는 전망을 내놓으면서 주가가 하락했고, 골드만삭스·씨티그룹·웰스파고 등 경쟁사들도 동반 하락했습니다. CEO 브라이언 모이니핸은 트레이딩 수익도 2분기의 급증세(+33%)에 비해 보합권에 그칠 것으로 예상했습니다. 2분기엔 투자은행 수수료 +50%, 트레이딩 수익 +33%로 깜짝 실적을 냈던 만큼, 이번 하향 가이던스가 시장에 더 크게 작용한 것으로 보입니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/14/Benzinga-Quick-Spark.jpg?width=1024&height=768"
+          "url": "https://finnhub.io/api/news?id=7f92e66de16101e7270a9490e22d92722610d8177864c27650013eda0e1675b0",
+          "korean_summary": "이 기사는 광학부품업체 코히런트(Coherent)가 S&P500 지수 편입 소식에 상승했다는 내용으로, 이니오와는 직접적인 관련이 없는 것으로 보입니다. 뉴스 수집 과정에서 참고용으로 함께 태깅된 것으로 추정됩니다.",
+          "image": null
         },
         {
-          "text": "옵션시장 대규모 매매 포착",
-          "source": "Benzinga",
-          "date": "9/16",
-          "url": "https://www.benzinga.com/markets/options/26/09/61823879/10-financials-stocks-whale-alerts-today-s-session",
-          "korean_summary": "벤징가의 옵션 활동 스캐너가 포착한 대형 자금('고래') 매매 상위 10건 중 하나로 이 종목이 포함됐습니다. 대형 옵션 거래는 종종 기관 투자자의 방향성 베팅을 시사하지만, 이 자체만으로 향후 주가를 예단하기는 어렵습니다. 특정 종목에 대한 심층 분석이라기보다 당일 옵션시장 동향을 자동으로 정리한 리포트에 가깝습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2025/11/06/aggregated_options_2.jpg?width=1024&height=768"
+          "text": "[참고, 타사 뉴스] 베어론 글로벌 오퍼튜니티 펀드 2분기 운용보고서",
+          "source": "SeekingAlpha",
+          "date": "9/14",
+          "url": "https://finnhub.io/api/news?id=c8785df4f7899efef2abb19514bd0dd756d78a264c63cb00667c004349c7477e",
+          "korean_summary": "베어론 글로벌 오퍼튜니티 펀드의 2분기 운용보고서로, 펀드(기관 클래스)가 26.7% 수익률을 기록해 MSCI ACWI 지수 상승률(14.9%)을 크게 웃돌았다는 내용입니다. 본문에 이니오에 대한 구체적 언급은 확인되지 않았습니다.",
+          "image": "https://static.seekingalpha.com/cdn/s3/uploads/getty_images/2266615986/image_2266615986.jpg?io=getty-c-w1536"
         }
       ],
       "spark": [
-        61.94,
-        62.01,
-        62.61,
-        63.06,
-        62.68,
-        62.39,
-        62.7,
-        62.58,
-        62.69,
-        59.46,
-        59.48,
-        57.89
+        19.45,
+        20.08,
+        20.3,
+        20.78,
+        21.8,
+        20.78,
+        19.62,
+        20.34,
+        17.46,
+        17.78,
+        18.7,
+        20.95
       ],
-      "rel_strength": -0.0224
+      "rel_strength": 0.1089
     },
     {
-      "symbol": "CSCO",
-      "name": "Cisco",
-      "sector": "네트워크장비",
-      "price": 107.72,
-      "day_return": -0.0217,
-      "return_5d": -0.0158,
-      "volume_ratio": 2.06,
-      "tag": "뉴스 없음",
-      "hook": "개별 재료 없이 거래량만 2배 급증",
-      "body": "이번에 수집된 기간 동안 시스코와 직접 관련된 뉴스는 확인되지 않았습니다. 거래량이 평소의 2배 이상으로 늘며 하락한 것으로 보아 연준 금리인상에 따른 기술주 전반의 약세에 동반된 것으로 추정되지만, 확인된 개별 재료는 없습니다.",
+      "symbol": "TWST",
+      "name": "Twist Bioscience Corporation Common Stock",
+      "sector": "바이오",
+      "price": 155.5,
+      "day_return": 0.08653577417551706,
+      "return_5d": 0.22565517241379296,
+      "volume_ratio": 2.5320607751170368,
+      "tag": "계약 수주",
+      "hook": "일라이릴리의 AI 신약개발 플랫폼 '튠랩'에 항체 데이터 공급사로 참여, 계약 금액은 비공개",
+      "body": "트위스트 바이오사이언스(TWST)는 9월 16일 일라이릴리의 AI/ML 신약개발 협업 플랫폼 '튠랩(TuneLab)'에 항체 특성분석 데이터를 공급하는 계약을 체결했다고 발표했습니다. 참여사들은 트위스트의 웻랩 데이터를 활용해 항체 개발 예측 모델(AbLab)을 더 빠르게 활용할 수 있게 되며, 계약 금액은 공개되지 않았습니다. 앞서 8월에는 앤트로픽이 자사 AI 모델을 활용한 단백질 설계 프로젝트의 독립 평가기관으로 트위스트를 선정한 바 있습니다.",
       "bullets": [
         {
-          "text": "개별 뉴스 없음 — 거래량만 평소의 2.06배로 급증",
-          "source": null,
-          "date": null,
-          "url": null
+          "text": "트위스트 바이오사이언스, 릴리 '튠랩' AI 신약개발 생태계에 데이터 공급사로 합류",
+          "source": "Benzinga",
+          "date": "9/16",
+          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61818749/beyond-hype-twist-bioscience-secures-data-pipeline-role-in-eli-lilly-tunelab-ecosystem",
+          "korean_summary": "트위스트 바이오사이언스는 일라이릴리가 만든 협업형 AI/ML 신약개발 플랫폼 '튠랩'에 항체 특성분석 데이터 서비스를 공급하는 계약을 체결했다고 발표했습니다. 참여 기업들은 트위스트가 제공하는 고품질 웻랩 데이터를 통해 항체 개발 예측 모델인 AbLab 등을 더 빠르게 활용할 수 있습니다. 에밀리 르프루스트 CEO는 트위스트의 대량 데이터 생산 역량과 릴리의 AI 파트너십 네트워크가 결합해 강력한 생태계를 만든다고 밝혔습니다. 앞서 8월에는 앤트로픽이 클로드 오퍼스 4.8 등 AI 모델을 활용한 단백질 설계 프로젝트의 독립 평가기관으로 트위스트를 선정한 바 있습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/Fears-Over-AI-And-Biotech.jpg?width=1024&height=768"
         },
         {
-          "text": "같은 날 시장 전체가 연준 금리인상 여파로 하락",
-          "source": null,
-          "date": null,
-          "url": null
+          "text": "릴리와의 AI 신약개발 제휴 발표 후 주가 14% 상승",
+          "source": "Yahoo",
+          "date": "9/17",
+          "url": "https://finnhub.io/api/news?id=ea01acddc7abd6dde2f09689c90a8c92f3264c839306667c9883e2447b5e1a41",
+          "korean_summary": "9월 16일 트위스트 바이오사이언스는 일라이릴리의 튠랩 플랫폼과 협약을 발표하며, 트위스트가 자사 프로토콜로 생성한 고품질 웻랩 항체 데이터를 릴리의 AI/ML 신약개발 모델에 공급하기로 했습니다. 이 협업으로 트위스트의 DNA·항체 역량이 릴리의 AI 기반 신약 발굴 생태계에 더 깊이 연결될 것으로 평가받으며 주가는 14% 상승했습니다.",
+          "image": "https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png"
+        },
+        {
+          "text": "펀드매니저 서한에서도 AI·차세대 시퀀싱 강점 부각",
+          "source": "Yahoo",
+          "date": "9/16",
+          "url": "https://finnhub.io/api/news?id=a52e0ac9bf908a6adfed4e3e73019e97a9041f3c973631320e670b59d20419f8",
+          "korean_summary": "파나서스 인베스트먼츠의 '파나서스 성장주 펀드' 2분기 투자자 서한에 따르면, 해당 펀드(운용 클래스 기준)는 2분기 17.49% 수익률을 기록해 러셀1000 성장지수(16.74%)를 웃돌았습니다. 정보기술·소비재 업종 보유 종목이 상대 수익률에 긍정적으로 기여했다고 설명하며, 트위스트 바이오사이언스의 AI·차세대 시퀀싱 경쟁력을 강점으로 언급했습니다.",
+          "image": "https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png"
         }
       ],
       "spark": [
-        110.46,
-        109.73,
-        109.47,
-        108.68,
-        109.15,
-        109.17,
-        109.45,
-        107.43,
-        112.19,
-        110.07,
-        110.12,
-        107.72
+        132.1,
+        131.0,
+        128.5,
+        124.72,
+        127.84,
+        125.72,
+        126.88,
+        127.08,
+        134.74,
+        137.89,
+        143.12,
+        155.5
       ],
-      "rel_strength": -0.0173
+      "rel_strength": 0.0751
     },
     {
-      "symbol": "COIN",
-      "name": "Coinbase",
-      "sector": "가상자산거래소",
-      "price": 164.46,
-      "day_return": -0.0441,
-      "return_5d": -0.0584,
-      "volume_ratio": 1.24,
-      "tag": "규제 리스크",
-      "hook": "가상자산 규제법 상원 통과 실패 여파",
-      "body": "가상자산 시장구조를 규정하는 'CLARITY Act'가 상원에서 통과에 실패하면서 전날 10% 급락했고, 이날은 약보합으로 마감했습니다. 다만 애널리스트들은 코인베이스의 기관 비즈니스(결제·스테이블코인·토큰화자산)를 저평가된 성장동력으로 보고 있습니다.",
+      "symbol": "CROX",
+      "name": "Crocs, Inc. Common Stock",
+      "sector": "소비재",
+      "price": 123.18,
+      "day_return": 0.0674176776429809,
+      "return_5d": 0.1318570247174493,
+      "volume_ratio": 3.690574834051155,
+      "tag": "내부자 매수",
+      "hook": "이사회 멤버가 43만7000달러 규모 자사주를 추가 매수했지만, 급등을 설명할 개별 뉴스는 확인되지 않음",
+      "body": "크록스(CROX) 이사회 멤버 토마스 스매크는 9월 14일 SEC 공시를 통해 주식 4000주(약 43만5000달러 상당)를 추가 매수해 보유 지분을 약 21만2000주(지분율 0.44%)로 늘렸습니다. 반면 옵션 시장에서는 10월 만기 125달러 행사가 풋옵션에 베어리시 스윕이 포착돼 일부 투자자는 하락 쪽에 베팅하기도 했습니다. 이날 주가는 6.74% 오른 123.18달러를 기록했지만, 이를 명확히 설명하는 개별 발표는 뉴스에서 확인되지 않았습니다.",
       "bullets": [
         {
-          "text": "CLARITY Act 상원 통과 실패로 전일 10% 급락",
+          "text": "이사회 멤버, 43만7000달러 규모 크록스 주식 추가 매수",
           "source": "Benzinga",
-          "date": "9/16",
-          "url": "https://www.benzinga.com/trading-ideas/movers/26/09/61814847/whats-going-on-with-coinbase-stock-wednesday",
-          "korean_summary": "가상자산 시장구조를 규정하는 'CLARITY Act'가 상원에서 절차적 표결(49대50, 필요 60표 미달)로 부결되면서 전날 10% 급락했던 코인베이스 주가가 수요일엔 보합권에서 움직였습니다. CEO 브라이언 암스트롱은 실망스럽다면서도 \"SEC와 CFTC가 기존 권한으로 명확한 규정을 만들 수 있다\"며 규제 명확화는 의회와 무관하게 진행될 것이라고 밝혔습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/Coinbase-Logo-Displayed-On-A-Smartphone-.jpg?width=1024&height=768"
+          "date": "9/15",
+          "url": "https://finnhub.io/api/news?id=fb3cf3b0c657831e07da144dddea0a1a920fe070d5e2465b6984d877c8c5bd74",
+          "korean_summary": "SEC 공시에 따르면 크록스 이사회 멤버 토마스 스매크가 9월 14일 주식 4000주를 매수했습니다. 이는 그의 두 번째 매수로, 이번 거래로 보유 지분이 늘어나며 시장에 자신감을 보여주는 신호로 해석됩니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2025/11/06/insider_trade_1.jpg?width=2048&height=1536"
         },
         {
-          "text": "SEC·CFTC가 대신 자체 규정을 신속 추진할 것이란 전망",
-          "source": "Benzinga",
-          "date": "9/16",
-          "url": "https://www.benzinga.com/crypto/cryptocurrency/26/09/61820404/sec-cftc-rulemaking-will-be-aggressive-and-swift-after-clarity-act-failure-bernstein-says",
-          "korean_summary": "번스타인 분석가들은 CLARITY 법안이 상원에서 부결됨에 따라 SEC와 CFTC가 공백을 메우기 위해 '공격적이고 신속한' 자체 규정 제정에 나설 것으로 전망했습니다. 토큰 증권·상품 분류, 디파이 규정, 주식 토큰화, 스테이블코인 보상 등이 우선순위로 꼽혔습니다. 폴리마켓에서는 올해 안 CLARITY Act 통과 확률이 2월 82%에서 표결 직전 16%, 현재는 5%까지 떨어졌습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/Senate-Eyes-DHS-Short-Term-Extension.jpg?width=1024&height=768"
+          "text": "이사회 멤버, 43만5000달러 규모 4000주 추가 매수로 지분 확대",
+          "source": "Yahoo",
+          "date": "9/15",
+          "url": "https://finnhub.io/api/news?id=fad8c45b8a9ccb029ef3d40b7d9fbf0a05401705709f844bc3f3e5669efb345d",
+          "korean_summary": "크록스 내부자의 장내 매수로 보유 지분이 약 21만2000주로 늘어나 회사 지분율 0.44%를 차지하게 됐습니다. 이번 매수는 43만5000달러가 넘는 규모로, 최근 추가 매수가 이어지고 있는 것으로 나타났습니다.",
+          "image": "https://s.yimg.com/rz/stage/p/yahoo_finance_en-US_h_p_finance_2.png"
         },
         {
-          "text": "BTIG, 코인베이스 기관 비즈니스를 '저평가된 성장동력'으로 평가",
+          "text": "옵션 시장에서는 베어리시 풋옵션 스윕도 함께 포착",
           "source": "Benzinga",
-          "date": "9/16",
-          "url": "https://www.benzinga.com/analyst-stock-ratings/analyst-color/26/09/61819807/coinbase-institutional-business-is-an-increasingly-important-contributor-to-growth-says-bullish-analyst",
-          "korean_summary": "BTIG 애널리스트 앤드류 하트는 코인베이스에 매수 의견과 목표가 240달러를 재확인하며, 기관 비즈니스가 \"저평가된 성장동력\"이라고 평가했습니다. 이 부문은 전체 매출의 약 20%를 차지하며, 200곳 넘는 기관 고객이 '코인베이스 개발자 플랫폼'을 통해 기술 스택 이용료를 내는 방식으로 확장 중입니다. 세계 시스템적으로 중요한 대형은행(G-SIB) 5곳이 코인베이스 인프라를 도입했습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/16/Coinbase-Logo-Displayed-On-A-Smartphone-.jpg?width=1024&height=768"
+          "date": "9/17",
+          "url": "https://www.benzinga.com/markets/options/26/09/61852092/10-consumer-discretionary-stocks-whale-alerts-today-s-session",
+          "korean_summary": "벤징가 옵션 스캐너에 따르면 크록스에서 10월 16일 만기, 행사가 125달러 풋옵션에 대한 베어리시 스윕이 포착됐습니다. 60건의 계약이 9개 거래로 나뉘어 체결됐으며 총 거래대금은 3만7200달러였습니다. 같은 날 테슬라, 라스베가스샌즈, 아마존 등 다른 소비재 관련주에서도 다양한 옵션 활동이 관측됐습니다.",
+          "image": "https://cdn.benzinga.com/files/images/story/2025/11/06/aggregated_options_1.jpg?width=1024&height=768"
         }
       ],
       "spark": [
-        188.04,
-        176.81,
-        174.88,
-        192.76,
-        184.63,
-        178.96,
-        174.66,
-        172.21,
-        175.31,
-        191.37,
-        172.04,
-        164.46
+        115.34,
+        115.82,
+        115.92,
+        117.5,
+        114.3,
+        111.11,
+        108.83,
+        112.49,
+        111.49,
+        111.37,
+        115.4,
+        123.18
       ],
-      "rel_strength": -0.0396
-    },
-    {
-      "symbol": "HON",
-      "name": "Honeywell",
-      "sector": "산업/항공전자",
-      "price": 207.71,
-      "day_return": 0.0208,
-      "return_5d": 0.0138,
-      "volume_ratio": 1.99,
-      "tag": "저평가 매수세 · 유일한 상승",
-      "hook": "이번 스크리닝에서 유일하게 오른 종목",
-      "body": "최근 시장 랠리에서 소외된 저평가 S&P500 종목 중 하나로 소개된 바 있어, 이날 저가 매수세가 유입된 것으로 보입니다. 거래량도 평소의 약 2배로 늘었습니다.",
-      "bullets": [
-        {
-          "text": "'랠리에서 소외된 저평가 S&P500 종목' 기사에 소개",
-          "source": "Benzinga",
-          "date": "9/13",
-          "url": "https://www.benzinga.com/markets/equities/26/09/61755151/top-3-undervalued-sp-500-stocks-the-market-rally-left-behind",
-          "korean_summary": "최근 랠리에서 소외된 S&P500 저평가 종목 3개(페이팔·허니웰·컴캐스트) 중 하나로 허니웰이 소개됐습니다. 올해 고점 대비 21.5% 넘게 하락해 1월 이후 최저 수준까지 밀렸는데, 트럼프 대통령이 봄바르디어 항공기 판매를 막겠다고 위협한 여파가 컸습니다(허니웰이 봄바르디어의 주요 부품 공급사). 매출 가이던스도 198억~200억 달러로 낮춰 잡으면서 주가수익비율(PER)이 11배까지 내려갔지만, 애널리스트 목표주가는 여전히 현재가보다 높게 유지되고 있습니다.",
-          "image": "https://cdn.benzinga.com/files/images/story/2026/09/13/Wall-Street-Sign-With-American-Flag-On-T.jpg?width=1024&height=768"
-        },
-        {
-          "text": "거래량 평소의 1.99배로 증가하며 반등",
-          "source": null,
-          "date": null,
-          "url": null
-        }
-      ],
-      "spark": [
-        213.6,
-        210.07,
-        206.06,
-        207.46,
-        209.59,
-        208.26,
-        204.88,
-        202.13,
-        202.27,
-        201.3,
-        203.48,
-        207.71
-      ],
-      "rel_strength": 0.0252
+      "rel_strength": 0.056
     }
-  ],
-  "spy_day_return": -0.004449314779118585
+  ]
 }
