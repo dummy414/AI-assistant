@@ -114,6 +114,18 @@
 
   .hide { display: none !important; }
 
+  /* 자동화가 조용히 멈췄을 때 낡은 데이터를 오늘 것처럼 보여주지 않기 위한 경고 */
+  .stale-banner {
+    display: none; align-items: flex-start; gap: 10px;
+    margin: 12px 0 0; padding: 11px 14px; border-radius: 10px;
+    font-size: 12.5px; line-height: 1.5;
+    background: var(--gold-soft); color: var(--gold); border: 1px solid transparent;
+  }
+  .stale-banner.show { display: flex; }
+  .stale-banner.severe { background: var(--down-soft); color: var(--down); }
+  .stale-banner .icon { flex: 0 0 auto; font-size: 14px; line-height: 1.3; }
+  .stale-banner b { font-variant-numeric: tabular-nums; }
+
   .tabbar {
     display: flex; gap: 8px; padding: 14px 2px 6px;
     overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
@@ -484,6 +496,11 @@
 </aside>
 
 <div class="wrap">
+  <div class="stale-banner" id="staleBanner" role="status">
+    <span class="icon">⚠️</span>
+    <span id="staleText"></span>
+  </div>
+
   <div class="tabbar">
     <button class="tab-btn active" id="tabToday">오늘의 관심종목</button>
     <button class="tab-btn" id="tabQuality">우량주</button>
@@ -990,8 +1007,28 @@
     renderRelated();
   }
 
+  // 자동화는 매일 아침 한 번 돈다. 하루가 훌쩍 넘도록 갱신이 없다면 파이프라인이
+  // 멈춘 것이고, 그걸 숨긴 채 옛 데이터를 오늘 것처럼 보여주면 안 된다.
+  function checkStale(generatedAt) {
+    const banner = document.getElementById('staleBanner');
+    const text = document.getElementById('staleText');
+    const t = Date.parse(generatedAt);
+    if (!t) return;
+    const hours = (Date.now() - t) / 36e5;
+    if (hours < 26) { banner.classList.remove('show', 'severe'); return; }
+
+    const days = Math.floor(hours / 24);
+    const when = days >= 1 ? `${days}일` : `${Math.floor(hours)}시간`;
+    banner.classList.add('show');
+    banner.classList.toggle('severe', hours >= 50);
+    text.innerHTML = `이 페이지의 해설·종목 선정은 <b>${when} 전</b> 데이터입니다. `
+      + `매일 아침 갱신되어야 하는데 그러지 않았습니다 — 자동 갱신이 멈췄을 수 있습니다. `
+      + `화면 위쪽 가격은 실시간이지만, 아래 해설과 뉴스는 그때 기준입니다.`;
+  }
+
   function render(d) {
     data = d;
+    checkStale(d.generated_at);
     document.getElementById('marketDate').textContent = d.market_date;
     document.getElementById('overviewText').textContent = d.overview;
     document.getElementById('updated').textContent = fmtUpdated(d.generated_at);
@@ -1200,6 +1237,22 @@
   }
 
   function renderQuality(q) {
+    // 우량주 숫자는 FMP 호출 한도에 걸리면 갱신되지 않고 이전 값이 유지된다(의도된 동작).
+    // 그때 날짜를 감추면 옛 수치를 오늘 것으로 오해하게 되므로 기준일을 함께 적는다.
+    const note = document.querySelector('#qualityView .quality-note');
+    if (note && q.generated_at && !note.dataset.dated) {
+      note.dataset.dated = '1';
+      const d = new Date(q.generated_at);
+      const stale = (Date.now() - d.getTime()) / 36e5 >= 30;
+      const label = isNaN(d) ? '' :
+        `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 기준`;
+      note.insertAdjacentHTML('beforeend',
+        `<div style="margin-top:8px;color:${stale ? 'var(--gold)' : 'var(--ink-3)'}">`
+        + `재무 수치 ${escapeHtml(label)}`
+        + (stale ? ' · 조회 한도로 갱신되지 않아 이전 값이 유지되고 있습니다.' : '')
+        + '</div>');
+    }
+
     const grid = document.getElementById('qualityGrid');
     grid.innerHTML = (q.companies || []).map(c => {
       const dirClass = c.day_return >= 0 ? 'up' : 'down';
