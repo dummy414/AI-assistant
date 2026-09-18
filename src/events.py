@@ -50,8 +50,11 @@ _MULT = {"trillion": 1e12, "t": 1e12, "billion": 1e9, "b": 1e9,
 # 이벤트 분류 — inflow(회사로 돈/자산이 들어오는 사건) / outflow(나가는 사건).
 # 어느 쪽이 "좋다"고 말하지 않는다. 방향은 규모를 해석하기 위한 라벨일 뿐이다.
 EVENT_TYPES = [
-    ("계약 수주",   "inflow",  r"\b(contract|awarded?|wins?|won|order|purchase agreement|backlog|task order)\b"),
-    ("인수·합병",   "inflow",  r"\b(acquir\w+|acquisition|merger|to buy|takeover)\b"),
+    # "deal", "agreement", "supply"가 빠져 있어서 제네락의 80억 달러 아마존 공급계약을
+    # 놓쳤던 적이 있다. 금액이 함께 있을 때만 사건으로 보므로 넓게 잡아도 오탐이 적다.
+    ("계약 수주",   "inflow",  r"\b(contract|awarded?|wins?|won|orders?|purchase agreement|backlog|task order|"
+                               r"deals?|agreement|supply|selected by|partnership|collaborat\w+)\b"),
+    ("인수·합병",   "inflow",  r"\b(acquir\w+|acquisition|merger|to buy|takeover|stake in)\b"),
     ("자금 조달",   "inflow",  r"\b(rais\w+|offering|private placement|financing|funding round|grant)\b"),
     ("소송·합의",   "outflow", r"\b(lawsuit|sued?|litigation|settle\w*|class action|verdict|damages)\b"),
     ("제재·벌금",   "outflow", r"\b(fine[sd]?|penalt\w+|sanction\w*|violation)\b"),

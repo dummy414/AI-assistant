@@ -20,7 +20,42 @@ import re
 import json
 from datetime import datetime, timedelta, timezone
 
-from src import config, watchlist
+from src import config, watchlist, events
+
+
+# ---- 촉매(catalyst) 분류 ----
+# "많이 움직인 종목"만 고르면 왜 움직였는지 모르는 밋밋한 카드가 섞인다. 그래서 뉴스를
+# 읽어 **무슨 일이 있었는지**로 한 번 더 거른다. 단계가 높을수록 읽을거리가 있는 종목이다.
+#   3: 금액이 명시된 구체적 사건 (계약·인수·소송·리콜 등)
+#   2: 실적 발표 관련
+#   1: 애널리스트 의견 변경
+#   0: 뉴스는 있으나 위 분류에 안 걸림
+#  -1: 뉴스 없음
+_EARNINGS_RE = re.compile(
+    r"\b(earnings|results|quarter|q[1-4]\s|guidance|revenue|beat|miss(?:ed|es)?|outlook|forecast)\b", re.I)
+_ANALYST_RE = re.compile(
+    r"\b(upgrade[sd]?|downgrade[sd]?|price target|initiat\w+ coverage|rating|analyst)\b", re.I)
+
+CATALYST_LABEL = {3: "구체적 사건", 2: "실적", 1: "애널리스트", 0: "일반 뉴스", -1: "뉴스 없음"}
+
+
+def catalyst_tier(news_items: list[dict]) -> tuple[int, str | None]:
+    """종목의 뉴스 묶음에서 가장 강한 촉매 단계와 사건 유형을 판단한다."""
+    if not news_items:
+        return -1, None
+    best, best_type = 0, None
+    for n in news_items:
+        text = f"{n.get('headline','')} {n.get('summary','')}"
+        event_type, _ = events.classify(text)
+        if event_type and events.parse_amounts(text):
+            return 3, event_type          # 금액까지 명시된 사건이면 더 볼 것도 없다
+        if event_type and best < 2:
+            best, best_type = 2, event_type
+        if _EARNINGS_RE.search(text) and best < 2:
+            best, best_type = 2, "실적 발표"
+        if _ANALYST_RE.search(text) and best < 1:
+            best, best_type = 1, "애널리스트 의견"
+    return best, best_type
 
 
 def _strip_html(html: str) -> str:
@@ -113,19 +148,34 @@ def main():
     shortlist_symbols = shortlist["symbol"].tolist()
     news_map = fetch_news_batch(shortlist_symbols)
 
-    with_news = [s for s in shortlist_symbols if news_map.get(s)]
-    without_news = [s for s in shortlist_symbols if not news_map.get(s)]
-    symbols = (with_news + without_news)[:FINAL]
+    print("\n" + "=" * 60)
+    print("3) 촉매 분류 — 무슨 일이 있었는지로 한 번 더 거르기")
+    print("=" * 60)
+    # 움직임 순위(rank)는 그대로 두고, 촉매 단계를 1순위 정렬키로 쓴다.
+    # 같은 단계 안에서는 원래의 등락·거래량 점수 순서가 유지된다.
+    catalysts = {}
+    for i, sym in enumerate(shortlist_symbols):
+        tier, event_type = catalyst_tier(news_map.get(sym, []))
+        catalysts[sym] = {"tier": tier, "event_type": event_type, "rank": i}
+
+    ordered = sorted(shortlist_symbols,
+                     key=lambda s: (-catalysts[s]["tier"], catalysts[s]["rank"]))
+    symbols = ordered[:FINAL]
     table = (shortlist[shortlist["symbol"].isin(symbols)]
              .set_index("symbol").loc[symbols].reset_index())
 
-    print(f"   후보 {len(shortlist_symbols)}개 중 뉴스 보유 {len(with_news)}개 "
-          f"→ 최종 {len(symbols)}개 선정")
+    for tier in (3, 2, 1, 0, -1):
+        group = [s for s in shortlist_symbols if catalysts[s]["tier"] == tier]
+        if group:
+            print(f"   [{CATALYST_LABEL[tier]}] {len(group)}개: {', '.join(group)}")
+    print(f"\n   후보 {len(shortlist_symbols)}개 → 촉매가 강한 순으로 {len(symbols)}개 선정")
     for s in symbols:
-        print(f"   {s}: {len(news_map.get(s, []))}건")
+        c = catalysts[s]
+        tag = c["event_type"] or CATALYST_LABEL[c["tier"]]
+        print(f"   {s}: 뉴스 {len(news_map.get(s, []))}건 · {tag}")
 
     print("\n" + "=" * 60)
-    print("3) 스파크라인 + SPY 대비 상대강도")
+    print("4) 스파크라인 + SPY 대비 상대강도")
     print("=" * 60)
     spark_map, spy_day_return = compute_spark_and_relative(symbols)
     print(f"   SPY 당일: {spy_day_return:+.2%}")
@@ -133,10 +183,14 @@ def main():
     snapshot = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "spy_day_return": spy_day_return,
+        # 유니버스 크기를 기록해둔다. 어느 날 갑자기 65로 찍혀 있으면 universe 빌드가
+        # 실패해 손으로 고른 목록으로 폴백했다는 뜻이다 (조용히 퇴화하는 걸 알아채려고).
+        "universe_size": len(watchlist.active_universe()),
         "stocks": [],
     }
     for _, row in table.iterrows():
         sym = row["symbol"]
+        c = catalysts[sym]
         snapshot["stocks"].append({
             "symbol": sym,
             "name": row["name"],
@@ -144,6 +198,9 @@ def main():
             "day_return": float(row["day_return"]),
             "return_5d": float(row["return_5d"]),
             "volume_ratio": float(row["volume_ratio"]),
+            "catalyst_tier": c["tier"],
+            "catalyst_label": CATALYST_LABEL[c["tier"]],
+            "catalyst_event_type": c["event_type"],
             "spark": spark_map[sym]["spark"],
             "rel_strength": spark_map[sym]["rel_strength"],
             "news": news_map.get(sym, []),
