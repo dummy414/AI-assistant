@@ -66,6 +66,8 @@ def _entry_from_cards(data: dict) -> dict:
                 "day_return": c.get("day_return"),
                 "tag": c.get("tag"),
                 "hook": c.get("hook"),
+                # 성적표에서 '촉매 종류별로 결과가 달랐나'를 보려면 등급이 필요하다
+                "catalyst_tier": c.get("catalyst_tier"),
             }
             for c in data.get("cards", [])
         ],

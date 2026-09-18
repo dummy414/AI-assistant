@@ -315,6 +315,37 @@
   .streak-badge .since.down { color: var(--down); }
   .nav-streak { font-size: 10px; color: var(--gold); font-weight: 700; margin-left: 2px; }
 
+  /* 성적표 — 우리가 올린 종목이 그 뒤 어떻게 됐는지 (고르지 않고 전부) */
+  .score-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; margin-bottom: 18px;
+  }
+  .score-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 12px; margin: 12px 0;
+  }
+  .score-cell { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+  .score-cell .k { font-size: 11px; color: var(--ink-3); display: block; margin-bottom: 4px; }
+  .score-cell .v {
+    font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .score-cell .v.up { color: var(--up); }
+  .score-cell .v.down { color: var(--down); }
+  .score-verdict {
+    font-size: 13px; line-height: 1.6; padding: 11px 13px; border-radius: 10px;
+    background: var(--accent-soft); color: var(--ink); margin-top: 4px;
+  }
+  .score-verdict b { color: var(--accent); }
+  .score-note { font-size: 11.5px; color: var(--ink-3); line-height: 1.55; margin-top: 10px; }
+  .score-sub { font-size: 12px; color: var(--ink-2); margin-top: 12px; }
+  .score-sub .row {
+    display: flex; justify-content: space-between; gap: 10px; padding: 5px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .score-sub .row:last-child { border-bottom: none; }
+  .score-sub .num { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+
   /* 히스토리 탭 */
   .hist-section-title {
     font-size: 14px; font-weight: 600; color: var(--ink); margin: 22px 0 10px;
@@ -1401,13 +1432,87 @@
     }).join('');
   }
 
+  // ---- 성적표: 우리가 올린 종목의 그 후 (고르지 않고 전부) ----
+  let scorecardData = null;
+
+  const TIER_LABEL = { '3': '구체적 사건', '2': '실적 발표', '1': '애널리스트', '0': '일반 뉴스', '-1': '뉴스 없음' };
+
+  function scorecardHtml() {
+    const s = scorecardData;
+    if (!s) return '';
+    if (!s.ready) {
+      return `<div class="score-card"><div class="sec-title">선정 종목 성적표</div>`
+        + `<div class="news-empty">${escapeHtml(s.reason || '기록이 더 쌓여야 계산할 수 있습니다.')}</div></div>`;
+    }
+    const o = (s.overall || {})['1'];
+    const b = (s.benchmark || {})['1'];
+    if (!o) {
+      return `<div class="score-card"><div class="sec-title">선정 종목 성적표</div>`
+        + `<div class="news-empty">아직 하루가 지나지 않아 측정할 수 없습니다.</div></div>`;
+    }
+
+    const cell = (k, v, cls) =>
+      `<div class="score-cell"><span class="k">${k}</span><span class="v ${cls || ''}">${v}</span></div>`;
+    const dir = x => (x >= 0 ? 'up' : 'down');
+
+    // 시장과 비교하는 게 핵심 — "절반이 올랐다"는 시장이 오른 날엔 의미가 없다
+    let verdict = '';
+    if (b) {
+      const diff = o.mean - b.mean;
+      verdict = `선정 종목의 다음날 평균은 <b>${pct(o.mean)}</b>, `
+        + `같은 기간 시장(SPY)은 <b>${pct(b.mean)}</b>였습니다. `
+        + (Math.abs(diff) < 0.001
+            ? '사실상 차이가 없습니다.'
+            : `시장보다 <b>${pct(Math.abs(diff)).replace('+', '')} ${diff > 0 ? '높았' : '낮았'}습니다</b>.`)
+        + (o.n < 50 ? ` 다만 표본이 ${o.n}건뿐이라 운의 영향이 큽니다.` : '');
+    }
+
+    const tiers = (s.by_tier || {})['1'] || {};
+    const tierRows = Object.entries(tiers).map(([t, v]) => v ? `
+      <div class="row">
+        <span>${escapeHtml(TIER_LABEL[t] || t)} <span style="color:var(--ink-3)">(${v.n}건)</span></span>
+        <span class="num ${dir(v.mean)}" style="color:var(--${dir(v.mean)})">${pct(v.mean)}</span>
+      </div>` : '').join('');
+
+    const ex = s.extremes || {};
+    const exRow = (r) => `
+      <div class="row">
+        <span><b style="font-family:'IBM Plex Mono',monospace">${escapeHtml(r.symbol)}</b>
+          <span style="color:var(--ink-3)">${escapeHtml(r.date || '')}</span></span>
+        <span class="num" style="color:var(--${dir(r.forward['1'])})">${pct(r.forward['1'])}</span>
+      </div>`;
+
+    return `
+      <div class="score-card">
+        <div class="sec-title">선정 종목 성적표 · 최근 ${s.days_recorded}일</div>
+        <div class="score-grid">
+          ${cell('측정된 선정 건수', `${o.n}건`)}
+          ${cell('다음날 상승 비율', `${(o.win_rate * 100).toFixed(0)}%`)}
+          ${cell('다음날 평균', pct(o.mean), dir(o.mean))}
+          ${cell('중앙값', pct(o.median), dir(o.median))}
+          ${b ? cell('같은 기간 시장', pct(b.mean), dir(b.mean)) : ''}
+        </div>
+        ${verdict ? `<div class="score-verdict">${verdict}</div>` : ''}
+        ${tierRows ? `<div class="score-sub"><div style="color:var(--ink-3);margin-bottom:4px">촉매 종류별 다음날 평균</div>${tierRows}</div>` : ''}
+        ${(ex.best || []).length ? `<div class="score-sub"><div style="color:var(--ink-3);margin-bottom:4px">가장 많이 오른 3건 / 내린 3건</div>${(ex.best || []).map(exRow).join('')}${(ex.worst || []).map(exRow).join('')}</div>` : ''}
+        <div class="score-note">
+          여기 나온 건 <b>고른 것이 아니라 그동안 이 사이트에 올라온 전부</b>입니다
+          (총 ${s.picks_total}건 중 시세 확인이 된 ${s.picks_measured}건).
+          잘된 것만 보여주지 않으려고 스크립트가 기계적으로 계산합니다.
+          <b>과거 기록일 뿐 앞으로의 성과를 뜻하지 않으며, 매매 결과도 아닙니다</b>
+          (실제로는 수수료·세금·체결가 차이가 생깁니다).
+        </div>
+      </div>`;
+  }
+
   // ---- 히스토리 탭: 반복 등장 종목 + 날짜별 기록 ----
   let historyData = null;
 
   function renderHistory() {
     const el = document.getElementById('historyBody');
     if (!historyData || !(historyData.days || []).length) {
-      el.innerHTML = '<div class="news-empty">아직 기록이 없습니다. 매일 갱신될 때마다 하루치씩 쌓입니다.</div>';
+      el.innerHTML = scorecardHtml()
+        + '<div class="news-empty">아직 기록이 없습니다. 매일 갱신될 때마다 하루치씩 쌓입니다.</div>';
       return;
     }
     const days = historyData.days;
@@ -1422,7 +1527,7 @@
       .sort((a, b) => b[1].count - a[1].count || b[1].streak - a[1].streak)
       .slice(0, 15);
 
-    let html = '';
+    let html = scorecardHtml();
     html += '<div class="hist-section-title">반복해서 올라온 종목</div>';
     if (repeats.length) {
       html += '<div class="hist-table">' + repeats.map(([sym, st]) => {
@@ -1587,15 +1692,17 @@
     .then(d => { if (d && d.notes) companyNotes = d.notes; })
     .catch(() => {});
 
-  const historyReady = fetch('history.json')
-    .then(r => (r.ok ? r.json() : null))
-    .then(h => {
-      if (!h) return;
+  const historyReady = Promise.all([
+    fetch('history.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
+    fetch('scorecard.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
+  ]).then(([h, s]) => {
+    if (h) {
       historyData = h;
       if (h.stats) historyStats = h.stats;
-      renderHistory();
-    })
-    .catch(() => { renderHistory(); });
+    }
+    scorecardData = s;
+    renderHistory();
+  });
 
   Promise.all([fetch('data.json').then(r => r.json()), historyReady, notesReady])
     .then(([d]) => {
