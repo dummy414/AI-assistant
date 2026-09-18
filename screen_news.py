@@ -94,8 +94,13 @@ def main():
     print("=" * 60)
     print("1) 유니버스 스크리닝 (유동성 높은 종목 중 오늘 변동/거래량 상위)")
     print("=" * 60)
-    table = watchlist.screen(top_n=10)
-    print(table[["symbol", "name", "price", "day_return", "volume_ratio"]]
+    # 유니버스가 1,000종목으로 넓어지면 무명 종목이 상위에 올 수 있다. 넉넉히 뽑아서
+    # 뉴스가 있는 종목을 우선 채우고, 모자라면 점수 순으로 마저 채운다
+    # (뉴스 없는 카드가 여러 장이면 읽을 게 없어지므로).
+    SHORTLIST = 24
+    FINAL = 10
+    shortlist = watchlist.screen(top_n=SHORTLIST)
+    print(shortlist[["symbol", "name", "price", "day_return", "volume_ratio"]].head(SHORTLIST)
           .to_string(index=False, formatters={
               "price": "${:.2f}".format,
               "day_return": "{:+.2%}".format,
@@ -105,8 +110,17 @@ def main():
     print("\n" + "=" * 60)
     print("2) 뉴스 수집 (Alpaca News API)")
     print("=" * 60)
-    symbols = table["symbol"].tolist()
-    news_map = fetch_news_batch(symbols)
+    shortlist_symbols = shortlist["symbol"].tolist()
+    news_map = fetch_news_batch(shortlist_symbols)
+
+    with_news = [s for s in shortlist_symbols if news_map.get(s)]
+    without_news = [s for s in shortlist_symbols if not news_map.get(s)]
+    symbols = (with_news + without_news)[:FINAL]
+    table = (shortlist[shortlist["symbol"].isin(symbols)]
+             .set_index("symbol").loc[symbols].reset_index())
+
+    print(f"   후보 {len(shortlist_symbols)}개 중 뉴스 보유 {len(with_news)}개 "
+          f"→ 최종 {len(symbols)}개 선정")
     for s in symbols:
         print(f"   {s}: {len(news_map.get(s, []))}건")
 

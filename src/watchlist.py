@@ -51,6 +51,20 @@ UNIVERSE: dict[str, str] = {
 }
 
 
+def active_universe() -> dict[str, str]:
+    """스크리닝에 쓸 유니버스(심볼 → 종목명).
+
+    src/universe.py가 만들어둔 유동성 유니버스(약 1,000종목)가 있으면 그걸 쓰고,
+    없으면 아래 손으로 고른 65종목으로 물러난다. 넓은 쪽을 쓰면 매일 나오는 종목이
+    훨씬 다양해지지만, 유동성 하한(주가 $5+ / 일평균 거래대금 $5M+)이 방어선 역할을 한다.
+    """
+    from . import universe
+    liquid = universe.load()
+    if liquid:
+        return {sym: row["name"] for sym, row in liquid.items()}
+    return dict(UNIVERSE)
+
+
 def _fetch_batch_bars(symbols: list[str], lookback_days: int = 45) -> pd.DataFrame:
     """유니버스 전 종목의 일봉을 단일 배치 요청으로 가져온다 (API 호출 최소화)."""
     from datetime import datetime, timedelta
@@ -62,9 +76,22 @@ def _fetch_batch_bars(symbols: list[str], lookback_days: int = 45) -> pd.DataFra
     client = StockHistoricalDataClient(config.ALPACA_API_KEY, config.ALPACA_SECRET_KEY)
     end = datetime.now()
     start = end - timedelta(days=lookback_days)
-    req = StockBarsRequest(symbol_or_symbols=symbols, timeframe=TimeFrame.Day,
-                            start=start, end=end, feed=DataFeed(config.ALPACA_FEED))
-    return client.get_stock_bars(req).df
+
+    # 유니버스가 1,000종목 규모로 커지면 한 번에 요청하기엔 응답이 너무 크다.
+    frames = []
+    for i in range(0, len(symbols), 200):
+        req = StockBarsRequest(symbol_or_symbols=symbols[i:i + 200], timeframe=TimeFrame.Day,
+                               start=start, end=end, feed=DataFeed(config.ALPACA_FEED))
+        try:
+            df = client.get_stock_bars(req).df
+        except Exception as e:
+            print(f"  바 조회 실패(건너뜀) {i}~{i+200}: {e}")
+            continue
+        if not df.empty:
+            frames.append(df)
+    if not frames:
+        return pd.DataFrame()
+    return pd.concat(frames)
 
 
 def screen(top_n: int = 10, min_price: float = 5.0) -> pd.DataFrame:
@@ -74,12 +101,14 @@ def screen(top_n: int = 10, min_price: float = 5.0) -> pd.DataFrame:
     점수 = (전일대비 등락률 절대값 순위) + (거래량 급증배수 순위) — 둘 다 순위가
     높을수록(=변동이 크고 거래가 몰릴수록) 뉴스에서 다뤄질 만한 종목일 가능성이 크다.
     """
-    symbols = list(UNIVERSE.keys())
+    names = active_universe()
+    symbols = list(names)
     bars = _fetch_batch_bars(symbols)
+    available = set(bars.index.get_level_values(0)) if not bars.empty else set()
 
     rows = []
     for sym in symbols:
-        if sym not in bars.index.get_level_values(0):
+        if sym not in available:
             continue
         df = bars.loc[sym].sort_index()
         if len(df) < 6:
@@ -94,7 +123,7 @@ def screen(top_n: int = 10, min_price: float = 5.0) -> pd.DataFrame:
         if last_close < min_price:
             continue
         rows.append({
-            "symbol": sym, "name": UNIVERSE[sym], "price": last_close,
+            "symbol": sym, "name": names[sym], "price": last_close,
             "day_return": day_ret, "return_5d": ret_5d, "volume_ratio": vol_ratio,
         })
 
@@ -119,12 +148,14 @@ def screen_anomalies(top_n: int = 8, lookback_days: int = 260, min_price: float 
 
     이 중 하나라도 임계값을 넘으면 "심상치 않음" 후보에 올린다.
     """
-    symbols = list(UNIVERSE.keys())
+    names = active_universe()
+    symbols = list(names)
     bars = _fetch_batch_bars(symbols, lookback_days=lookback_days)
+    available = set(bars.index.get_level_values(0)) if not bars.empty else set()
 
     candidates = []
     for sym in symbols:
-        if sym not in bars.index.get_level_values(0):
+        if sym not in available:
             continue
         df = bars.loc[sym].sort_index()
         if len(df) < 30:
@@ -193,7 +224,7 @@ def screen_anomalies(top_n: int = 8, lookback_days: int = 260, min_price: float 
 
         anomaly_score = abs(return_z) + max(vol_z, 0) / 2 + (streak >= 5) * 2 + (near_high or near_low) * 1.5
         candidates.append({
-            "symbol": sym, "name": UNIVERSE[sym], "price": round(float(last_close), 2),
+            "symbol": sym, "name": names[sym], "price": round(float(last_close), 2),
             "day_return": round(float(today_ret), 4), "return_z": round(float(return_z), 2),
             "vol_z": round(float(vol_z), 2), "streak": int(streak),
             "near_high": bool(near_high), "near_low": bool(near_low),
