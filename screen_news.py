@@ -97,7 +97,10 @@ def fetch_news_batch(symbols: list[str], limit_per_symbol: int = 4, lookback_day
                 by_symbol[s].append({
                     "headline": n.headline,
                     "summary": n.summary,
-                    "content_text": _strip_html(n.content)[:4000],
+                    # 본문은 한국어 3~5문장 요약을 쓰기 위한 재료다. 기사 핵심은 대개 앞부분에
+                    # 있고, 이 파일을 매일 LLM이 통째로 읽으므로 길이가 곧 토큰 비용이다.
+                    # 4,000자 → 1,800자로 줄여도 요약 품질에는 영향이 거의 없다.
+                    "content_text": _strip_html(n.content)[:1800],
                     "image": image,
                     "url": n.url,
                     "source": n.source,
