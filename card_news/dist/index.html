@@ -376,6 +376,19 @@
   .rel-badge.down { color: var(--down); background: var(--down-soft); }
   .rel-badge .label { font-family: 'Archivo', sans-serif; font-weight: 500; color: var(--ink-3); margin-right: 3px; }
 
+  /* 이 회사가 뭘 하는 곳인지 — 낯선 중소형주가 매일 올라오므로 기본 설명이 먼저 필요하다 */
+  .primer {
+    background: var(--surface-2); border-radius: 10px; padding: 12px 14px;
+    font-size: 13.5px; line-height: 1.65; color: var(--ink-2);
+  }
+  .primer .ph {
+    display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 5px;
+  }
+  .primer .meta { display: block; margin-top: 7px; font-size: 11.5px; color: var(--ink-3); }
+  .primer a { color: var(--accent); text-decoration: none; }
+  .primer a:hover { text-decoration: underline; }
+
   .hook { font-family: 'Newsreader', serif; font-style: italic; font-size: 17px; line-height: 1.45; border-left: 2px solid var(--accent); padding-left: 12px; }
   .body-text { font-size: 14.5px; line-height: 1.7; color: var(--ink-2); }
 
@@ -881,6 +894,28 @@
     fill('moversDown', down);
   }
 
+  // 회사 설명 (company_notes.json) — 한 번 써두고 계속 재사용하는 자료
+  let companyNotes = {};
+
+  function primerHtml(symbol) {
+    const n = companyNotes[symbol];
+    if (!n || !n.primer) return '';
+    const meta = [];
+    if (n.industry) meta.push(escapeHtml(n.industry));
+    if (n.market_cap_musd) {
+      const b = n.market_cap_musd / 1000;
+      meta.push(`시가총액 ${b >= 1 ? b.toFixed(1) + 'B' : Math.round(n.market_cap_musd) + 'M'}`);
+    }
+    const url = safeUrl(n.weburl);
+    if (url) meta.push(`<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">홈페이지 ↗</a>`);
+    return `
+      <div class="primer">
+        <span class="ph">어떤 회사인가</span>
+        ${escapeHtml(n.primer)}
+        ${meta.length ? `<span class="meta">${meta.join(' · ')}</span>` : ''}
+      </div>`;
+  }
+
   function fmtEarningsDate(d) {
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || '');
     return m ? `${Number(m[2])}/${Number(m[3])}` : null;
@@ -960,6 +995,7 @@
       <div class="chart-row">${sparklineSvg(c.spark)}${relBadgeHtml(c)}</div>
       ${range52Html(c)}
       ${contextRowHtml(c)}
+      ${primerHtml(c.symbol)}
       <div class="hook">${escapeHtml(c.hook)}</div>
       <div class="body-text">${escapeHtml(c.body)}</div>
       <div class="inline-news">
@@ -1459,6 +1495,11 @@
 
   // 등장 기록을 먼저 받아두면 카드가 그려질 때 '3일 연속' 배지가 함께 붙는다.
   // 없거나 실패해도(첫 배포 등) 배지만 생략되고 나머지는 정상 동작한다.
+  const notesReady = fetch('company_notes.json')
+    .then(r => (r.ok ? r.json() : null))
+    .then(d => { if (d && d.notes) companyNotes = d.notes; })
+    .catch(() => {});
+
   const historyReady = fetch('history.json')
     .then(r => (r.ok ? r.json() : null))
     .then(h => {
@@ -1469,7 +1510,7 @@
     })
     .catch(() => { renderHistory(); });
 
-  Promise.all([fetch('data.json').then(r => r.json()), historyReady])
+  Promise.all([fetch('data.json').then(r => r.json()), historyReady, notesReady])
     .then(([d]) => {
       render(d);
       renderCombo();
