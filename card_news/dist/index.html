@@ -508,7 +508,7 @@
   .rp-fwd b.up { color: var(--up); }
   .rp-fwd b.down { color: var(--down); }
   .rp-fwd b.na { color: var(--ink-3); }
-  .rp-sum { margin-top: 11px; }
+  .rp-scope { margin-top: 12px; margin-bottom: 4px; font-size: 11px; color: var(--ink-3); }
   .rp-empty { font-size: 12.5px; color: var(--ink-3); line-height: 1.6; }
 
   /* 카드 안을 섹션으로 나눠 읽는 순서를 만든다: 무슨 회사 → 왜 화제 → 숫자 → 뉴스 */
@@ -1201,12 +1201,14 @@
     if (!rows) return '';
     // 통계는 화면에 나열한 몇 건이 아니라 찾아낸 사건 **전부**로 계산한다.
     // 그래서 표의 최고치가 위 목록에 안 보일 수 있다 — 그 점을 먼저 밝혀둔다.
+    // 표 헤더에 넣으면 좁은 화면에서 열이 뭉개진다 — 표 위 한 줄로 뺀다
     const scope = v.events_found > v.events.length
       ? `위 ${v.events.length}건을 포함한 전체 ${v.events_found}건 기준`
       : `위 ${v.events.length}건 전부 기준`;
     return `
-      <table class="stat-table rp-sum">
-        <thead><tr><th>이후 경과 · ${escapeHtml(scope)}</th><th>상승/전체</th><th>중앙값</th><th>최저 ~ 최고</th></tr></thead>
+      <div class="rp-scope">${escapeHtml(scope)}</div>
+      <table class="stat-table">
+        <thead><tr><th>이후 경과</th><th>상승/전체</th><th>중앙값</th><th>최저 ~ 최고</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>`;
   }
