@@ -302,7 +302,12 @@
   .chg { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; padding: 3px 9px; border-radius: 8px; font-variant-numeric: tabular-nums; }
   .chg.up { color: var(--up); background: var(--up-soft); }
   .chg.down { color: var(--down); background: var(--down-soft); }
-  .substats { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  /* 가격 아래 보조 정보 한 줄 — 텍스트와 배지가 섞이므로 flex로 세로 정렬을 맞춘다 */
+  .substats {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums;
+  }
+  .substats b { color: var(--ink-2); font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
 
   /* 며칠째 등장했는지 — 매일 새 목록만 보면 추적이 안 되므로 연속성을 표시한다 */
   .streak-badge {
@@ -466,55 +471,6 @@
   .ins-row .amt.buy { color: var(--up); }
   .ins-row .amt.sell { color: var(--down); }
 
-  /* 과거 재생 — 이 종목이 평소와 다르게 움직였던 날과 그때의 헤드라인 */
-  .rp-today {
-    display: inline-flex; align-items: baseline; gap: 7px; margin-bottom: 11px;
-    font-size: 12px; padding: 5px 11px; border-radius: 999px;
-    background: var(--surface-2); color: var(--ink-2);
-  }
-  .rp-today b { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
-  .rp-today.up b { color: var(--up); }
-  .rp-today.down b { color: var(--down); }
-  .rp-ev { padding: 9px 0; border-bottom: 1px solid var(--line); }
-  .rp-ev:last-of-type { border-bottom: none; }
-  .rp-top { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
-  .rp-date {
-    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-3);
-  }
-  .rp-move {
-    font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;
-    font-size: 13px; font-weight: 600; padding: 1px 7px; border-radius: 6px;
-  }
-  .rp-move.up { color: var(--up); background: var(--up-soft); }
-  .rp-move.down { color: var(--down); background: var(--down-soft); }
-  .rp-sigma { font-size: 11.5px; color: var(--ink-3); }
-  .rp-head {
-    display: block; margin: 5px 0 6px; font-size: 13px; line-height: 1.5;
-    color: var(--ink-2); text-decoration: none;
-  }
-  a.rp-head:hover { color: var(--accent); text-decoration: underline; }
-  .rp-head.none { color: var(--ink-3); font-style: italic; font-size: 12px; }
-  /* 번역문 아래 원문 — 우리가 옮긴 말과 출처의 말을 구분해서 보여준다 */
-  .rp-head-en {
-    display: block; margin-top: 3px; font-size: 11px; line-height: 1.45;
-    color: var(--ink-3); font-style: italic;
-  }
-  .rp-sector {
-    display: inline-block; margin-right: 6px; padding: 1px 6px; border-radius: 5px;
-    background: var(--surface-2); color: var(--ink-3); font-size: 10.5px;
-    font-weight: 700; letter-spacing: .03em; vertical-align: 1px;
-  }
-  /* 사건 후 경과는 "그래서 그 다음엔?"에 답하는 줄이라 한 눈에 들어와야 한다 */
-  .rp-fwd { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink-3); }
-  .rp-fwd b {
-    font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;
-    font-weight: 600; margin-left: 3px;
-  }
-  .rp-fwd b.up { color: var(--up); }
-  .rp-fwd b.down { color: var(--down); }
-  .rp-fwd b.na { color: var(--ink-3); }
-  .rp-scope { margin-top: 12px; margin-bottom: 4px; font-size: 11px; color: var(--ink-3); }
-  .rp-empty { font-size: 12.5px; color: var(--ink-3); line-height: 1.6; }
 
   /* 카드 안을 섹션으로 나눠 읽는 순서를 만든다: 무슨 회사 → 왜 화제 → 숫자 → 뉴스 */
   .sec { border-top: 1px solid var(--line); padding-top: 13px; }
@@ -652,7 +608,6 @@
   <div class="tabbar">
     <button class="tab-btn active" id="tabToday">오늘의 관심종목</button>
     <button class="tab-btn" id="tabQuality">우량주</button>
-    <button class="tab-btn" id="tabCombo">🐰🐰 두 마리 토끼</button>
     <button class="tab-btn" id="tabRadar">📡 레이더 포착</button>
     <button class="tab-btn" id="tabAsk">🔎 종목 알아보기</button>
     <button class="tab-btn" id="tabHistory">📅 히스토리</button>
@@ -700,14 +655,6 @@
       "이 종목이 계속 오른다"는 걸 예측하거나 보장하지 않습니다. 재무제표는 분기 단위라 매일 크게 바뀌지 않습니다.
     </div>
     <div class="quality-grid" id="qualityGrid"></div>
-  </section>
-
-  <section class="quality-view hide" id="comboView">
-    <div class="quality-note">
-      "오늘 화제인 종목"과 "우량주" 두 리스트에 <b>동시에</b> 들어있는 종목만 모았습니다.
-      매수 신호가 아니라, 두 조건이 우연히 겹쳤다는 사실만 보여줍니다. 겹치는 종목이 없는 날도 있습니다.
-    </div>
-    <div class="quality-grid" id="comboGrid"></div>
   </section>
 
   <section class="quality-view hide" id="radarView">
@@ -1179,126 +1126,6 @@
       </div>`;
   }
 
-  // ---- 과거 재생 (replay.json) ----
-  // 주식을 오래 본 사람은 "얘 작년 실적 때도 이랬는데 그 뒤 도로 빠졌지" 같은 참조점을
-  // 머리에 갖고 있다. 그 기억을 데이터로 대신 만들어주는 블록이다.
-  // 사건을 찾는 기준은 뉴스 분류가 아니라 주가다 — 그날 등락 ÷ 직전 60일 표준편차.
-  // 뉴스 분류로 과거 사건을 찾으면 오탐이 절반을 넘는다(src/replay.py 주석 참고).
-  let replayData = {};
-
-  function fwdSpan(label, v) {
-    if (v == null) return `<span>${label}<b class="na"> —</b></span>`;
-    return `<span>${label}<b class="${v >= 0 ? 'up' : 'down'}">${pct(v)}</b></span>`;
-  }
-
-  function replaySummaryTable(v) {
-    const rows = [5, 20].map(h => {
-      const s = (v.summary || {})[String(h)];
-      if (!s) return '';
-      return `
-        <tr>
-          <td>${h}거래일 뒤</td>
-          <td>${s.n}건 중 <b>${s.up}건</b> 상승</td>
-          <td class="${s.median >= 0 ? 'up' : 'down'}">${pct(s.median)}</td>
-          <td class="band">${pct(s.worst)} ~ ${pct(s.best)}</td>
-        </tr>`;
-    }).filter(Boolean).join('');
-    if (!rows) return '';
-    // 통계는 화면에 나열한 몇 건이 아니라 찾아낸 사건 **전부**로 계산한다.
-    // 그래서 표의 최고치가 위 목록에 안 보일 수 있다 — 그 점을 먼저 밝혀둔다.
-    // 표 헤더에 넣으면 좁은 화면에서 열이 뭉개진다 — 표 위 한 줄로 뺀다
-    const scope = v.events_found > v.events.length
-      ? `위 ${v.events.length}건을 포함한 전체 ${v.events_found}건 기준`
-      : `위 ${v.events.length}건 전부 기준`;
-    return `
-      <div class="rp-scope">${escapeHtml(scope)}</div>
-      <table class="stat-table">
-        <thead><tr><th>이후 경과</th><th>상승/전체</th><th>중앙값</th><th>최저 ~ 최고</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
-  }
-
-  function replayHtml(symbol) {
-    const v = replayData[symbol];
-    if (!v) return '';
-    const t = v.today || {};
-    const yrs = (v.bars / 252).toFixed(1);
-
-    // 오늘이 조용한 날이면 "평소의 0.3배"는 어색하다 — 말로 풀어준다
-    const todayNote = t.move_vs_normal == null ? ''
-      : (t.move_vs_normal >= 1
-          ? `= 평소 변동폭의 <b>${t.move_vs_normal}배</b>`
-          : '— 평소 변동폭 안에 들어오는 조용한 날');
-    const todayPill = !todayNote ? '' : `
-      <div class="rp-today ${t.return >= 0 ? 'up' : 'down'}">
-        <span>오늘</span><b>${pct(t.return)}</b><span>${todayNote}</span>
-      </div>`;
-
-    if (!v.events || !v.events.length) {
-      return `
-        <div class="sec">
-          <div class="sec-title">과거 재생 · 평소와 다르게 움직였던 날</div>
-          ${todayPill}
-          <div class="rp-empty">
-            최근 ${yrs}년간 평소 변동폭의 ${v.threshold_sigma}배를 넘긴 날이 없었습니다 —
-            원래 크게 튀지 않는 종목이라는 뜻입니다.
-          </div>
-        </div>`;
-    }
-
-    const evs = v.events.map(e => {
-      const n = e.news;
-      const url = n ? safeUrl(n.url) : '';
-      // 업종이 통째로 움직인 날은 그렇게 밝혀준다 — 이 회사 소식으로 오해하면 안 된다
-      const mark = n && n.sector_wide ? '<span class="rp-sector">업종 전체</span>' : '';
-      // 한국어가 있으면 그걸 먼저 보여주되, 원문 제목도 작게 남긴다 —
-      // 번역은 우리가 만든 것이고 원문은 출처의 것이라 둘을 섞으면 안 된다.
-      let headline;
-      if (!n) {
-        headline = '<span class="rp-head none">그날을 설명할 만한 기사를 찾지 못했습니다</span>';
-      } else {
-        const main = escapeHtml(n.headline_ko || n.headline);
-        const inner = mark + main
-          + (n.headline_ko ? `<span class="rp-head-en">${escapeHtml(n.headline)}</span>` : '');
-        headline = url
-          ? `<a class="rp-head" href="${url}" target="_blank" rel="noopener noreferrer">${inner}</a>`
-          : `<span class="rp-head">${inner}</span>`;
-      }
-      const f = e.forward || {};
-      return `
-        <div class="rp-ev">
-          <div class="rp-top">
-            <span class="rp-date">${escapeHtml(e.date)}</span>
-            <span class="rp-move ${e.return >= 0 ? 'up' : 'down'}">${pct(e.return)}</span>
-            <span class="rp-sigma">평소의 ${e.move_vs_normal}배${
-              n && n.articles_that_day ? ` · 그날 기사 ${n.articles_that_day}건` : ''}</span>
-          </div>
-          ${headline}
-          <div class="rp-fwd">
-            ${fwdSpan('1일 후', f['1'])}${fwdSpan('5일 후', f['5'])}${fwdSpan('20일 후', f['20'])}
-          </div>
-        </div>`;
-    }).join('');
-
-    const more = v.events_found > v.events.length
-      ? ` (전체 ${v.events_found}건 중 최근 ${v.events.length}건)` : '';
-
-    return `
-      <div class="sec">
-        <div class="sec-title">과거 재생 · 평소와 다르게 움직였던 날${escapeHtml(more)}</div>
-        ${todayPill}
-        ${evs}
-        ${replaySummaryTable(v)}
-        <div class="stat-caption">
-          최근 ${yrs}년 중 <b>그날 등락이 직전 60거래일 평소 변동폭의 ${v.threshold_sigma}배를
-          넘긴 날</b>을 골라, 그때 나온 기사 제목과 그 뒤 주가를 그대로 옮긴 것입니다.
-          기사는 분류하지 않고 원문 제목을 붙였습니다.
-          <b>과거 기록이며 예측이 아닙니다</b> — 표본이 열 건 남짓이라 "다음에도 이럴 것"의
-          근거가 되지 못합니다. 평균보다 <b>최저~최고 폭</b>을 보세요.
-        </div>
-      </div>`;
-  }
-
   function range52Html(c) {
     const st = c.stats || {};
     if (st.pct_in_52w_range == null || st.low_52w == null || st.high_52w == null) return '';
@@ -1320,10 +1147,16 @@
     const newsHtml = c.bullets.length
       ? c.bullets.map(b => newsItemHtml(b, 'detail-' + active)).join('')
       : '<div class="news-empty">관련 뉴스가 확인되지 않았습니다.</div>';
-    const hasExtra = c.return_5d != null && c.volume_ratio != null;
-    const substatsText = hasExtra
-      ? `5일 ${pct(c.return_5d)} · 거래량 평소 대비 ${c.volume_ratio.toFixed(2)}배`
-      : '실시간 시세 · 직접 추가한 종목이라 5일 추이 데이터는 없습니다';
+    // 가격 바로 아래 줄. 5일 등락은 아래 '숫자로 보기' 표에 이미 있으므로 여기서는 빼고,
+    // 그 표에 없는 것(거래량·연속 선정)만 남긴다.
+    const subBits = [];
+    if (c.volume_ratio != null) {
+      subBits.push(`<span>거래량 평소 대비 <b>${c.volume_ratio.toFixed(2)}배</b></span>`);
+    } else {
+      subBits.push('<span>실시간 시세 · 직접 추가한 종목이라 추이 데이터는 없습니다</span>');
+    }
+    const streak = streakBadgeHtml(c.symbol);
+    if (streak) subBits.push(streak);
     detailEl.innerHTML = `
       <div class="detail-head">
         <span class="tag">${escapeHtml(c.tag)}</span>
@@ -1345,8 +1178,7 @@
         <span class="price">$${c.price.toFixed(2)}</span>
         <span class="chg ${dirClass}">${arrow} ${pct(c.day_return)}</span>
       </div>
-      <div class="substats">${substatsText}</div>
-      ${streakBadgeHtml(c.symbol) ? `<div>${streakBadgeHtml(c.symbol)}</div>` : ''}
+      <div class="substats">${subBits.join('')}</div>
 
       ${primerHtml(c.symbol)}
 
@@ -1367,8 +1199,6 @@
           ${statTableHtml(c)}
         </div>
       </div>
-
-      ${replayHtml(c.symbol)}
 
       ${insiderHtml(c.symbol)}
 
@@ -1516,7 +1346,7 @@
       .then(live => {
         if (live.error) return Promise.reject(new Error(live.error));
         mergeLive(live);
-        renderNav(); renderDetail(); renderRelated(); renderCombo(); renderMovers();
+        renderNav(); renderDetail(); renderRelated(); renderMovers();
         liveStatusEl.textContent = '실시간 · ' + fmtClock(live.fetched_at);
         liveDotEl.classList.add('on');
       })
@@ -1562,7 +1392,6 @@
   // ---- 우량주 탭 (실제 재무데이터, 예측 아님) ----
   const tabToday = document.getElementById('tabToday');
   const tabQuality = document.getElementById('tabQuality');
-  const tabCombo = document.getElementById('tabCombo');
   const tabRadar = document.getElementById('tabRadar');
   const tabAsk = document.getElementById('tabAsk');
   const tabHistory = document.getElementById('tabHistory');
@@ -1570,7 +1399,6 @@
   const layoutEl = document.querySelector('.layout');
   const moversEl = document.getElementById('movers');
   const qualityViewEl = document.getElementById('qualityView');
-  const comboViewEl = document.getElementById('comboView');
   const radarViewEl = document.getElementById('radarView');
   const askViewEl = document.getElementById('askView');
   const historyViewEl = document.getElementById('historyView');
@@ -1579,7 +1407,6 @@
   function showTab(name) {
     const isToday = name === 'today';
     const isQuality = name === 'quality';
-    const isCombo = name === 'combo';
     const isRadar = name === 'radar';
     const isAsk = name === 'ask';
     const isHistory = name === 'history';
@@ -1587,57 +1414,20 @@
     layoutEl.classList.toggle('hide', !isToday);
     moversEl.classList.toggle('hide', !isToday);
     qualityViewEl.classList.toggle('hide', !isQuality);
-    comboViewEl.classList.toggle('hide', !isCombo);
     radarViewEl.classList.toggle('hide', !isRadar);
     askViewEl.classList.toggle('hide', !isAsk);
     historyViewEl.classList.toggle('hide', !isHistory);
     tabToday.classList.toggle('active', isToday);
     tabQuality.classList.toggle('active', isQuality);
-    tabCombo.classList.toggle('active', isCombo);
     tabRadar.classList.toggle('active', isRadar);
     tabAsk.classList.toggle('active', isAsk);
     tabHistory.classList.toggle('active', isHistory);
   }
   tabToday.addEventListener('click', () => showTab('today'));
   tabQuality.addEventListener('click', () => showTab('quality'));
-  tabCombo.addEventListener('click', () => showTab('combo'));
   tabRadar.addEventListener('click', () => showTab('radar'));
   tabAsk.addEventListener('click', () => showTab('ask'));
   tabHistory.addEventListener('click', () => showTab('history'));
-
-  function renderCombo() {
-    if (!data || !qualityData) return;
-    const qMap = {};
-    qualityData.companies.forEach(c => { qMap[c.symbol] = c; });
-    const overlap = data.cards.filter(c => qMap[c.symbol]);
-    const grid = document.getElementById('comboGrid');
-    if (!overlap.length) {
-      grid.innerHTML = '<div class="news-empty">오늘은 두 리스트에 겹치는 종목이 없습니다.</div>';
-      return;
-    }
-    grid.innerHTML = overlap.map(t => {
-      const q = qMap[t.symbol];
-      const dirClass = t.day_return >= 0 ? 'up' : 'down';
-      const arrow = t.day_return >= 0 ? '▲' : '▼';
-      return `
-        <div class="qcard">
-          <div><span class="qcard-sym">${escapeHtml(t.symbol)}</span><span class="qcard-name">${escapeHtml(t.name)}</span></div>
-          <div class="qcard-industry">${escapeHtml(q.industry || '')}</div>
-          <div class="qcard-price-row">
-            <span class="price">$${t.price.toFixed(2)}</span>
-            <span class="chg ${dirClass}">${arrow} ${pct(t.day_return)}</span>
-          </div>
-          <div class="hook" style="font-size:14px">${escapeHtml(t.hook)}</div>
-          <div class="qcard-metrics">
-            <div><span class="qmetric-label">시가총액</span><span class="qmetric-value">${fmtMarketCap(q.market_cap)}</span></div>
-            <div><span class="qmetric-label">PER</span><span class="qmetric-value">${q.per != null ? q.per.toFixed(1) : '—'}</span></div>
-            <div><span class="qmetric-label">매출성장률(YoY)</span><span class="qmetric-value">${q.revenue_growth != null ? pct(q.revenue_growth) : '—'}</span></div>
-            <div><span class="qmetric-label">순이익률</span><span class="qmetric-value">${q.net_margin != null ? pct(q.net_margin) : '—'}</span></div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
 
   function fmtMarketCap(n) {
     if (n == null) return '—';
@@ -1933,7 +1723,7 @@
 
   fetch('quality.json')
     .then(r => r.json())
-    .then(q => { qualityData = q; renderQuality(q); renderCombo(); })
+    .then(q => { qualityData = q; renderQuality(q); })
     .catch(() => {});
 
   fetch('radar.json')
@@ -1946,11 +1736,9 @@
   const notesReady = Promise.all([
     fetch('company_notes.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
     fetch('insider.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
-    fetch('replay.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
-  ]).then(([n, i, rp]) => {
+  ]).then(([n, i]) => {
     if (n && n.notes) companyNotes = n.notes;
     if (i && i.symbols) insiderData = i.symbols;
-    if (rp && rp.symbols) replayData = rp.symbols;
   });
 
   const historyReady = Promise.all([
@@ -1968,7 +1756,6 @@
   Promise.all([fetch('data.json').then(r => r.json()), historyReady, notesReady])
     .then(([d]) => {
       render(d);
-      renderCombo();
       pollLive();
       setInterval(pollLive, LIVE_INTERVAL_MS);
     })

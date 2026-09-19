@@ -31,7 +31,7 @@ DIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "card_news", "di
 FILES = [
     "data.json", "radar.json", "quality.json",
     "history.json", "company_notes.json", "insider.json",
-    "scorecard.json", "replay.json",
+    "scorecard.json",
 ]
 
 
@@ -39,9 +39,9 @@ def _stamp(raw: bytes) -> datetime | None:
     """파일이 마지막으로 손질된 시각.
 
     generated_at('언제 계산했나')만 보면 **계산 뒤에 덧붙인 작업**을 놓친다.
-    예를 들어 replay.json은 만들어진 뒤에 한국어 번역이 따로 채워지는데,
-    그때 generated_at은 그대로라서 '로컬이 더 최신'을 판정하지 못하고
-    번역을 통째로 덮어쓴 적이 있다. 그래서 modified_at도 함께 본다.
+    스크립트가 파일을 만든 다음 사람이나 LLM이 내용을 채워 넣는 경우가 그렇다 —
+    그때 generated_at은 그대로라서 '로컬이 더 최신'을 판정하지 못하고 방금 한
+    작업을 통째로 덮어쓴 적이 있다. 그래서 modified_at도 함께 본다.
     """
     try:
         doc = json.loads(raw)
