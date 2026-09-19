@@ -668,9 +668,10 @@
 
   <section class="quality-view hide" id="askView">
     <div class="quality-note">
-      특정 종목의 실제 가격·변동성·거래량·재무지표·최근 뉴스를 찾아서 사실대로만 답합니다.
-      갖고 있는 데이터로 부족하면 AI가 직접 웹 검색도 합니다. "지금 사도 될까요?"처럼
-      오를지 내릴지 예측하거나 매수·매도를 추천하는 답은 하지 않습니다.
+      기사를 요약하지 않고 <b>회사가 SEC에 직접 제출한 자료</b>를 읽고 답합니다 —
+      "이건 중요하다"며 회사가 신고한 공시(8-K)와, 회사가 보고한 재무 수치(XBRL) 4년치입니다.
+      그래서 답변에 <b>제출일과 항목번호</b>가 함께 붙습니다.
+      "지금 사도 될까요?"처럼 오를지 내릴지 예측하거나 매수·매도를 추천하는 답은 하지 않습니다.
     </div>
     <form class="add-ticker" id="askSymbolForm" style="max-width:220px;margin-bottom:14px">
       <input id="askSymbolInput" placeholder="티커 입력 (예: AAPL)" maxlength="8" autocomplete="off">
@@ -1680,7 +1681,7 @@
     askInput.disabled = false;
     askInput.placeholder = `${raw}에 대해 궁금한 걸 물어보세요`;
     askSendBtn.disabled = false;
-    addAskMsg('bot', `${raw}에 대해 실제 가격·변동성·재무·최근 뉴스를 찾아서 사실대로 답해드릴게요. 오를지 내릴지 예측이나 매수 추천은 하지 않아요.`);
+    addAskMsg('bot', `${raw}가 SEC에 낸 공시와 재무보고를 직접 읽고 답해드릴게요. 오를지 내릴지 예측이나 매수 추천은 하지 않아요.`);
     askInput.focus();
   });
 
