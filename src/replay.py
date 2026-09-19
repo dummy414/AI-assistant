@@ -17,6 +17,14 @@ replay.py — "이 종목, 예전에 이렇게 움직였을 때 무슨 일이 �
 표준편차는 **그날을 제외한 직전 60일**로 계산한다. 그날을 포함하면 큰 움직임이
 자기 기준을 부풀려서 사건을 놓친다 (그리고 미래 정보를 쓰는 셈이 된다).
 
+### 한 번 조사한 종목은 보관한다
+카드는 매일 갈리지만 이 파일은 **누적**된다. 예전에 올라왔던 종목을 직접 추가하거나
+즐겨찾기에서 다시 열었을 때도 과거 재생이 붙게 하려는 것이다.
+
+보관해도 매일 **전부 다시 계산한다.** 그래야 최근 사건의 빈칸("5일 후 —")이 시간이
+지나면서 채워지고, '오늘' 값도 옳게 남는다. 대신 과거 헤드라인은 절대 바뀌지 않으므로
+지난 파일에서 그대로 재사용한다 — 뉴스 호출이 이 모듈에서 가장 느린 부분이다.
+
 ### 이건 예측이 아니다
 과거 5번 중 3번 올랐다는 건 다음에 오른다는 뜻이 아니다. 표본이 5개면 동전
 던지기와 구분되지 않는다. 그래서 이 모듈은:
@@ -50,6 +58,11 @@ COOLDOWN_DAYS = 5          # 같은 사건의 연속일을 한 건으로 묶는�
 MAX_EVENTS = 6             # 카드에 넣을 최대 건수 (최근 순)
 MIN_SAMPLE = 3             # 이 미만이면 요약 통계를 내지 않는다
 HORIZONS = [1, 5, 20]      # 사건 후 1 / 5 / 20거래일
+# 한 번 조사한 종목은 카드에서 내려가도 보관한다 (직접 추가한 종목·즐겨찾기에서 쓰인다).
+# 다만 이 파일은 방문할 때마다 받으므로 무한정 키우면 폰에서 손해다.
+# 종목당 gzip 약 0.8KB — 150종목이면 압축 후 약 115KB.
+MAX_TOTAL_SYMBOLS = 150
+LIVE_REPLAY_URL = "https://today-watchlist-kr.netlify.app/replay.json"
 NEWS_URL = "https://data.alpaca.markets/v1beta1/news"
 # 1순위는 이 종목이 주인공인 기사. 하지만 채굴주·반도체처럼 **업종이 통째로 움직이는**
 # 종목은 개별 뉴스가 아예 없고 "Crypto-Related Stocks Surge" 같은 기사만 있다.
@@ -233,7 +246,59 @@ def headline_for(symbol: str, event_day: str) -> dict | None:
 
 
 # --------------------------------------------------------------------------
-def build(symbols: list[str], with_news: bool = True) -> dict:
+# 누적 — 한 번 조사한 종목은 카드에서 내려가도 보관한다
+# --------------------------------------------------------------------------
+def _load_previous() -> dict[str, dict]:
+    """지난 replay.json을 불러온다 (배포된 사이트 + 로컬 dist를 합침).
+
+    자동화는 커밋을 하지 않으므로 누적 데이터의 정본은 **배포된 사이트**에 있다.
+    로컬 dist도 같이 읽어서 종목별로 last_seen이 더 최신인 쪽을 쓴다 — 둘 중
+    하나가 실패해도 남은 쪽으로 이어갈 수 있다.
+    """
+    merged: dict[str, dict] = {}
+    for label, loader in (
+        ("사이트", lambda: json.loads(urllib.request.urlopen(
+            urllib.request.Request(LIVE_REPLAY_URL, headers={"User-Agent": "Mozilla/5.0"}),
+            timeout=30).read())),
+        ("로컬", lambda: json.load(open(os.path.normpath(os.path.join(
+            config.DATA_DIR, "..", "card_news", "dist", "replay.json")), encoding="utf-8"))),
+    ):
+        try:
+            syms = loader().get("symbols", {})
+        except Exception as e:
+            print(f"   기존 기록({label}) 못 읽음: {type(e).__name__}")
+            continue
+        for sym, entry in syms.items():
+            old = merged.get(sym)
+            if old is None or (entry.get("last_seen") or "") >= (old.get("last_seen") or ""):
+                merged[sym] = entry
+        print(f"   기존 기록({label}) {len(syms)}종목")
+    return merged
+
+
+def _cached_news(entry: dict | None) -> dict[str, dict]:
+    """지난 기록에서 '사건일 → 헤드라인' 표를 뽑는다.
+
+    과거 사건의 헤드라인은 절대 바뀌지 않는다. 그래서 한 번 받아두면 다시 받을
+    이유가 없고, 뉴스 호출이 이 모듈에서 가장 느린 부분이라 효과가 크다.
+    """
+    if not entry:
+        return {}
+    return {e["date"]: e["news"] for e in entry.get("events", [])
+            if e.get("date") and e.get("news")}
+
+
+# --------------------------------------------------------------------------
+def build(symbols: list[str], with_news: bool = True,
+          previous: dict[str, dict] | None = None,
+          today_symbols: list[str] | None = None) -> dict:
+    """symbols = 오늘 카드 종목 + 보관 종목 전부. today_symbols를 따로 받는 이유는
+    보관 종목의 last_seen(마지막으로 카드에 오른 날)을 건드리면 안 되기 때문이다 —
+    그 값으로 보관함이 넘칠 때 내보낼 순서를 정한다."""
+    previous = previous or {}
+    today_key = datetime.now(timezone.utc).date().isoformat()
+    current = set(today_symbols if today_symbols is not None else symbols)
+
     bars = watchlist._fetch_batch_bars(symbols, lookback_days=LOOKBACK_DAYS)
     if bars.empty:
         return {"generated_at": datetime.now(timezone.utc).isoformat(),
@@ -241,8 +306,15 @@ def build(symbols: list[str], with_news: bool = True) -> dict:
     available = set(bars.index.get_level_values(0))
 
     out: dict[str, dict] = {}
+    reused = fetched = 0
     for sym in symbols:
+        prev = previous.get(sym)
         if sym not in available:
+            # 시세를 못 받았다고 기존 기록까지 버리지는 않는다 (한 번 겪은 실수다).
+            # 다만 '오늘'은 확인할 수 없으므로 지우고 오래된 기록임을 표시한다.
+            if prev:
+                out[sym] = {**prev, "today": None, "today_is_unusual": False, "stale": True}
+                print(f"   {sym:6s} 시세 없음 — 기존 기록 유지")
             continue
         df = bars.loc[sym].sort_index()
         closes = df["close"].to_numpy(dtype=float)
@@ -250,14 +322,23 @@ def build(symbols: list[str], with_news: bool = True) -> dict:
 
         events, today = find_events(closes, dates)
         if today is None:
-            print(f"   {sym:6s} 데이터 부족 ({len(closes)}봉) — 건너뜀")
+            if prev:
+                out[sym] = {**prev, "today": None, "today_is_unusual": False, "stale": True}
+            else:
+                print(f"   {sym:6s} 데이터 부족 ({len(closes)}봉) — 건너뜀")
             continue
 
         shown = events[:MAX_EVENTS]
         if with_news:
+            cache = _cached_news(prev)
             for ev in shown:
+                if ev["date"] in cache:
+                    ev["news"] = cache[ev["date"]]     # 과거 헤드라인은 안 바뀐다
+                    reused += 1
+                    continue
                 time.sleep(THROTTLE)
                 ev["news"] = headline_for(sym, ev["date"])
+                fetched += 1
 
         # 오늘과 같은 방향이었던 사건만 따로 — 이게 가장 궁금한 숫자다
         same_dir = [e for e in events if e["direction"] == today["direction"]]
@@ -275,15 +356,22 @@ def build(symbols: list[str], with_news: bool = True) -> dict:
             "summary": {str(h): summarize(events, h) for h in HORIZONS},
             "summary_same_direction": {str(h): summarize(same_dir, h) for h in HORIZONS},
             "same_direction_n": len(same_dir),
+            # 카드에 마지막으로 올라온 날 — 보관함이 넘칠 때 오래된 것부터 내보낸다
+            "last_seen": today_key if sym in current else (
+                (prev or {}).get("last_seen")),
         }
+        mark = "" if sym in current else " [보관]"
         with_news_n = sum(1 for e in shown if e.get("news"))
         print(f"   {sym:6s} {len(closes)}봉 · 사건 {len(events):2d}건 "
               f"(표시 {len(shown)}, 헤드라인 {with_news_n}) · "
-              f"오늘 {today['return']:+.2%} = 평소의 {today['move_vs_normal']}배")
+              f"오늘 {today['return']:+.2%} = 평소의 {today['move_vs_normal']}배{mark}")
 
+    print(f"\n   헤드라인: 기존 재사용 {reused}건 · 새로 조회 {fetched}건")
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "ready": bool(out),
+        "today_symbols": [s for s in symbols if s in current and s in out],
+        "archived_symbols": [s for s in out if s not in current],
         "lookback_days": LOOKBACK_DAYS,
         "vol_window": VOL_WINDOW,
         "threshold_sigma": SIGMA_THRESHOLD,
@@ -329,23 +417,44 @@ def _load_symbols() -> tuple[list[str], str]:
 
 
 def main():
-    symbols, source = _load_symbols()
+    today_symbols, source = _load_symbols()
     print(f"종목 출처: {source}")
 
-    print(f"과거 재생 — {len(symbols)}종목, 최근 {LOOKBACK_DAYS}일에서 "
-          f"평소의 {SIGMA_THRESHOLD}배 이상 움직인 날 찾기")
-    result = build(symbols)
+    print("기존 기록 불러오는 중…")
+    previous = _load_previous()
+
+    # 오늘 종목 + 예전에 조사해둔 종목. 보관함이 무한정 커지면 폰에서 받는 파일이
+    # 무거워지므로 최근에 카드에 올랐던 순으로 상한을 둔다.
+    room = max(0, MAX_TOTAL_SYMBOLS - len(today_symbols))
+    archived = sorted((s for s in previous if s not in set(today_symbols)),
+                      key=lambda s: previous[s].get("last_seen") or "", reverse=True)[:room]
+    dropped = len(previous) - len(set(previous) & set(today_symbols)) - len(archived)
+    symbols = list(dict.fromkeys(today_symbols + archived))
+
+    print(f"\n과거 재생 — 오늘 {len(today_symbols)}종목 + 보관 {len(archived)}종목 "
+          f"= {len(symbols)}종목" + (f" (상한 초과 {dropped}종목 제외)" if dropped > 0 else ""))
+    print(f"최근 {LOOKBACK_DAYS}일에서 평소의 {SIGMA_THRESHOLD}배 이상 움직인 날 찾기")
+    result = build(symbols, previous=previous, today_symbols=today_symbols)
+
+    if not result.get("ready"):
+        print(f"만들지 못했습니다: {result.get('reason')} — 기존 파일을 그대로 둡니다.")
+        raise SystemExit(1)
 
     dist = os.path.normpath(os.path.join(config.DATA_DIR, "..", "card_news", "dist"))
     os.makedirs(dist, exist_ok=True)
     path = os.path.join(dist, "replay.json")
+    # 누적 파일이라 커지므로 공백 없이 쓴다 (gzip 후에도 원본 파싱 비용은 줄어든다)
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False, indent=2)
+        json.dump(result, f, ensure_ascii=False, separators=(",", ":"))
 
-    total = sum(v["events_found"] for v in result["symbols"].values())
-    heads = sum(1 for v in result["symbols"].values() for e in v["events"] if e.get("news"))
-    print(f"\n저장 완료: {path}")
-    print(f"종목 {len(result['symbols'])}개 · 과거 사건 {total}건 · 헤드라인 확보 {heads}건")
+    total = sum(v.get("events_found", 0) for v in result["symbols"].values())
+    heads = sum(1 for v in result["symbols"].values()
+                for e in v.get("events", []) if e.get("news"))
+    size = os.path.getsize(path)
+    print(f"\n저장 완료: {path} ({size:,}B)")
+    print(f"종목 {len(result['symbols'])}개 "
+          f"(오늘 {len(result['today_symbols'])} + 보관 {len(result['archived_symbols'])}) · "
+          f"과거 사건 {total}건 · 헤드라인 {heads}건")
 
 
 if __name__ == "__main__":
