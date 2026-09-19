@@ -5,7 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>오늘의 관심종목</title>
-<meta name="description" content="오늘 유동성 높은 대형주 중 변동이 컸던 10종목을 실제 뉴스와 함께 정리한 카드뉴스">
+<meta name="description" content="미국 주식을 회사가 SEC에 직접 낸 공시로 확인하는 곳. 매일 아침 화제 종목을 실제 뉴스와 함께 한국어로 정리합니다.">
+<!-- 카톡·슬랙·디스코드에 링크를 붙였을 때 제목 카드가 뜨게 한다.
+     지금까지 이게 없어서 링크를 보내도 아무것도 안 보였다.
+     종목별 미리보기(?s=GNRC)까지 만들려면 서버에서 태그를 갈아끼워야 하므로
+     여기서는 사이트 공통 카드만 둔다. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="오늘의 관심종목">
+<meta property="og:title" content="오늘의 관심종목">
+<meta property="og:description" content="미국 주식을 회사가 SEC에 직접 낸 공시로 확인하는 곳. 매일 아침 자동으로 갱신됩니다.">
+<meta property="og:url" content="https://today-watchlist-kr.netlify.app/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="오늘의 관심종목">
+<meta name="twitter:description" content="미국 주식을 회사가 SEC에 직접 낸 공시로 확인하는 곳.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%B0%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -139,6 +152,53 @@
   .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   .tab-btn:hover:not(.active) { background: var(--surface-2); }
   .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* 종목 한 장 */
+  .stock-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .back-btn {
+    font-family: 'Archivo', sans-serif; font-size: 12.5px; font-weight: 600;
+    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink-2); cursor: pointer;
+  }
+  .back-btn:hover { background: var(--surface-2); }
+  .stock-copied { font-size: 12px; color: var(--up); opacity: 0; transition: opacity .2s; }
+  .stock-copied.show { opacity: 1; }
+  .stock-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .stock-head .ticker { font-family: 'IBM Plex Mono', monospace; font-size: 30px; font-weight: 700; }
+  .stock-head .cname { font-size: 15px; color: var(--ink-2); }
+  .stock-sic { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  /* 티커는 사이트 어디서나 누를 수 있어야 한다 — 그래야 섬이 아니게 된다 */
+  [data-stock] { cursor: pointer; }
+  .nav-item[data-stock]:hover .nav-sym,
+  .mrow[data-stock]:hover .mrow-sym,
+  .hist-chip[data-stock]:hover b,
+  .hist-row[data-stock]:hover .sym,
+  .qcard[data-stock]:hover .qcard-sym { color: var(--accent); }
+  .hist-chip[data-stock]:hover, .qcard[data-stock]:hover { border-color: var(--accent); }
+  /* 회사가 신고한 것 — 8-K 타임라인 */
+  .fil-row {
+    display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid var(--line); align-items: baseline;
+  }
+  .fil-row:last-of-type { border-bottom: none; }
+  .fil-date {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-3);
+    text-decoration: none;
+  }
+  a.fil-date:hover { color: var(--accent); text-decoration: underline; }
+  .fil-items { display: flex; flex-wrap: wrap; gap: 5px; }
+  .fil-item {
+    font-size: 11.5px; padding: 2px 8px; border-radius: 6px;
+    background: var(--surface-2); color: var(--ink-2); white-space: nowrap;
+  }
+  .fil-item.notable { background: var(--gold-soft); color: var(--gold); font-weight: 600; }
+  .fil-item .code { font-family: 'IBM Plex Mono', monospace; opacity: .7; margin-right: 3px; }
+  .ext-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ext-link {
+    font-size: 12px; padding: 6px 11px; border-radius: 999px; text-decoration: none;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+  }
+  .ext-link:hover { border-color: var(--accent); color: var(--accent); }
 
   .quality-view { padding: 8px 2px 100px; }
   .quality-note {
@@ -666,6 +726,17 @@
     <div class="quality-grid" id="radarGrid"></div>
   </section>
 
+  <!-- 종목 한 장 — 이 사이트가 한 종목에 대해 아는 것을 전부 모은 화면.
+       어디서든 티커를 누르면 여기로 오고, 주소(?s=GNRC)로 공유할 수 있다. -->
+  <section class="quality-view hide" id="stockView">
+    <div class="stock-bar">
+      <button class="back-btn" id="stockBack">← 돌아가기</button>
+      <button class="back-btn" id="stockShare">🔗 링크 복사</button>
+      <span class="stock-copied" id="stockCopied">복사됐습니다</span>
+    </div>
+    <div id="stockBody"></div>
+  </section>
+
   <section class="quality-view hide" id="askView">
     <div class="quality-note">
       기사를 요약하지 않고 <b>회사가 SEC에 직접 제출한 자료</b>를 읽고 답합니다 —
@@ -950,7 +1021,7 @@
     return `
       <button class="mrow" data-i="${i}">
         <span style="min-width:0">
-          <span class="mrow-sym">${escapeHtml(c.symbol)}</span>
+          <span class="mrow-sym" data-stock="${escapeHtml(c.symbol)}">${escapeHtml(c.symbol)}</span>
           <span class="mrow-name">${escapeHtml(c.name)}</span>
         </span>
         <span class="mrow-right">
@@ -1127,6 +1198,291 @@
       </div>`;
   }
 
+  // ================= 종목 한 장 =================
+  // 이 사이트가 한 종목에 대해 아는 것을 한 화면에 모은다. 카드·레이더·우량주·
+  // 히스토리가 각자 따로 놀던 걸 여기로 모으는 게 목적이다.
+  // 오늘 선정된 종목이 아니어도 열린다 — 그때는 가진 것만 보여준다.
+  let stockSymbol = null;
+  const filingsCache = {};
+
+  function cardFor(sym) {
+    return (data && data.cards ? data.cards.find((c) => c.symbol === sym) : null) || null;
+  }
+
+  function fmtBil(v) {
+    if (v == null) return '—';
+    const a = Math.abs(v);
+    if (a >= 1e9) return (v / 1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return (v / 1e6).toFixed(0) + 'M';
+    return String(Math.round(v));
+  }
+
+  // 회사가 "이건 중요하다"며 SEC에 신고한 것들. 항목번호가 곧 사건의 종류다.
+  function filingsHtml(f) {
+    if (!f) return '<div class="sec"><div class="sec-title">회사가 신고한 것</div>'
+      + '<div class="news-empty">불러오는 중…</div></div>';
+    if (!f.found) {
+      return `<div class="sec"><div class="sec-title">회사가 신고한 것</div>
+        <div class="news-empty">${escapeHtml(f.reason || 'SEC 자료를 찾지 못했습니다.')}</div></div>`;
+    }
+    const rows = (f.filings || []).map((x) => {
+      const url = safeUrl(x.url);
+      const items = (x.items_ko || []).map((it) =>
+        `<span class="fil-item${it.notable ? ' notable' : ''}"><span class="code">${escapeHtml(it.code)}</span>${escapeHtml(it.label || '')}</span>`
+      ).join('');
+      const d = url
+        ? `<a class="fil-date" href="${url}" target="_blank" rel="noopener noreferrer">${escapeHtml(x.date)} ↗</a>`
+        : `<span class="fil-date">${escapeHtml(x.date)}</span>`;
+      return `<div class="fil-row">${d}<div class="fil-items">${items}</div></div>`;
+    }).join('');
+
+    const links = [];
+    if (safeUrl(f.edgar_url)) {
+      links.push(`<a class="ext-link" href="${safeUrl(f.edgar_url)}" target="_blank" rel="noopener noreferrer">SEC 공시 전체 보기 ↗</a>`);
+    }
+    (f.periodic || []).forEach((p) => {
+      const u = safeUrl(p.url);
+      if (u) links.push(`<a class="ext-link" href="${u}" target="_blank" rel="noopener noreferrer">${escapeHtml(p.form)} (${escapeHtml(p.date)}) ↗</a>`);
+    });
+
+    return `
+      <div class="sec">
+        <div class="sec-title">회사가 신고한 것 · 최근 1년</div>
+        ${rows || '<div class="news-empty">최근 1년간 중요사항 신고(8-K)가 없습니다.</div>'}
+        <div class="ext-links">${links.join('')}</div>
+        <div class="stat-caption">
+          미국 상장사는 중요한 일이 생기면 <b>8-K</b>라는 서식으로 SEC에 신고해야 합니다.
+          앞의 번호가 사건의 종류이고, <b>노란색</b>은 계약·인수·임원변경처럼 특히 눈여겨볼 항목입니다.
+          날짜를 누르면 회사가 낸 원문으로 갑니다. <b>기자의 해석이 아니라 회사가 직접 쓴 문서입니다.</b>
+        </div>
+      </div>`;
+  }
+
+  // 회사가 태그를 붙여 SEC에 보고한 연간 수치 (데이터 벤더 가공값이 아님)
+  function xbrlHtml(f) {
+    if (!f || !f.found || !(f.financials || []).length) return '';
+    const years = f.financials[0].years;
+    const head = years.map((y) => `<th>${y}</th>`).join('');
+    const rows = f.financials.map((a) => {
+      const tds = years.map((y) => {
+        const v = a.byYear[y];
+        const cls = v == null ? '' : (v < 0 ? 'down' : '');
+        return `<td class="${cls}">${v == null ? '—' : fmtBil(v)}</td>`;
+      }).join('');
+      return `<tr><td>${escapeHtml(a.label)}</td>${tds}</tr>`;
+    }).join('');
+    return `
+      <div class="sec">
+        <div class="sec-title">회사가 보고한 숫자 · 단위 달러</div>
+        <table class="stat-table">
+          <thead><tr><th>항목</th>${head}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="stat-caption">
+          연차보고서(10-K)에 회사가 직접 써낸 값입니다. B는 10억, M은 100만 달러입니다.
+          회계연도 기준이라 달력 연도와 다를 수 있습니다.
+        </div>
+      </div>`;
+  }
+
+  function appearanceHtml(sym) {
+    const st = historyStats[sym];
+    if (!st) return '';
+    const bits = [`이 사이트에 <b>${st.count}번</b> 올라왔습니다`];
+    if (st.streak >= 2) bits.push(`<b>${st.streak}일 연속</b>`);
+    if (st.count_7d >= 2) bits.push(`최근 7일 <b>${st.count_7d}번</b>`);
+    let since = '';
+    if (st.change_since_first != null) {
+      const dir = st.change_since_first >= 0 ? 'up' : 'down';
+      since = `<div class="stat-caption">첫 등장일 종가 대비 가장 최근 등장일 종가
+        <b class="${dir}">${pct(st.change_since_first)}</b> —
+        실제 매매 결과가 아니고, 등장 사이 기간의 움직임은 반영되지 않습니다.</div>`;
+    }
+    return `
+      <div class="sec">
+        <div class="sec-title">이 사이트에서의 기록</div>
+        <div class="sec-body"><div class="body-text">${bits.join(' · ')}</div>${since}</div>
+      </div>`;
+  }
+
+  function renderStock() {
+    const sym = stockSymbol;
+    if (!sym) return;
+    const el = document.getElementById('stockBody');
+    const c = cardFor(sym);
+    const f = filingsCache[sym];
+    const note = companyNotes[sym];
+    const fav = isFavorite(sym);
+
+    const name = (c && c.name) || (f && f.company) || '';
+    const sic = (c && c.sector) || (f && f.sic) || '';
+    const priceRow = c && c.price != null
+      ? `<div class="price-row">
+           <span class="price">$${c.price.toFixed(2)}</span>
+           <span class="chg ${c.day_return >= 0 ? 'up' : 'down'}">${c.day_return >= 0 ? '▲' : '▼'} ${pct(c.day_return)}</span>
+         </div>`
+      : '<div class="substats"><span>오늘 선정된 종목이 아니라 시세는 표시하지 않습니다</span></div>';
+
+    const todayBlock = c ? `
+      <div class="sec">
+        <div class="sec-title">오늘 화제인 이유</div>
+        <div class="sec-body">
+          <div class="hook">${escapeHtml(c.hook)}</div>
+          <div class="body-text">${escapeHtml(c.body)}</div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-title">숫자로 보기</div>
+        <div class="sec-body">
+          <div class="chart-row">${sparklineSvg(c.spark)}${relBadgeHtml(c)}</div>
+          ${range52Html(c)}
+          ${contextRowHtml(c)}
+          ${statTableHtml(c)}
+        </div>
+      </div>` : '';
+
+    const newsBlock = c && c.bullets && c.bullets.length ? `
+      <div class="inline-news sec">
+        <div class="sec-title">관련 뉴스</div>
+        <div class="news-list">${c.bullets.map((b) => newsItemHtml(b, 'stock-' + sym)).join('')}</div>
+      </div>` : '';
+
+    el.innerHTML = `
+      <div class="stock-head">
+        <span class="ticker">${escapeHtml(sym)}</span>
+        <span class="cname">${escapeHtml(name)}</span>
+        <button class="star-btn${fav ? ' on' : ''}" id="stockStar" aria-label="즐겨찾기">${fav ? '★' : '☆'}</button>
+      </div>
+      ${sic ? `<div class="stock-sic">${escapeHtml(sic)}</div>` : ''}
+      ${priceRow}
+      ${primerHtml(sym)}
+      ${todayBlock}
+      ${filingsHtml(f)}
+      ${xbrlHtml(f)}
+      ${insiderHtml(sym)}
+      ${appearanceHtml(sym)}
+      ${newsBlock}
+      <div class="sec">
+        <div class="sec-title">이 종목에 대해 물어보기</div>
+        <div class="sec-body">
+          <div class="body-text" style="margin-bottom:10px;color:var(--ink-3);font-size:12.5px">
+            위 공시와 재무보고를 근거로 답합니다. 오를지 내릴지 예측이나 매수 추천은 하지 않습니다.
+          </div>
+          <form class="ask-input-row" id="stockAskForm">
+            <input id="stockAskInput" placeholder="예: 최근에 무슨 계약을 했어?" autocomplete="off">
+            <button type="submit" id="stockAskBtn">물어보기</button>
+          </form>
+          <div class="ask-chat" id="stockAskChat" style="margin-top:12px"></div>
+        </div>
+      </div>`;
+
+    wireNewsItems(el);
+    const star = el.querySelector('#stockStar');
+    if (star) star.addEventListener('click', () => { toggleFavorite(sym); renderStock(); });
+    const form = el.querySelector('#stockAskForm');
+    if (form) form.addEventListener('submit', (e) => { e.preventDefault(); stockAsk(sym); });
+  }
+
+  function stockAsk(sym) {
+    const input = document.getElementById('stockAskInput');
+    const chat = document.getElementById('stockAskChat');
+    const btn = document.getElementById('stockAskBtn');
+    const q = input.value.trim();
+    if (!q) return;
+    const mine = document.createElement('div');
+    mine.className = 'ask-msg user';
+    mine.textContent = q;
+    chat.appendChild(mine);
+    input.value = '';
+    input.disabled = true; btn.disabled = true;
+    const loading = document.createElement('div');
+    loading.className = 'ask-msg bot loading';
+    loading.textContent = '공시를 읽는 중…';
+    chat.appendChild(loading);
+    fetch('/.netlify/functions/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol: sym, question: q }),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        loading.className = 'ask-msg bot' + (res.error ? ' err' : '');
+        loading.textContent = res.error ? '답변을 가져오지 못했습니다: ' + res.error : res.answer;
+      })
+      .catch(() => {
+        loading.className = 'ask-msg bot err';
+        loading.textContent = '네트워크 오류로 답변을 가져오지 못했습니다.';
+      })
+      .finally(() => {
+        input.disabled = false; btn.disabled = false;
+        chat.scrollTop = chat.scrollHeight;
+      });
+  }
+
+  function openStock(sym, push) {
+    sym = String(sym || '').trim().toUpperCase();
+    if (!/^[A-Z.]{1,8}$/.test(sym)) return;
+    stockSymbol = sym;
+    showTab('stock');
+    renderStock();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (push !== false) setUrl({ s: sym });
+    if (filingsCache[sym] === undefined) {
+      filingsCache[sym] = null;               // 중복 호출 방지
+      fetch('/.netlify/functions/filings?symbol=' + encodeURIComponent(sym))
+        .then((r) => (r.ok ? r.json() : null))
+        .then((f) => {
+          filingsCache[sym] = f || { found: false, reason: 'SEC 자료를 불러오지 못했습니다.' };
+          if (stockSymbol === sym) renderStock();
+        })
+        .catch(() => {
+          filingsCache[sym] = { found: false, reason: 'SEC 자료를 불러오지 못했습니다.' };
+          if (stockSymbol === sym) renderStock();
+        });
+    }
+  }
+
+  // ---- 주소 연결 ----
+  // 지금까지 이 사이트는 주소가 절대 바뀌지 않아서 "내 사이트에서 GNRC 봐봐"라고
+  // 링크를 보낼 방법이 아예 없었다. 그게 외딴섬처럼 느껴지는 큰 이유였다.
+  function setUrl(state) {
+    const p = new URLSearchParams();
+    if (state.s) p.set('s', state.s);
+    else if (state.tab && state.tab !== 'today') p.set('tab', state.tab);
+    const qs = p.toString();
+    const url = location.pathname + (qs ? '?' + qs : '');
+    if (url !== location.pathname + location.search) history.pushState(state, '', url);
+    document.title = state.s ? `${state.s} · 오늘의 관심종목` : '오늘의 관심종목';
+  }
+
+  function applyUrl(push) {
+    const p = new URLSearchParams(location.search);
+    const s = p.get('s');
+    if (s && /^[A-Za-z.]{1,8}$/.test(s)) { openStock(s, push); return true; }
+    const tab = p.get('tab');
+    if (tab && ['quality', 'radar', 'ask', 'history'].includes(tab)) { showTab(tab); return true; }
+    showTab('today');
+    return false;
+  }
+
+  window.addEventListener('popstate', () => { applyUrl(false); });
+
+  // 티커는 화면 곳곳에 나온다. 하나하나 핸들러를 달지 않고 문서 하나로 위임한다.
+  //
+  // 캡처 단계에서 잡는 이유: 무버스 행은 <button>이고 자기 클릭 핸들러(카드 선택)가
+  // 있다. 버블 단계에서 받으면 그게 먼저 실행돼 두 동작이 겹친다.
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-stock]');
+    if (!el) return;
+    // data-stock 요소 **안쪽**에 있는 링크·버튼(뉴스 항목, 별표 등)은 그쪽에 양보한다.
+    // 바깥 부모가 버튼인 경우(무버스 행)는 우리가 가져간다.
+    const inner = e.target.closest('a, button, input, select, textarea, .star-btn');
+    if (inner && inner !== el && el.contains(inner)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openStock(el.dataset.stock);
+  }, true);
+
   function range52Html(c) {
     const st = c.stats || {};
     if (st.pct_in_52w_range == null || st.low_52w == null || st.high_52w == null) return '';
@@ -1172,7 +1528,7 @@
         </div>
       </div>
       <div>
-        <div class="ticker-row"><span class="ticker">${escapeHtml(c.symbol)}</span><span class="cname">${escapeHtml(c.name)}</span></div>
+        <div class="ticker-row"><span class="ticker" data-stock="${escapeHtml(c.symbol)}" title="이 종목 한 장 보기">${escapeHtml(c.symbol)}</span><span class="cname">${escapeHtml(c.name)}</span></div>
         <div class="sector">${escapeHtml(c.sector)}</div>
       </div>
       <div class="price-row">
@@ -1403,6 +1759,7 @@
   const radarViewEl = document.getElementById('radarView');
   const askViewEl = document.getElementById('askView');
   const historyViewEl = document.getElementById('historyView');
+  const stockViewEl = document.getElementById('stockView');
   let qualityData = null;
 
   function showTab(name) {
@@ -1411,6 +1768,7 @@
     const isRadar = name === 'radar';
     const isAsk = name === 'ask';
     const isHistory = name === 'history';
+    const isStock = name === 'stock';       // 탭 버튼이 없는 화면 (티커를 눌러서 온다)
     overviewEl.classList.toggle('hide', !isToday);
     layoutEl.classList.toggle('hide', !isToday);
     moversEl.classList.toggle('hide', !isToday);
@@ -1418,17 +1776,36 @@
     radarViewEl.classList.toggle('hide', !isRadar);
     askViewEl.classList.toggle('hide', !isAsk);
     historyViewEl.classList.toggle('hide', !isHistory);
+    stockViewEl.classList.toggle('hide', !isStock);
     tabToday.classList.toggle('active', isToday);
     tabQuality.classList.toggle('active', isQuality);
     tabRadar.classList.toggle('active', isRadar);
     tabAsk.classList.toggle('active', isAsk);
     tabHistory.classList.toggle('active', isHistory);
   }
-  tabToday.addEventListener('click', () => showTab('today'));
-  tabQuality.addEventListener('click', () => showTab('quality'));
-  tabRadar.addEventListener('click', () => showTab('radar'));
-  tabAsk.addEventListener('click', () => showTab('ask'));
-  tabHistory.addEventListener('click', () => showTab('history'));
+  function goTab(name) { showTab(name); stockSymbol = null; setUrl({ tab: name }); }
+  tabToday.addEventListener('click', () => goTab('today'));
+  tabQuality.addEventListener('click', () => goTab('quality'));
+  tabRadar.addEventListener('click', () => goTab('radar'));
+  tabAsk.addEventListener('click', () => goTab('ask'));
+  tabHistory.addEventListener('click', () => goTab('history'));
+
+  document.getElementById('stockBack').addEventListener('click', () => {
+    if (history.length > 1) history.back(); else goTab('today');
+  });
+  document.getElementById('stockShare').addEventListener('click', () => {
+    const url = location.origin + location.pathname + '?s=' + encodeURIComponent(stockSymbol || '');
+    const done = () => {
+      const el = document.getElementById('stockCopied');
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 1600);
+    };
+    if (navigator.share) {
+      navigator.share({ title: `${stockSymbol} · 오늘의 관심종목`, url }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(done).catch(() => {});
+    }
+  });
 
   function fmtMarketCap(n) {
     if (n == null) return '—';
@@ -1459,7 +1836,7 @@
       const dirClass = c.day_return >= 0 ? 'up' : 'down';
       const arrow = c.day_return >= 0 ? '▲' : '▼';
       return `
-        <div class="qcard">
+        <div class="qcard" data-stock="${escapeHtml(c.symbol)}">
           <div><span class="qcard-sym">${escapeHtml(c.symbol)}</span><span class="qcard-name">${escapeHtml(c.name)}</span></div>
           <div class="qcard-industry">${escapeHtml(c.industry || '')}</div>
           <div class="qcard-price-row">
@@ -1583,7 +1960,7 @@
         const chgText = chg == null ? '—' : pct(chg);
         const streakText = st.streak >= 2 ? `${st.streak}일 연속 · ` : '';
         return `
-          <div class="hist-row">
+          <div class="hist-row" data-stock="${escapeHtml(sym)}">
             <span class="sym">${escapeHtml(sym)}</span>
             <span class="meta">${escapeHtml(names[sym] || '')} · ${streakText}${st.count}회 등장 (최근 7일 ${st.count_7d}회)</span>
             <span class="num ${cls}">${chgText}</span>
@@ -1601,7 +1978,7 @@
       const chips = (d.stocks || []).map(s => {
         const cls = s.day_return == null ? '' : (s.day_return >= 0 ? 'up' : 'down');
         const ret = s.day_return == null ? '' : `<span class="c ${cls}">${pct(s.day_return)}</span>`;
-        return `<span class="hist-chip" title="${escapeHtml(s.tag || '')}"><b>${escapeHtml(s.symbol)}</b>${ret}</span>`;
+        return `<span class="hist-chip" data-stock="${escapeHtml(s.symbol)}" title="${escapeHtml(s.tag || '')}"><b>${escapeHtml(s.symbol)}</b>${ret}</span>`;
       }).join('');
       return `
         <div class="hist-day">
@@ -1632,7 +2009,7 @@
         ? bullets.map(b => newsItemHtml(b, 'radar-' + idx)).join('')
         : '<div class="news-empty">관련 뉴스가 확인되지 않았습니다.</div>';
       return `
-        <div class="qcard">
+        <div class="qcard" data-stock="${escapeHtml(it.symbol)}">
           <div><span class="qcard-sym">${escapeHtml(it.symbol)}</span><span class="qcard-name">${escapeHtml(it.name)}</span></div>
           <div class="qcard-price-row">
             <span class="price">$${it.price.toFixed(2)}</span>
@@ -1757,6 +2134,7 @@
   Promise.all([fetch('data.json').then(r => r.json()), historyReady, notesReady])
     .then(([d]) => {
       render(d);
+      applyUrl(false);        // ?s=GNRC 로 들어왔으면 그 종목을 바로 연다
       pollLive();
       setInterval(pollLive, LIVE_INTERVAL_MS);
     })

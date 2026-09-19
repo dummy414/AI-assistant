@@ -22,7 +22,7 @@
 // 필요한 환경변수: ALPACA_API_KEY, ALPACA_SECRET_KEY, ANTHROPIC_API_KEY
 // FMP_API_KEY는 선택 (없으면 시가총액·PER 없이 답변)
 
-const SEC_UA = { "User-Agent": "today-watchlist-kr chocanxi@gmail.com" };
+const sec = require("./lib/sec");
 
 // 모델과 답변 길이는 **Netlify 무료 플랜의 함수 실행 10초 제한**에 맞춰 정했다.
 // 이 제한을 넘기면 사용자는 답을 아예 못 받는다. 그래서 여유가 최우선이다.
@@ -76,143 +76,29 @@ const SYSTEM_PROMPT = `당신은 '오늘의 관심종목' 사이트의 종목 �
 예측이나 추천을 요구받으면, 그건 하지 않는다고 한 줄로 말하고 위 형식대로 사실을 정리해 주세요.
 마크다운 기호(**, ##)는 쓰지 마세요 — 화면에 그대로 보입니다.`;
 
-// 8-K 항목번호 = 회사가 고른 '사건의 종류'. 이 표가 이 기능의 핵심이다.
-const ITEM_LABEL = {
-  "1.01": "중요 계약 체결", "1.02": "중요 계약 종료", "1.03": "파산·법정관리",
-  "2.01": "자산 인수·매각 완료", "2.02": "실적 발표", "2.03": "채무 발생",
-  "2.04": "채무 조기상환 사유 발생", "2.05": "구조조정 비용 결정", "2.06": "자산 손상",
-  "3.01": "상장폐지 통보", "3.02": "미등록 주식 발행", "3.03": "주주 권리 변경",
-  "4.01": "회계법인 변경", "4.02": "과거 재무제표 신뢰 불가",
-  "5.01": "경영권 변동", "5.02": "임원·이사 선임/사임", "5.03": "정관 변경",
-  "5.07": "주주총회 표결 결과", "5.08": "주주제안 관련",
-  "7.01": "Reg FD 공개", "8.01": "기타 중요사항", "9.01": "재무제표·첨부자료",
-};
-
-// 회사마다 쓰는 XBRL 태그가 다르다(QCOM은 Revenues, AA는 RevenueFromContract...).
-// 그래서 후보를 나열해두고 먼저 잡히는 것을 쓴다.
-const XBRL_CONCEPTS = [
-  ["매출", ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax"]],
-  ["영업이익", ["OperatingIncomeLoss"]],
-  ["순이익", ["NetIncomeLoss"]],
-  ["자산총계", ["Assets"]],
-  ["부채총계", ["Liabilities"]],
-  ["현금성자산", ["CashAndCashEquivalentsAtCarryingValue"]],
-  ["연구개발비", ["ResearchAndDevelopmentExpense"]],
-];
-
 const EIGHTK_LOOKBACK_DAYS = 240;
 const EIGHTK_MAX = 6;
 const EIGHTK_CHARS = 2200;      // 한 건당 본문 상한 (8-K는 원래 짧다)
 
 function clip(s, n) { return String(s || "").slice(0, n || 4000); }
 
-function stripHtml(html) {
-  return String(html || "")
-    .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&#160;|&nbsp;/g, " ")
-    .replace(/&#8217;|&rsquo;|&#39;/g, "'")
-    .replace(/&#8220;|&#8221;|&ldquo;|&rdquo;|&quot;/g, '"')
-    .replace(/&#8212;|&mdash;/g, "—")
-    .replace(/&amp;/g, "&")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-// 티커→CIK 맵은 10,000개짜리라 한 번 받으면 warm start 동안 재사용한다
-let tickerMapCache = null;
-async function tickerToCik(symbol) {
-  if (!tickerMapCache) {
-    const r = await fetch("https://www.sec.gov/files/company_tickers.json", { headers: SEC_UA });
-    if (!r.ok) return null;
-    const j = await r.json();
-    tickerMapCache = {};
-    for (const v of Object.values(j)) tickerMapCache[v.ticker] = String(v.cik_str).padStart(10, "0");
-  }
-  return tickerMapCache[symbol] || null;
-}
-
-function itemsToKorean(items) {
-  return String(items || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((code) => `${code} ${ITEM_LABEL[code] || ""}`.trim())
-    .join(" / ");
-}
-
-async function fetchEightK(cik, rec) {
-  const cutoff = new Date(Date.now() - EIGHTK_LOOKBACK_DAYS * 864e5).toISOString().slice(0, 10);
-  const targets = [];
-  for (let i = 0; i < rec.form.length && targets.length < EIGHTK_MAX; i++) {
-    if (rec.form[i] !== "8-K" || rec.filingDate[i] < cutoff) continue;
-    // 9.01(첨부자료)만 있는 건은 내용이 없다 — 건너뛴다
-    const codes = String(rec.items[i] || "").split(",").map((s) => s.trim()).filter(Boolean);
-    if (codes.length && codes.every((c) => c === "9.01")) continue;
-    targets.push({
-      date: rec.filingDate[i],
-      items: rec.items[i],
-      url: `https://www.sec.gov/Archives/edgar/data/${Number(cik)}/${rec.accessionNumber[i].replace(/-/g, "")}/${rec.primaryDocument[i]}`,
-    });
-  }
-  return Promise.all(targets.map(async (t) => {
-    try {
-      const res = await fetch(t.url, { headers: SEC_UA });
-      if (!res.ok) return { ...t, text: "" };
-      // 공시 앞머리는 표지(주소·전화번호·거래소 코드)라 알맹이가 뒤에 있다.
-      // 그래서 앞 600자를 버리고 그다음부터 자른다.
-      const full = stripHtml(await res.text());
-      const body = full.length > 1200 ? full.slice(600) : full;
-      return { ...t, text: body.slice(0, EIGHTK_CHARS) };
-    } catch (e) {
-      return { ...t, text: "" };
-    }
-  }));
-}
-
-async function fetchConcept(cik, tags) {
-  for (const tag of tags) {
-    try {
-      const r = await fetch(
-        `https://data.sec.gov/api/xbrl/companyconcept/CIK${cik}/us-gaap/${tag}.json`,
-        { headers: SEC_UA }
-      );
-      if (!r.ok) continue;
-      const j = await r.json();
-      const units = (j.units && (j.units.USD || Object.values(j.units)[0])) || [];
-      const byYear = {};
-      for (const u of units) {
-        if (u.form !== "10-K" || !u.fy || u.val == null) continue;
-        if (u.start) {
-          const days = (new Date(u.end) - new Date(u.start)) / 864e5;
-          if (days < 300 || days > 400) continue;      // 연간 구간만 (분기 제외)
-        }
-        byYear[u.fy] = u.val;
-      }
-      const years = Object.keys(byYear).map(Number).sort((a, b) => b - a).slice(0, 4);
-      if (years.length) return { years, byYear };
-    } catch (e) { /* 다음 태그 시도 */ }
-  }
-  return null;
+// lib은 화면용으로 배열을 주지만, 프롬프트에는 한 줄 문자열이 낫다
+function itemsText(items) {
+  return sec.itemsToKorean(items).map((x) => `${x.code} ${x.label}`.trim()).join(" / ");
 }
 
 async function fetchSecContext(symbol) {
-  const cik = await tickerToCik(symbol);
+  const cik = await sec.tickerToCik(symbol);
   if (!cik) return null;
-  const subRes = await fetch(`https://data.sec.gov/submissions/CIK${cik}.json`, { headers: SEC_UA });
-  if (!subRes.ok) return null;
-  const sub = await subRes.json();
-  const rec = (sub.filings && sub.filings.recent) || {};
+  const sub = await sec.fetchSubmissions(cik);
+  const rec = (sub && sub.filings && sub.filings.recent) || {};
   if (!rec.form) return null;
 
   // SEC는 초당 10건을 권고한다. 8-K와 XBRL을 한 번에 15건 쏘지 않고 두 번에 나눈다.
-  const eightK = await fetchEightK(cik, rec);
-  const concepts = await Promise.all(XBRL_CONCEPTS.map(([, tags]) => fetchConcept(cik, tags).catch(() => null)));
-
-  const annual = [];
-  XBRL_CONCEPTS.forEach(([label], i) => {
-    if (concepts[i]) annual.push({ label, ...concepts[i] });
+  const eightK = await sec.listEightK(cik, rec, {
+    days: EIGHTK_LOOKBACK_DAYS, max: EIGHTK_MAX, withBody: true, bodyChars: EIGHTK_CHARS,
   });
+  const annual = await sec.fetchFinancials(cik);
 
   const latest = {};
   for (const f of ["10-K", "10-Q"]) {
@@ -300,18 +186,19 @@ function money(v) {
   return Math.round(v).toLocaleString() + "달러";
 }
 
-function buildSecBlock(sec) {
-  if (!sec) return "[공시 타임라인] 조회 실패 (SEC에서 이 티커를 찾지 못했습니다)";
+// 주의: 매개변수 이름을 sec으로 두면 모듈 `sec`(lib/sec.js)을 가린다. ctx로 받는다.
+function buildSecBlock(ctx) {
+  if (!ctx) return "[공시 타임라인] 조회 실패 (SEC에서 이 티커를 찾지 못했습니다)";
   const out = [];
-  out.push(`[회사] ${sec.company || "—"} · 업종(SIC) ${sec.industry || "—"} · CIK ${sec.cik}`);
-  if (sec.latest["10-K"] || sec.latest["10-Q"]) {
-    out.push(`[최근 정기보고서] 연차보고서(10-K) ${sec.latest["10-K"] || "—"} · 분기보고서(10-Q) ${sec.latest["10-Q"] || "—"}`);
+  out.push(`[회사] ${ctx.company || "—"} · 업종(SIC) ${ctx.industry || "—"} · CIK ${ctx.cik}`);
+  if (ctx.latest["10-K"] || ctx.latest["10-Q"]) {
+    out.push(`[최근 정기보고서] 연차보고서(10-K) ${ctx.latest["10-K"] || "—"} · 분기보고서(10-Q) ${ctx.latest["10-Q"] || "—"}`);
   }
 
-  if (sec.annual.length) {
-    const years = sec.annual[0].years;
+  if (ctx.annual.length) {
+    const years = ctx.annual[0].years;
     out.push("", `[보고된 숫자] 회사가 SEC에 제출한 연차보고서(10-K) 수치. 회계연도 ${years.join(", ")}`);
-    for (const a of sec.annual) {
+    for (const a of ctx.annual) {
       const row = a.years.map((y) => `${y}년 ${money(a.byYear[y])}`).join(" / ");
       out.push(`  ${a.label}: ${row}`);
     }
@@ -319,11 +206,11 @@ function buildSecBlock(sec) {
     out.push("", "[보고된 숫자] 없음 (XBRL 자료를 찾지 못했습니다)");
   }
 
-  if (sec.eightK.length) {
-    out.push("", `[공시 타임라인] 최근 ${EIGHTK_LOOKBACK_DAYS}일간 회사가 '중요사항'으로 SEC에 신고한 건 ${sec.eightK.length}건.`,
+  if (ctx.eightK.length) {
+    out.push("", `[공시 타임라인] 최근 ${EIGHTK_LOOKBACK_DAYS}일간 회사가 '중요사항'으로 SEC에 신고한 건 ${ctx.eightK.length}건.`,
       "항목번호가 사건의 종류입니다. 인용할 때 제출일과 항목번호를 함께 쓰세요.");
-    sec.eightK.forEach((f, i) => {
-      out.push(`  ${i + 1}) ${f.date} · 항목 ${itemsToKorean(f.items) || "—"}`);
+    ctx.eightK.forEach((f, i) => {
+      out.push(`  ${i + 1}) ${f.date} · 항목 ${itemsText(f.items) || "—"}`);
       out.push(`     원문: ${f.text}`);
     });
   } else {
@@ -465,7 +352,7 @@ exports.handler = async function (event) {
         answer,
         symbol,
         sources,
-        filings: secCtx ? secCtx.eightK.map((f) => ({ date: f.date, items: itemsToKorean(f.items) })) : [],
+        filings: secCtx ? secCtx.eightK.map((f) => ({ date: f.date, items: itemsText(f.items) })) : [],
         usage: claudeJson.usage || null,
       }),
     };
