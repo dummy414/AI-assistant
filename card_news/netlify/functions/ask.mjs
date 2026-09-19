@@ -1,4 +1,4 @@
-﻿// ask.js — 특정 종목을 '1차 자료'로 조사하는 리서치 함수 (서버리스)
+// ask.mjs — 종목을 '1차 자료'로 조사하고, 답을 흘려보내는 함수 (스트리밍)
 // ============================================================================
 // 보통의 종목 챗봇은 웹 검색 결과를 요약한다. 그건 기자가 쓴 글을 다시 쓰는 것이고
 // 어느 도구나 할 수 있다. 여기서는 **회사가 SEC에 직접 제출한 것**을 먼저 읽는다:
@@ -9,36 +9,29 @@
 //   2) XBRL 재무 추이 — 회사가 태그를 붙여 보고한 실제 숫자 4년치.
 //      데이터 벤더의 가공값이 아니라 공시 원본이다. 역시 파싱이 필요 없다.
 //
-// 10-K 본문에서 '위험요인' 섹션만 잘라내는 것도 시도했지만 포기했다. 정규식이
-// 목차와 상호참조 문장("see Item 1A. Risk Factors...")을 섹션 제목으로 오인해서,
-// 종목에 따라 엉뚱한 20만 자를 집거나 아예 못 찾았다. 파싱으로 독해를 대신하려다
-// 실패한 전례가 이 저장소에 이미 두 번 있다(events.py, replay.py) — 같은 실수를
-// 반복하지 않고, 대신 파싱이 필요 없는 구조화 자료만 쓴다.
+// **왜 스트리밍인가.** 무료 플랜의 동기 함수는 10초에서 끊긴다. 그래서 한동안
+// Haiku에 답변 400자로 묶어두고 웹검색도 껐다. 그런데 실제로 재보니
+// **스트리밍 응답은 그 제한에 걸리지 않았다** — 25초짜리가 26.7초 만에 완주했다.
+// 그래서 Sonnet + 웹검색 + 긴 답변으로 되돌렸다. 덤으로 답이 타이핑되듯 나와서
+// 기다리는 느낌도 사라진다.
 //
-// 이 기능의 차별점은 모델이 아니라 **자료**다. 실제로 공시를 넣어주자 답의 구체성이
-// 확 올라갔다 (예: 제네락의 아마존 워런트 169만 주 중 30만 주 즉시 행사, 나머지는
-// 납품액 8억 달러 도달에 연동 — 이런 건 어느 기사에도 없고 공시 원문에만 있다).
+// 응답 형식은 JSON이 아니라 **평문 스트림**이다. 클라이언트가 받는 대로 화면에 붙인다.
+// 자료 수집 단계에서 실패하면 스트림을 열기 전에 JSON 오류로 돌려준다 (상태코드를
+// 바꿀 수 있는 마지막 시점이기 때문이다).
 //
 // 필요한 환경변수: ALPACA_API_KEY, ALPACA_SECRET_KEY, ANTHROPIC_API_KEY
 // FMP_API_KEY는 선택 (없으면 시가총액·PER 없이 답변)
 
-const sec = require("./lib/sec");
+import sec from "./lib/sec.js";
 
-// 모델과 답변 길이는 **Netlify 무료 플랜의 함수 실행 10초 제한**에 맞춰 정했다.
-// 이 제한을 넘기면 사용자는 답을 아예 못 받는다. 그래서 여유가 최우선이다.
-//
-// 같은 프롬프트로 실측한 총 소요시간(자료 수집 포함, 3종목 평균):
-//   Sonnet  7.7 / 8.8 / 10.0초  ← 한 건이 제한에 정확히 걸렸다. 못 쓴다.
-//   Haiku   5.6 / 6.6 / 6.7초   ← 3.3초 여유
-// Netlify를 Pro로 올리면 제한이 26초가 되고 Sonnet + 웹검색까지 쓸 수 있다.
-const MODEL = "claude-haiku-4-5-20251001";
-// 한국어는 글자당 약 1.5토큰이다. 900토큰(=약 600자)으로 두었더니 모델이 상한까지
-// 꽉 채워 쓰면서 총 11초가 나왔고 답변도 문장 중간에 잘렸다. 620토큰(=약 400자)이면
-// 생성 6.5초 + 자료수집 1.9초 = 8.4초로 제한 안에 들어온다.
-const MAX_TOKENS = 620;
-// 웹검색은 1회에 4~6초가 더 붙어 제한을 넘긴다. 공시 원문을 이미 넣어주므로
-// 검색 의존도가 낮아졌다고 보고 끈다 (경쟁사 비교 같은 질문은 답이 얕아진다).
-const WEB_SEARCH_MAX_USES = 0;
+const MODEL = "claude-sonnet-5";
+// **thinking 블록이 max_tokens를 함께 쓴다.** 1200으로 두었더니 사고와 웹검색
+// 결과만으로 예산을 다 써서 본문이 시작도 못 하고 stop_reason=max_tokens로 끝난
+// 적이 있다(화면에는 "답변을 생성하지 못했습니다"만 떴다).
+// 스트리밍이라 실제 소요시간은 '실제로 쓴 양'에 비례하지 '상한'에 비례하지 않는다.
+// 답 길이는 프롬프트에서 450~700자로 잡으므로, 상한은 넉넉히 두는 쪽이 안전하다.
+const MAX_TOKENS = 4000;
+const WEB_SEARCH_MAX_USES = 2;
 
 const SYSTEM_PROMPT = `당신은 '오늘의 관심종목' 사이트의 종목 리서치 도우미입니다.
 읽는 사람은 주식을 잘 모르는 초보입니다. 전문용어는 풀어 쓰세요.
@@ -46,25 +39,26 @@ const SYSTEM_PROMPT = `당신은 '오늘의 관심종목' 사이트의 종목 �
 **당신의 특징은 1차 자료를 읽는다는 것입니다.**
 [공시 타임라인]은 회사가 "이건 중요하다"며 SEC에 직접 신고한 사건들이고,
 [보고된 숫자]는 회사가 SEC에 제출한 재무 수치입니다. 기자의 해석이 아니라 원본입니다.
-웹 검색은 쓸 수 없습니다. 주어진 자료 안에서만 답하고, 없는 것은 없다고 말하세요.
+이 둘을 먼저 쓰고, 자료에 없는 것(경쟁사 비교, 업계 동향, 최신 반응)이 필요할 때만
+web_search를 쓰세요(최대 2회).
 
-답변은 아래 네 항목으로. **각 항목은 2문장 이내, 전체 400자 이내**로 압축하세요.
-길게 쓰면 중간에 잘려서 아무 쓸모가 없습니다. 중요한 것부터 쓰고 나머지는 버리세요.
+답변은 아래 네 항목으로, 전체 450~700자.
 
 ■ 공시
-  질문과 가장 관련 있는 신고 1~2건만. 반드시 (제출일, 항목번호)를 같이 적으세요.
+  질문과 가장 관련 있는 신고 1~3건. 반드시 (제출일, 항목번호)를 같이 적으세요.
   예: "데이터센터 공급계약 체결 (2026-07-29, 항목 1.01)"
+  공시 원문에 구체적 조건(금액·주식수·단계)이 있으면 그걸 쓰세요 — 그게 기사에 없는 정보입니다.
 
 ■ 숫자
-  [보고된 숫자]에서 질문과 관련된 항목만 골라 연도별 변화를 한두 문장으로.
+  [보고된 숫자]에서 질문과 관련된 항목을 골라 연도별 변화를 설명하세요.
   주어진 값만 쓰고 지어내지 마세요.
 
 ■ 양면
-  뒷받침하는 사실과 걸리는 사실을 **각각 한 문장씩**. 한쪽만 쓰면 안 됩니다 —
+  뒷받침하는 사실과 걸리는 사실을 **둘 다**. 한쪽만 쓰면 안 됩니다 —
   좋은 얘기만 늘어놓는 것은 사실상 추천이 됩니다.
 
 ■ 못 확인한 것
-  자료에 없어 답할 수 없었던 것을 한 문장으로. 비우지 마세요 —
+  자료에도 검색에도 없어 답할 수 없었던 것. 비우지 마세요 —
   모르는 걸 모른다고 말하는 게 이 도구의 핵심입니다.
 
 절대 하지 말 것:
@@ -219,42 +213,42 @@ function buildSecBlock(ctx) {
   return out.join("\n");
 }
 
-exports.handler = async function (event) {
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: JSON.stringify({ error: "POST만 허용됩니다." }) };
-  }
+function jsonError(status, message) {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { "content-type": "application/json; charset=utf-8" },
+  });
+}
+
+export default async function handler(request) {
+  if (request.method !== "POST") return jsonError(405, "POST만 허용됩니다.");
 
   const API_KEY = process.env.ALPACA_API_KEY;
   const SECRET_KEY = process.env.ALPACA_SECRET_KEY;
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   const FMP_API_KEY = process.env.FMP_API_KEY;
-
   if (!API_KEY || !SECRET_KEY || !ANTHROPIC_API_KEY) {
-    return { statusCode: 500, body: JSON.stringify({ error: "서버 환경변수가 설정되지 않았습니다." }) };
+    return jsonError(500, "서버 환경변수가 설정되지 않았습니다.");
   }
 
   let body;
   try {
-    body = JSON.parse(event.body || "{}");
+    body = await request.json();
   } catch (e) {
-    return { statusCode: 400, body: JSON.stringify({ error: "잘못된 요청입니다." }) };
+    return jsonError(400, "잘못된 요청입니다.");
   }
 
   const symbol = String(body.symbol || "").trim().toUpperCase();
   const question = String(body.question || "").trim();
   const history = Array.isArray(body.history) ? body.history.slice(-6) : [];
-
-  if (!/^[A-Z.]{1,8}$/.test(symbol)) {
-    return { statusCode: 400, body: JSON.stringify({ error: "올바른 티커가 아닙니다." }) };
-  }
-  if (!question || question.length > 300) {
-    return { statusCode: 400, body: JSON.stringify({ error: "질문은 1~300자여야 합니다." }) };
-  }
+  if (!/^[A-Z.]{1,8}$/.test(symbol)) return jsonError(400, "올바른 티커가 아닙니다.");
+  if (!question || question.length > 300) return jsonError(400, "질문은 1~300자여야 합니다.");
 
   const headers = { "APCA-API-KEY-ID": API_KEY, "APCA-API-SECRET-KEY": SECRET_KEY };
 
+  // --- 자료 수집: 여기서 실패하면 아직 상태코드를 바꿀 수 있다 ---
+  let factsBlock;
   try {
-    // SEC 조회가 실패해도 나머지로 답할 수 있어야 한다
     const [alpacaCtx, fmpCtx, secCtx] = await Promise.all([
       fetchAlpacaContext(symbol, headers),
       fetchFmpContext(symbol, FMP_API_KEY),
@@ -289,74 +283,115 @@ exports.handler = async function (event) {
       });
     }
     lines.push("", buildSecBlock(secCtx));
-
-    const factsBlock = clip(lines.join("\n"), 60000);
-
-    const messages = [
-      ...history
-        .filter((h) => h && (h.role === "user" || h.role === "assistant") && typeof h.content === "string")
-        .map((h) => ({ role: h.role, content: clip(h.content, 2000) })),
-      { role: "user", content: `[실제 데이터]\n${factsBlock}\n\n[질문]\n${clip(question, 300)}` },
-    ];
-
-    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: SYSTEM_PROMPT,
-        messages,
-        ...(WEB_SEARCH_MAX_USES > 0
-          ? { tools: [{ type: "web_search_20250305", name: "web_search", max_uses: WEB_SEARCH_MAX_USES }] }
-          : {}),
-      }),
-    });
-
-    if (!claudeRes.ok) {
-      const errText = await claudeRes.text();
-      return { statusCode: 502, body: JSON.stringify({ error: "AI 응답 실패: " + errText.slice(0, 200) }) };
-    }
-    const claudeJson = await claudeRes.json();
-    const blocks = claudeJson.content || [];
-    let answer = blocks.map((c) => c.text || "").join("").trim();
-
-    const sources = [];
-    const seen = new Set();
-    blocks.forEach((b) => {
-      (b.citations || []).forEach((c) => {
-        if (c.url && !seen.has(c.url)) { seen.add(c.url); sources.push({ url: c.url, title: c.title || c.url }); }
-      });
-    });
-    if (!answer && claudeJson.stop_reason === "pause_turn") {
-      answer = "조사가 오래 걸려 답변을 완성하지 못했습니다. 질문을 좀 더 구체적으로 다시 해주세요.";
-    }
-    if (!answer) answer = "답변을 생성하지 못했습니다.";
-
-    // 어떤 1차 자료를 실제로 읽었는지 밝힌다 — 근거의 출처를 감추지 않는다
-    const used = [];
-    if (secCtx && secCtx.eightK.length) used.push(`SEC 중요사항 공시 ${secCtx.eightK.length}건`);
-    if (secCtx && secCtx.annual.length) used.push("SEC 재무보고(XBRL)");
-    if (sources.length) used.push(`웹 ${sources.length}곳`);
-    if (used.length) answer += `\n\n근거: ${used.join(" · ")}`;
-    if (sources.length) answer += `\n출처: ${sources.slice(0, 3).map((s) => s.title).join(" · ")}`;
-
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-      body: JSON.stringify({
-        answer,
-        symbol,
-        sources,
-        filings: secCtx ? secCtx.eightK.map((f) => ({ date: f.date, items: itemsText(f.items) })) : [],
-        usage: claudeJson.usage || null,
-      }),
-    };
+    factsBlock = clip(lines.join("\n"), 60000);
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: String(err) }) };
+    return jsonError(500, "자료를 모으지 못했습니다: " + String(err).slice(0, 120));
   }
-};
+
+  const messages = [
+    ...history
+      .filter((h) => h && (h.role === "user" || h.role === "assistant") && typeof h.content === "string")
+      .map((h) => ({ role: h.role, content: clip(h.content, 2000) })),
+    { role: "user", content: `[실제 데이터]\n${factsBlock}\n\n[질문]\n${clip(question, 300)}` },
+  ];
+
+  const upstream = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      system: SYSTEM_PROMPT,
+      messages,
+      stream: true,
+      // Sonnet 5의 사고(thinking)는 적응형이라 프롬프트가 길면 알아서 길어진다.
+      // 그게 max_tokens를 먹고 첫 글자까지 22초가 걸리게 만들었다. 이 작업은
+      // '주어진 공시를 정해진 형식으로 정리하기'라 깊은 사고가 필요 없어서 끈다.
+      thinking: { type: "disabled" },
+      ...(WEB_SEARCH_MAX_USES > 0
+        ? { tools: [{ type: "web_search_20250305", name: "web_search", max_uses: WEB_SEARCH_MAX_USES }] }
+        : {}),
+    }),
+  });
+
+  if (!upstream.ok || !upstream.body) {
+    const t = await upstream.text().catch(() => "");
+    return jsonError(502, "AI 응답 실패: " + t.slice(0, 200));
+  }
+
+  // --- 여기서부터는 스트림. 상태코드는 더 못 바꾸므로 오류도 본문에 적는다 ---
+  const enc = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const reader = upstream.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      let wrote = false;
+      let stopReason = null;
+      const sources = [];
+      const seen = new Set();
+
+      const push = (t) => { if (t) { controller.enqueue(enc.encode(t)); wrote = true; } };
+
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop();
+          for (const line of lines) {
+            if (!line.startsWith("data:")) continue;
+            const payload = line.slice(5).trim();
+            if (!payload || payload === "[DONE]") continue;
+            let ev;
+            try { ev = JSON.parse(payload); } catch (e) { continue; }
+            if (ev.type === "message_delta" && ev.delta && ev.delta.stop_reason) {
+              stopReason = ev.delta.stop_reason;
+            }
+            if (ev.type === "content_block_delta" && ev.delta) {
+              // thinking_delta는 모델의 사고 과정이라 화면에 내보내지 않는다
+              if (ev.delta.type === "text_delta") push(ev.delta.text);
+              // 웹검색을 썼다면 어느 페이지를 봤는지 모아둔다
+              if (ev.delta.type === "citations_delta" && ev.delta.citation) {
+                const c = ev.delta.citation;
+                if (c.url && !seen.has(c.url)) {
+                  seen.add(c.url);
+                  sources.push(c.title || c.url);
+                }
+              }
+            }
+          }
+        }
+        if (!wrote) {
+          push(stopReason === "max_tokens"
+            ? "자료를 읽는 데 분량을 다 써서 답을 쓰지 못했습니다. 질문을 좁혀서 다시 물어봐 주세요."
+            : "답변을 생성하지 못했습니다. 질문을 조금 더 구체적으로 다시 해주세요.");
+        } else if (stopReason === "max_tokens") {
+          push("\n\n(분량 제한으로 여기서 끊겼습니다)");
+        }
+        // 근거를 감추지 않는다 — 무엇을 읽고 답했는지 끝에 밝힌다
+        const used = ["SEC 공시·재무보고"];
+        if (sources.length) used.push(`웹 ${sources.length}곳`);
+        push(`\n\n근거: ${used.join(" · ")}`);
+        if (sources.length) push(`\n출처: ${sources.slice(0, 3).join(" · ")}`);
+      } catch (err) {
+        push(`\n\n(답변이 도중에 끊겼습니다: ${String(err).slice(0, 100)})`);
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-store",
+      "x-accel-buffering": "no",
+    },
+  });
+}

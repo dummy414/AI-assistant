@@ -1383,6 +1383,54 @@
     if (form) form.addEventListener('submit', (e) => { e.preventDefault(); stockAsk(sym); });
   }
 
+  // 답변은 한 번에 오지 않고 흘러 들어온다. 서버가 SEC 공시를 읽고 Sonnet이
+  // 글을 쓰는 데 20초쯤 걸리는데, 다 끝날 때까지 빈 화면을 보여주면 고장난 줄 안다.
+  // 받는 대로 붙이고, 첫 글자가 오기 전까지는 무슨 일을 하고 있는지 알려준다.
+  const ASK_STEPS = ['공시를 읽는 중…', '재무보고를 확인하는 중…', '자료를 맞춰보는 중…', '정리하는 중…'];
+
+  function askStream(symbol, question, history, el) {
+    let step = 0;
+    el.textContent = ASK_STEPS[0];
+    const timer = setInterval(() => {
+      step = Math.min(step + 1, ASK_STEPS.length - 1);
+      el.textContent = ASK_STEPS[step];
+    }, 4000);
+    const stop = () => clearInterval(timer);
+
+    return fetch('/.netlify/functions/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol, question, history: history || [] }),
+    })
+      .then(async (r) => {
+        if (!r.ok) {
+          const j = await r.json().catch(() => ({}));
+          throw new Error(j.error || ('요청이 실패했습니다 (' + r.status + ')'));
+        }
+        if (!r.body) throw new Error('이 브라우저에서는 응답을 읽지 못했습니다.');
+        const reader = r.body.getReader();
+        const dec = new TextDecoder();
+        let acc = '';
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (!acc) { stop(); el.classList.remove('loading'); }
+          acc += dec.decode(value, { stream: true });
+          el.textContent = acc;
+          const chat = el.parentElement;
+          if (chat) chat.scrollTop = chat.scrollHeight;
+        }
+        return acc;
+      })
+      .catch((err) => {
+        el.classList.remove('loading');
+        el.classList.add('err');
+        el.textContent = '답변을 가져오지 못했습니다: ' + err.message;
+        return '';
+      })
+      .finally(stop);
+  }
+
   function stockAsk(sym) {
     const input = document.getElementById('stockAskInput');
     const chat = document.getElementById('stockAskChat');
@@ -1395,28 +1443,13 @@
     chat.appendChild(mine);
     input.value = '';
     input.disabled = true; btn.disabled = true;
-    const loading = document.createElement('div');
-    loading.className = 'ask-msg bot loading';
-    loading.textContent = '공시를 읽는 중…';
-    chat.appendChild(loading);
-    fetch('/.netlify/functions/ask', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ symbol: sym, question: q }),
-    })
-      .then((r) => r.json())
-      .then((res) => {
-        loading.className = 'ask-msg bot' + (res.error ? ' err' : '');
-        loading.textContent = res.error ? '답변을 가져오지 못했습니다: ' + res.error : res.answer;
-      })
-      .catch(() => {
-        loading.className = 'ask-msg bot err';
-        loading.textContent = '네트워크 오류로 답변을 가져오지 못했습니다.';
-      })
-      .finally(() => {
-        input.disabled = false; btn.disabled = false;
-        chat.scrollTop = chat.scrollHeight;
-      });
+    const target = document.createElement('div');
+    target.className = 'ask-msg bot loading';
+    chat.appendChild(target);
+    askStream(sym, q, [], target).finally(() => {
+      input.disabled = false; btn.disabled = false;
+      chat.scrollTop = chat.scrollHeight;
+    });
   }
 
   function openStock(sym, push) {
@@ -1693,8 +1726,17 @@
     });
   }
 
+  // 실시간 시세는 **화면에 띄우고 있는 종목**을 물어봐야 한다.
+  // 예전에는 사용자가 직접 추가한 종목만 보냈고, 서버가 옛날 10종목을 하드코딩해두고
+  // 있어서 오늘 카드 16개 중 우연히 겹치는 2개만 갱신됐다 — 나머지는 전날 종가인데
+  // 화면에는 '실시간'이라고 떠 있었다.
   function liveUrl() {
-    return LIVE_ENDPOINT + (customSymbols.length ? ('?extra=' + encodeURIComponent(customSymbols.join(','))) : '');
+    const syms = [...new Set([
+      ...(data && data.cards ? data.cards.map((c) => c.symbol) : []),
+      ...customSymbols,
+      ...(stockSymbol ? [stockSymbol] : []),   // 종목 한 장을 보고 있으면 그것도
+    ])].filter(Boolean).slice(0, 40);
+    return LIVE_ENDPOINT + (syms.length ? ('?symbols=' + encodeURIComponent(syms.join(','))) : '');
   }
 
   function pollLive() {
@@ -2072,26 +2114,9 @@
     askInput.value = '';
     askInput.disabled = true;
     askSendBtn.disabled = true;
-    const loadingEl = addAskMsg('bot', '조사하는 중…', 'loading');
-    fetch('/.netlify/functions/ask', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ symbol: askSymbol, question: q, history: historyForRequest }),
-    })
-      .then(r => r.json())
-      .then(res => {
-        loadingEl.remove();
-        if (res.error) {
-          addAskMsg('bot', '답변을 가져오지 못했습니다: ' + res.error, 'err');
-        } else {
-          addAskMsg('bot', res.answer);
-          askHistory.push({ role: 'assistant', content: res.answer });
-        }
-      })
-      .catch(() => {
-        loadingEl.remove();
-        addAskMsg('bot', '답변을 가져오지 못했습니다. 잠시 후 다시 시도해주세요.', 'err');
-      })
+    const target = addAskMsg('bot', '', 'loading');
+    askStream(askSymbol, q, historyForRequest, target)
+      .then((answer) => { if (answer) askHistory.push({ role: 'assistant', content: answer }); })
       .finally(() => {
         askInput.disabled = false;
         askSendBtn.disabled = false;
