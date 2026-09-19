@@ -40,6 +40,7 @@ import json
 import os
 import re
 import statistics
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -456,6 +457,224 @@ def main():
           f"(오늘 {len(result['today_symbols'])} + 보관 {len(result['archived_symbols'])}) · "
           f"과거 사건 {total}건 · 헤드라인 {heads}건")
 
+    todo = todo_cli(quiet=True)
+    if todo:
+        print(f"\n한국어 번역이 없는 헤드라인 {todo}건 — "
+              f"`python -m src.replay todo` 로 목록을 받으세요.")
+
+
+# --------------------------------------------------------------------------
+# 헤드라인 한국어 번역 — 목록 뽑기 / 되쓰기
+# --------------------------------------------------------------------------
+# 영어 헤드라인은 초보에게 불편하다. 그렇다고 이 스크립트가 직접 번역 API를
+# 부르면 매일 돈이 나간다. 어차피 매일 아침 도는 자동화는 이미 LLM이고 이미
+# 한국어를 쓰므로, 거기서 번역하게 하고 이 모듈은 **목록을 주고 결과를 받아
+# 안전하게 써넣는 일**만 한다 (48KB JSON을 손으로 고치게 하면 사고가 난다).
+#
+# 과거 헤드라인은 절대 바뀌지 않으므로 번역도 한 번만 하면 된다.
+# 번역문은 news 딕셔너리 안에 headline_ko로 들어가고, 다음 날 실행에서
+# _cached_news가 news를 통째로 재사용하므로 저절로 따라온다.
+TODO_PATH = "replay_todo.json"
+
+
+def _dist_path(name: str) -> str:
+    return os.path.normpath(os.path.join(config.DATA_DIR, "..", "card_news", "dist", name))
+
+
+def _iter_news(doc: dict):
+    for sym, v in doc.get("symbols", {}).items():
+        for ev in v.get("events", []):
+            if ev.get("news") and ev["news"].get("headline"):
+                yield sym, ev["news"]
+
+
+def todo_cli(quiet: bool = False) -> int:
+    """번역이 안 된 헤드라인을 골라 data/replay_todo.json에 저장한다."""
+    try:
+        with open(_dist_path("replay.json"), encoding="utf-8") as f:
+            doc = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"replay.json을 읽지 못했습니다: {e}")
+        return 0
+
+    # 같은 헤드라인이 여러 종목에 붙는 경우가 있다 (업종 전체 기사). 한 번만 번역한다.
+    pending: dict[str, list[str]] = {}
+    done = 0
+    for sym, news in _iter_news(doc):
+        if news.get("headline_ko"):
+            done += 1
+            continue
+        pending.setdefault(news["headline"], []).append(sym)
+
+    items = [{"id": i + 1, "en": en, "symbols": syms}
+             for i, (en, syms) in enumerate(pending.items())]
+    os.makedirs(config.DATA_DIR, exist_ok=True)
+    path = os.path.join(config.DATA_DIR, TODO_PATH)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump({
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "instruction": (
+                "각 항목의 en을 한국어 헤드라인으로 옮겨 "
+                "{\"1\": \"번역문\", \"2\": \"...\"} 형태의 JSON으로 저장한 뒤 "
+                "`python -m src.replay apply <파일>`을 실행하세요. "
+                "번역만 하고 해석·전망·평가는 덧붙이지 마세요."),
+            "rules": [
+                "금액 환산에서 자릿수를 틀리는 일이 잦습니다. 반드시 아래 표대로 하세요:",
+                "  $1B = 10억 달러 · $2.995B = 29.95억 달러 · $14B = 140억 달러 (B는 숫자 x 10억)",
+                "  $1M = 100만 달러 · $71.017M = 7,101.7만 달러 (M은 숫자 x 100만)",
+                "  환산이 헷갈리면 원문 표기를 그대로 두세요 ($2.995B). 틀린 숫자보다 낫습니다.",
+                "괄호로 감싼 금액은 마이너스입니다: $(1.98) → -1.98달러",
+                "약어는 풀어 쓰기: EPS → 주당순이익, Q2 → 2분기",
+                "투자의견(Buy·Outperform·Underperform 등)은 원문을 그대로 두세요",
+                "회사명 뒤 Inc·Holdings·Mining 같은 접미사는 굳이 옮기지 마세요",
+                "헤드라인 문체로 짧게. 끝에 마침표를 찍지 마세요",
+                "금액은 기계로 검산합니다. 원문 금액과 맞지 않으면 그 번역은 버려집니다.",
+            ],
+            "pending": len(items),
+            "already_done": done,
+            "items": items,
+        }, f, ensure_ascii=False, indent=2)
+
+    if not quiet:
+        print(f"번역 대기 {len(items)}건 (이미 완료 {done}건) → {path}")
+        for it in items[:5]:
+            print(f"  {it['id']:3d}. {it['en'][:88]}")
+        if len(items) > 5:
+            print(f"  … 외 {len(items) - 5}건")
+    return len(items)
+
+
+# 번역문의 금액 검산 — LLM은 단위 환산에서 자릿수를 틀린다.
+# 실제로 $2.995B를 "299.5억 달러"(정답 29.95억)로 옮긴 적이 있다. 금융 화면에서
+# 이런 숫자는 그냥 두면 안 되므로, 원문 금액과 번역 금액을 각각 달러로 환산해
+# 대조하고 맞지 않으면 **번역을 버리고 영어 원문을 쓴다**.
+_EN_MONEY = re.compile(r"\$\s?\(?(\d[\d,]*(?:\.\d+)?)\)?\s*(trillion|billion|million|thousand|[TBMK])?\b", re.I)
+_EN_MULT = {"trillion": 1e12, "t": 1e12, "billion": 1e9, "b": 1e9,
+            "million": 1e6, "m": 1e6, "thousand": 1e3, "k": 1e3}
+_KO_MONEY = re.compile(r"(\d[\d,]*(?:\.\d+)?)\s*(조|억|만)?\s*달러")
+_KO_MULT = {"조": 1e12, "억": 1e8, "만": 1e4, None: 1.0, "": 1.0}
+
+
+def _amounts_en(text: str) -> list[float]:
+    out = []
+    for num, unit in _EN_MONEY.findall(text or ""):
+        try:
+            out.append(float(num.replace(",", "")) * _EN_MULT.get((unit or "").lower(), 1.0))
+        except ValueError:
+            pass
+    return out
+
+
+def _amounts_ko(text: str) -> list[float]:
+    out = []
+    for num, unit in _KO_MONEY.findall(text or ""):
+        try:
+            out.append(float(num.replace(",", "")) * _KO_MULT.get(unit or None, 1.0))
+        except ValueError:
+            pass
+    return out
+
+
+def check_amounts(en: str, ko: str) -> str | None:
+    """번역문의 금액이 원문과 맞는지 본다. 문제가 있으면 사유를 돌려준다."""
+    src, dst = _amounts_en(en), _amounts_ko(ko)
+    if not src:
+        return None                      # 원문에 금액이 없으면 볼 것도 없다
+    remaining = list(dst)
+    for v in src:
+        hit = next((d for d in remaining if abs(d - v) <= max(abs(v) * 0.01, 1e-9)), None)
+        if hit is None:
+            return (f"원문 금액 {v:,.0f}달러에 해당하는 값이 번역문에 없음 "
+                    f"(번역문 금액: {[f'{d:,.0f}' for d in dst] or '없음'})")
+        remaining.remove(hit)
+    return None
+
+
+def apply_cli(trans_path: str):
+    """번역 결과를 replay.json에 써넣는다 (금액 검산 통과분만)."""
+    with open(trans_path, encoding="utf-8") as f:
+        trans = json.load(f)
+    with open(os.path.join(config.DATA_DIR, TODO_PATH), encoding="utf-8") as f:
+        todo = json.load(f)
+    by_id = {str(it["id"]): it["en"] for it in todo["items"]}
+
+    # id → 영어 원문 → 번역문. 금액이 안 맞으면 버린다 (틀린 숫자보다 영어가 낫다)
+    mapping, rejected = {}, []
+    for key, ko in trans.items():
+        en = by_id.get(str(key))
+        if not en or not isinstance(ko, str) or not ko.strip():
+            continue
+        problem = check_amounts(en, ko.strip())
+        if problem:
+            rejected.append((en, ko.strip(), problem))
+            continue
+        mapping[en] = ko.strip()
+    if rejected:
+        print(f"금액 검산 불합격 {len(rejected)}건 — 영어 원문을 그대로 둡니다:")
+        for en, ko, why in rejected[:8]:
+            print(f"  EN {en[:70]}")
+            print(f"  KO {ko[:70]}")
+            print(f"   → {why}")
+    if not mapping:
+        raise SystemExit("적용할 번역이 없습니다 (목록의 id와 맞지 않거나 전부 검산 불합격).")
+
+    path = _dist_path("replay.json")
+    with open(path, encoding="utf-8") as f:
+        doc = json.load(f)
+    applied = 0
+    for _sym, news in _iter_news(doc):
+        ko = mapping.get(news["headline"])
+        if ko and not news.get("headline_ko"):
+            news["headline_ko"] = ko
+            applied += 1
+    # generated_at은 '언제 계산했나'라 여기서 바꾸면 뜻이 흐려진다. 대신 modified_at을
+    # 남긴다 — pull_live.py가 '로컬이 더 최신인가'를 판단할 때 이 값을 함께 본다.
+    # (이게 없어서 번역을 덮어쓴 적이 있다.)
+    doc["modified_at"] = datetime.now(timezone.utc).isoformat()
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
+
+    remaining = sum(1 for _s, n in _iter_news(doc) if not n.get("headline_ko"))
+    print(f"번역 {len(mapping)}건 중 {applied}건 적용 → {path}")
+    print(f"아직 번역 없는 헤드라인: {remaining}건")
+
+
+def verify_cli():
+    """이미 들어있는 번역을 다시 검산해 틀린 것을 걷어낸다.
+
+    검산 규칙을 고쳤을 때나, 예전에 잘못 들어간 번역을 청소할 때 쓴다.
+    걷어낸 자리는 다음 `todo`에서 다시 번역 대상으로 잡힌다.
+    """
+    path = _dist_path("replay.json")
+    with open(path, encoding="utf-8") as f:
+        doc = json.load(f)
+    removed = 0
+    seen: dict[str, str | None] = {}
+    for _sym, news in _iter_news(doc):
+        ko = news.get("headline_ko")
+        if not ko:
+            continue
+        en = news["headline"]
+        if en not in seen:
+            seen[en] = check_amounts(en, ko)
+            if seen[en]:
+                print(f"  ✗ {en[:72]}\n    {ko[:72]}\n    → {seen[en]}")
+        if seen[en]:
+            del news["headline_ko"]
+            removed += 1
+    doc["modified_at"] = datetime.now(timezone.utc).isoformat()
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
+    left = sum(1 for _s, n in _iter_news(doc) if n.get("headline_ko"))
+    print(f"\n검산 불합격 {removed}건 제거 · 남은 번역 {left}건")
+
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "todo":
+        todo_cli()
+    elif len(sys.argv) > 1 and sys.argv[1] == "verify":
+        verify_cli()
+    elif len(sys.argv) > 2 and sys.argv[1] == "apply":
+        apply_cli(sys.argv[2])
+    else:
+        main()

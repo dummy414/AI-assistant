@@ -36,11 +36,26 @@ FILES = [
 
 
 def _stamp(raw: bytes) -> datetime | None:
+    """파일이 마지막으로 손질된 시각.
+
+    generated_at('언제 계산했나')만 보면 **계산 뒤에 덧붙인 작업**을 놓친다.
+    예를 들어 replay.json은 만들어진 뒤에 한국어 번역이 따로 채워지는데,
+    그때 generated_at은 그대로라서 '로컬이 더 최신'을 판정하지 못하고
+    번역을 통째로 덮어쓴 적이 있다. 그래서 modified_at도 함께 본다.
+    """
     try:
-        v = json.loads(raw).get("generated_at")
-        return datetime.fromisoformat(v) if v else None
-    except (json.JSONDecodeError, ValueError, AttributeError):
+        doc = json.loads(raw)
+    except (json.JSONDecodeError, ValueError):
         return None
+    stamps = []
+    for key in ("generated_at", "modified_at"):
+        v = doc.get(key) if isinstance(doc, dict) else None
+        try:
+            if v:
+                stamps.append(datetime.fromisoformat(v))
+        except (ValueError, TypeError):
+            continue
+    return max(stamps) if stamps else None
 
 
 def main():
