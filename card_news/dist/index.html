@@ -466,6 +466,51 @@
   .ins-row .amt.buy { color: var(--up); }
   .ins-row .amt.sell { color: var(--down); }
 
+  /* 과거 재생 — 이 종목이 평소와 다르게 움직였던 날과 그때의 헤드라인 */
+  .rp-today {
+    display: inline-flex; align-items: baseline; gap: 7px; margin-bottom: 11px;
+    font-size: 12px; padding: 5px 11px; border-radius: 999px;
+    background: var(--surface-2); color: var(--ink-2);
+  }
+  .rp-today b { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+  .rp-today.up b { color: var(--up); }
+  .rp-today.down b { color: var(--down); }
+  .rp-ev { padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .rp-ev:last-of-type { border-bottom: none; }
+  .rp-top { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+  .rp-date {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-3);
+  }
+  .rp-move {
+    font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;
+    font-size: 13px; font-weight: 600; padding: 1px 7px; border-radius: 6px;
+  }
+  .rp-move.up { color: var(--up); background: var(--up-soft); }
+  .rp-move.down { color: var(--down); background: var(--down-soft); }
+  .rp-sigma { font-size: 11.5px; color: var(--ink-3); }
+  .rp-head {
+    display: block; margin: 5px 0 6px; font-size: 13px; line-height: 1.5;
+    color: var(--ink-2); text-decoration: none;
+  }
+  a.rp-head:hover { color: var(--accent); text-decoration: underline; }
+  .rp-head.none { color: var(--ink-3); font-style: italic; font-size: 12px; }
+  .rp-sector {
+    display: inline-block; margin-right: 6px; padding: 1px 6px; border-radius: 5px;
+    background: var(--surface-2); color: var(--ink-3); font-size: 10.5px;
+    font-weight: 700; letter-spacing: .03em; vertical-align: 1px;
+  }
+  /* 사건 후 경과는 "그래서 그 다음엔?"에 답하는 줄이라 한 눈에 들어와야 한다 */
+  .rp-fwd { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink-3); }
+  .rp-fwd b {
+    font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;
+    font-weight: 600; margin-left: 3px;
+  }
+  .rp-fwd b.up { color: var(--up); }
+  .rp-fwd b.down { color: var(--down); }
+  .rp-fwd b.na { color: var(--ink-3); }
+  .rp-sum { margin-top: 11px; }
+  .rp-empty { font-size: 12.5px; color: var(--ink-3); line-height: 1.6; }
+
   /* 카드 안을 섹션으로 나눠 읽는 순서를 만든다: 무슨 회사 → 왜 화제 → 숫자 → 뉴스 */
   .sec { border-top: 1px solid var(--line); padding-top: 13px; }
   .sec-title {
@@ -1129,6 +1174,116 @@
       </div>`;
   }
 
+  // ---- 과거 재생 (replay.json) ----
+  // 주식을 오래 본 사람은 "얘 작년 실적 때도 이랬는데 그 뒤 도로 빠졌지" 같은 참조점을
+  // 머리에 갖고 있다. 그 기억을 데이터로 대신 만들어주는 블록이다.
+  // 사건을 찾는 기준은 뉴스 분류가 아니라 주가다 — 그날 등락 ÷ 직전 60일 표준편차.
+  // 뉴스 분류로 과거 사건을 찾으면 오탐이 절반을 넘는다(src/replay.py 주석 참고).
+  let replayData = {};
+
+  function fwdSpan(label, v) {
+    if (v == null) return `<span>${label}<b class="na"> —</b></span>`;
+    return `<span>${label}<b class="${v >= 0 ? 'up' : 'down'}">${pct(v)}</b></span>`;
+  }
+
+  function replaySummaryTable(v) {
+    const rows = [5, 20].map(h => {
+      const s = (v.summary || {})[String(h)];
+      if (!s) return '';
+      return `
+        <tr>
+          <td>${h}거래일 뒤</td>
+          <td>${s.n}건 중 <b>${s.up}건</b> 상승</td>
+          <td class="${s.median >= 0 ? 'up' : 'down'}">${pct(s.median)}</td>
+          <td class="band">${pct(s.worst)} ~ ${pct(s.best)}</td>
+        </tr>`;
+    }).filter(Boolean).join('');
+    if (!rows) return '';
+    // 통계는 화면에 나열한 몇 건이 아니라 찾아낸 사건 **전부**로 계산한다.
+    // 그래서 표의 최고치가 위 목록에 안 보일 수 있다 — 그 점을 먼저 밝혀둔다.
+    const scope = v.events_found > v.events.length
+      ? `위 ${v.events.length}건을 포함한 전체 ${v.events_found}건 기준`
+      : `위 ${v.events.length}건 전부 기준`;
+    return `
+      <table class="stat-table rp-sum">
+        <thead><tr><th>이후 경과 · ${escapeHtml(scope)}</th><th>상승/전체</th><th>중앙값</th><th>최저 ~ 최고</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  function replayHtml(symbol) {
+    const v = replayData[symbol];
+    if (!v) return '';
+    const t = v.today || {};
+    const yrs = (v.bars / 252).toFixed(1);
+
+    // 오늘이 조용한 날이면 "평소의 0.3배"는 어색하다 — 말로 풀어준다
+    const todayNote = t.move_vs_normal == null ? ''
+      : (t.move_vs_normal >= 1
+          ? `= 평소 변동폭의 <b>${t.move_vs_normal}배</b>`
+          : '— 평소 변동폭 안에 들어오는 조용한 날');
+    const todayPill = !todayNote ? '' : `
+      <div class="rp-today ${t.return >= 0 ? 'up' : 'down'}">
+        <span>오늘</span><b>${pct(t.return)}</b><span>${todayNote}</span>
+      </div>`;
+
+    if (!v.events || !v.events.length) {
+      return `
+        <div class="sec">
+          <div class="sec-title">과거 재생 · 평소와 다르게 움직였던 날</div>
+          ${todayPill}
+          <div class="rp-empty">
+            최근 ${yrs}년간 평소 변동폭의 ${v.threshold_sigma}배를 넘긴 날이 없었습니다 —
+            원래 크게 튀지 않는 종목이라는 뜻입니다.
+          </div>
+        </div>`;
+    }
+
+    const evs = v.events.map(e => {
+      const n = e.news;
+      const url = n ? safeUrl(n.url) : '';
+      // 업종이 통째로 움직인 날은 그렇게 밝혀준다 — 이 회사 소식으로 오해하면 안 된다
+      const mark = n && n.sector_wide ? '<span class="rp-sector">업종 전체</span>' : '';
+      const headline = n
+        ? (url
+            ? `<a class="rp-head" href="${url}" target="_blank" rel="noopener noreferrer">${mark}${escapeHtml(n.headline)}</a>`
+            : `<span class="rp-head">${mark}${escapeHtml(n.headline)}</span>`)
+        : '<span class="rp-head none">그날을 설명할 만한 기사를 찾지 못했습니다</span>';
+      const f = e.forward || {};
+      return `
+        <div class="rp-ev">
+          <div class="rp-top">
+            <span class="rp-date">${escapeHtml(e.date)}</span>
+            <span class="rp-move ${e.return >= 0 ? 'up' : 'down'}">${pct(e.return)}</span>
+            <span class="rp-sigma">평소의 ${e.move_vs_normal}배${
+              n && n.articles_that_day ? ` · 그날 기사 ${n.articles_that_day}건` : ''}</span>
+          </div>
+          ${headline}
+          <div class="rp-fwd">
+            ${fwdSpan('1일 후', f['1'])}${fwdSpan('5일 후', f['5'])}${fwdSpan('20일 후', f['20'])}
+          </div>
+        </div>`;
+    }).join('');
+
+    const more = v.events_found > v.events.length
+      ? ` (전체 ${v.events_found}건 중 최근 ${v.events.length}건)` : '';
+
+    return `
+      <div class="sec">
+        <div class="sec-title">과거 재생 · 평소와 다르게 움직였던 날${escapeHtml(more)}</div>
+        ${todayPill}
+        ${evs}
+        ${replaySummaryTable(v)}
+        <div class="stat-caption">
+          최근 ${yrs}년 중 <b>그날 등락이 직전 60거래일 평소 변동폭의 ${v.threshold_sigma}배를
+          넘긴 날</b>을 골라, 그때 나온 기사 제목과 그 뒤 주가를 그대로 옮긴 것입니다.
+          기사는 분류하지 않고 원문 제목을 붙였습니다.
+          <b>과거 기록이며 예측이 아닙니다</b> — 표본이 열 건 남짓이라 "다음에도 이럴 것"의
+          근거가 되지 못합니다. 평균보다 <b>최저~최고 폭</b>을 보세요.
+        </div>
+      </div>`;
+  }
+
   function range52Html(c) {
     const st = c.stats || {};
     if (st.pct_in_52w_range == null || st.low_52w == null || st.high_52w == null) return '';
@@ -1197,6 +1352,8 @@
           ${statTableHtml(c)}
         </div>
       </div>
+
+      ${replayHtml(c.symbol)}
 
       ${insiderHtml(c.symbol)}
 
@@ -1774,9 +1931,11 @@
   const notesReady = Promise.all([
     fetch('company_notes.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
     fetch('insider.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
-  ]).then(([n, i]) => {
+    fetch('replay.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
+  ]).then(([n, i, rp]) => {
     if (n && n.notes) companyNotes = n.notes;
     if (i && i.symbols) insiderData = i.symbols;
+    if (rp && rp.symbols) replayData = rp.symbols;
   });
 
   const historyReady = Promise.all([
