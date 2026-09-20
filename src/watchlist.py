@@ -94,6 +94,21 @@ def _fetch_batch_bars(symbols: list[str], lookback_days: int = 45) -> pd.DataFra
     return pd.concat(frames)
 
 
+def last_bar_date(symbol: str = "SPY") -> str | None:
+    """마지막 거래일(YYYY-MM-DD). 실행 날짜와 다를 수 있다.
+
+    이게 없어서 사고가 났다. 자동화는 매일 아침 도는데, 토요일 아침에 돌면
+    시장은 금요일이 마지막이다. 그런데 카드에는 실행 날짜가 '시장 날짜'로 적혀서
+    "9월 19일 미국 증시는…"이라는 문장이 나왔다 — 9월 19일은 토요일이었다.
+    날짜는 실행 시각이 아니라 **데이터에서** 가져와야 한다.
+    """
+    bars = _fetch_batch_bars([symbol], lookback_days=12)
+    if bars.empty or symbol not in set(bars.index.get_level_values(0)):
+        return None
+    df = bars.loc[symbol].sort_index()
+    return str(df.index[-1])[:10]
+
+
 def screen(top_n: int = 10, min_price: float = 5.0) -> pd.DataFrame:
     """
     유니버스 안에서 '오늘 화제인 종목' top_n개를 고른다.

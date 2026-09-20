@@ -1656,10 +1656,25 @@
       + `화면 위쪽 가격은 실시간이지만, 아래 해설과 뉴스는 그때 기준입니다.`;
   }
 
+  // 시장 날짜는 실행 날짜가 아니다. 주말·공휴일 아침에 자동 갱신이 돌면 데이터는
+  // 직전 거래일(보통 금요일) 것이다. 그걸 '오늘'인 것처럼 보여주면 거짓말이 된다.
+  const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
+  function marketDateLabel(md) {
+    if (!md) return '—';
+    const m = String(md).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return md;                       // 예전 형식("2026년 9월 16일")은 그대로
+    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    const label = `${+m[2]}월 ${+m[3]}일(${WEEKDAY_KO[d.getDay()]}) 장 마감 기준`;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const days = Math.round((today - d) / 864e5);
+    if (days >= 1) return `${label} · 그 뒤로 ${days}일간 새 거래일이 없었습니다`;
+    return label;
+  }
+
   function render(d) {
     data = d;
     checkStale(d.generated_at);
-    document.getElementById('marketDate').textContent = d.market_date;
+    document.getElementById('marketDate').textContent = marketDateLabel(d.market_date);
     document.getElementById('overviewText').textContent = d.overview;
     document.getElementById('updated').textContent = fmtUpdated(d.generated_at);
     renderNav();

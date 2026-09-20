@@ -225,8 +225,40 @@ def compute_spark_and_relative(symbols: list[str], lookback_days: int = 25) -> t
     return out, spy_day_return
 
 
+LIVE_DATA_URL = "https://today-watchlist-kr.netlify.app/data.json"
+EXIT_NO_NEW_SESSION = 2      # 새 거래일이 없어서 할 일이 없다는 뜻 (오류가 아니다)
+
+
+def deployed_market_date() -> str | None:
+    """지금 사이트에 올라가 있는 데이터가 어느 거래일 것인지."""
+    import urllib.request
+    try:
+        req = urllib.request.Request(LIVE_DATA_URL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return json.loads(r.read()).get("market_date")
+    except Exception as e:
+        print(f"   (배포된 data.json을 못 읽었습니다: {type(e).__name__} — 비교를 건너뜁니다)")
+        return None
+
+
 def main():
     os.makedirs(config.DATA_DIR, exist_ok=True)
+
+    # ---- 새 거래일이 있는지 먼저 확인 ----
+    # 자동화는 매일 아침 돌지만 시장은 주말·공휴일에 쉰다. 토요일·일요일 아침에
+    # 돌면 금요일과 똑같은 봉을 보고 똑같은 종목을 뽑는다. 실제로 어제와 오늘
+    # 선정이 16개 중 14개가 겹쳤고, 등락률은 소수점까지 같았다.
+    # 같은 걸 다시 만드느라 세션 예산을 쓰지 말고 여기서 끝낸다.
+    market_date = watchlist.last_bar_date()
+    print(f"마지막 거래일: {market_date or '확인 실패'}")
+    if market_date:
+        already = deployed_market_date()
+        if already == market_date:
+            print(f"\n이미 {market_date} 데이터가 올라가 있습니다 — 새 거래일이 없습니다(휴장일).")
+            print("갱신할 것이 없으므로 여기서 종료합니다.")
+            raise SystemExit(EXIT_NO_NEW_SESSION)
+        if already:
+            print(f"   (사이트에 올라간 것: {already} → 새로 만듭니다)")
 
     print("=" * 60)
     print("1) 유니버스 스크리닝 (유동성 높은 종목 중 오늘 변동/거래량 상위)")
@@ -311,6 +343,9 @@ def main():
 
     snapshot = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        # 데이터에서 읽은 실제 거래일. 실행 날짜와 다를 수 있으므로(주말·공휴일)
+        # 카드에 쓸 날짜는 반드시 이 값을 써야 한다.
+        "market_date": market_date,
         "spy_day_return": spy_day_return,
         # 유니버스 크기를 기록해둔다. 어느 날 갑자기 65로 찍혀 있으면 universe 빌드가
         # 실패해 손으로 고른 목록으로 폴백했다는 뜻이다 (조용히 퇴화하는 걸 알아채려고).
