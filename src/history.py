@@ -17,6 +17,7 @@ git 없이도 기록이 누적된다.
 from __future__ import annotations
 import json
 import os
+import re
 import urllib.request
 from datetime import datetime, timezone
 
@@ -40,16 +41,28 @@ def _fetch_live_history() -> list[dict]:
         return []
 
 
-def _date_key(data: dict) -> str:
-    """정렬·중복제거에 쓸 날짜 키(YYYY-MM-DD).
+_ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
-    market_date는 사람이 읽는 값이라 형식이 섞인다("2026년 9월 16일" vs "2026-09-18").
-    그걸 키로 쓰면 정렬이 깨지므로, 기계가 만든 generated_at에서 날짜만 뽑아 쓴다.
+
+def _date_key(data: dict) -> str:
+    """정렬·중복제거에 쓸 날짜 키(YYYY-MM-DD) — **거래일**이지 실행일이 아니다.
+
+    예전에는 generated_at(실행 시각)에서 뽑았다. market_date의 형식이 섞여 있어서
+    ("2026년 9월 16일" vs "2026-09-18") 정렬이 깨졌기 때문이다. 그런데 그 때문에
+    **주말에 같은 거래일이 두 번 기록됐다** — 금요일 데이터를 금요일 밤과 토요일 밤에
+    각각 기록해서, 화면에 "2일째 선정"이 뜨고 "첫 등장 이후 +0.00%"가 나왔다.
+    하루를 두 번 세면 연속 일수도, 성적표의 표본 수도 틀린다.
+
+    이제 screen_news.py가 봉에서 읽은 거래일을 market_date에 ISO 형식으로 넣으므로
+    그걸 우선 쓰고, 옛 기록(한국어 날짜)만 generated_at으로 물러난다.
     """
+    md = str(data.get("market_date") or "")
+    if _ISO_DATE.fullmatch(md):
+        return md
     gen = data.get("generated_at") or ""
     if len(gen) >= 10 and gen[4] == "-" and gen[7] == "-":
         return gen[:10]
-    return str(data.get("market_date") or "")
+    return md
 
 
 def _entry_from_cards(data: dict) -> dict:
@@ -83,10 +96,14 @@ def build(data_path: str | None = None) -> dict:
     days = _fetch_live_history()
     entry = _entry_from_cards(today)
 
-    # 같은 날짜가 이미 있으면(하루에 여러 번 실행) 덮어쓴다.
-    # 예전 기록에는 date 키가 없을 수 있어 그때는 그 자리에서 만들어 준다.
+    # 같은 거래일이 이미 있으면 덮어쓴다 — 하루에 여러 번 실행했거나, 주말에 돌아
+    # 직전 거래일을 다시 본 경우다. 기존 기록의 date도 다시 계산한다(예전에 실행일로
+    # 잘못 저장된 것을 거래일 기준으로 바로잡기 위해).
     for d in days:
-        d.setdefault("date", _date_key(d))
+        d["date"] = _date_key(d)
+    dropped = [d["date"] for d in days if d["date"] == entry["date"]]
+    if dropped:
+        print(f"   같은 거래일({entry['date']}) 기록이 이미 있어 새 것으로 교체합니다.")
     days = [d for d in days if d["date"] != entry["date"]]
     days.append(entry)
     days.sort(key=lambda d: d["date"])

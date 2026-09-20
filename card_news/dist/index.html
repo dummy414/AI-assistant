@@ -1761,8 +1761,17 @@
         if (live.error) return Promise.reject(new Error(live.error));
         mergeLive(live);
         renderNav(); renderDetail(); renderRelated(); renderMovers();
-        liveStatusEl.textContent = '실시간 · ' + fmtClock(live.fetched_at);
-        liveDotEl.classList.add('on');
+        // 시세가 페이지와 같은 거래일 것이면 '실시간'이 아니라 그냥 그날 종가다.
+        // 주말·공휴일에 '실시간'이라고 띄우면 새 정보가 있는 것처럼 오해하게 된다.
+        const closed = live.session_date && data && live.session_date === data.market_date;
+        if (closed) {
+          const m = String(live.session_date).match(/^\d{4}-(\d{2})-(\d{2})$/);
+          liveStatusEl.textContent = m ? `장 마감 · ${+m[1]}/${+m[2]} 종가` : '장 마감';
+          liveDotEl.classList.remove('on');
+        } else {
+          liveStatusEl.textContent = '실시간 · ' + fmtClock(live.fetched_at);
+          liveDotEl.classList.add('on');
+        }
       })
       .catch(() => {
         liveStatusEl.textContent = '실시간 연결 안 됨';
