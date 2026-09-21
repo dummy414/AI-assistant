@@ -1637,23 +1637,45 @@
     renderRelated();
   }
 
-  // 자동화는 매일 아침 한 번 돈다. 하루가 훌쩍 넘도록 갱신이 없다면 파이프라인이
-  // 멈춘 것이고, 그걸 숨긴 채 옛 데이터를 오늘 것처럼 보여주면 안 된다.
-  function checkStale(generatedAt) {
+  // 갱신이 멈췄는지 판단하는 기준은 '몇 시간 지났나'가 아니라 **거래일**이다.
+  //
+  // 예전에는 generated_at이 26시간을 넘으면 경고를 띄웠다. 그런데 주말·공휴일에는
+  // 새 거래일이 없어서 자동화가 일부러 건너뛴다(그게 정상이다). 그러면 generated_at이
+  // 그대로 멈춰 있어서, 아무 문제가 없는데도 월요일이면 "자동 갱신이 멈췄을 수 있습니다"가
+  // 뜬다. 정상 동작에 거짓 경고를 붙이면 진짜 고장났을 때 아무도 안 믿는다.
+  //
+  // 그래서 market_date(데이터가 어느 거래일 것인지)와 오늘 사이에 **지나간 평일**을 센다.
+  // 금요일 데이터를 월요일 아침에 보는 건 0일(정상), 화요일 아침에도 금요일이면 1일 밀린 것.
+  function missedWeekdays(marketDate) {
+    const m = String(marketDate || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;                       // 옛 형식이면 판단하지 않는다
+    const from = new Date(+m[1], +m[2] - 1, +m[3]);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    let n = 0;
+    for (let d = new Date(from); ; ) {
+      d.setDate(d.getDate() + 1);
+      if (d >= today) break;                   // 오늘은 아직 장이 안 끝났을 수 있어 세지 않는다
+      const wd = d.getDay();
+      if (wd !== 0 && wd !== 6) n++;           // 주말 제외
+    }
+    return n;
+  }
+
+  function checkStale(d) {
     const banner = document.getElementById('staleBanner');
     const text = document.getElementById('staleText');
-    const t = Date.parse(generatedAt);
-    if (!t) return;
-    const hours = (Date.now() - t) / 36e5;
-    if (hours < 26) { banner.classList.remove('show', 'severe'); return; }
+    const missed = missedWeekdays(d.market_date);
+    if (missed === null || missed < 1) { banner.classList.remove('show', 'severe'); return; }
 
-    const days = Math.floor(hours / 24);
-    const when = days >= 1 ? `${days}일` : `${Math.floor(hours)}시간`;
     banner.classList.add('show');
-    banner.classList.toggle('severe', hours >= 50);
-    text.innerHTML = `이 페이지의 해설·종목 선정은 <b>${when} 전</b> 데이터입니다. `
-      + `매일 아침 갱신되어야 하는데 그러지 않았습니다 — 자동 갱신이 멈췄을 수 있습니다. `
-      + `화면 위쪽 가격은 실시간이지만, 아래 해설과 뉴스는 그때 기준입니다.`;
+    banner.classList.toggle('severe', missed >= 2);
+    // 1일 밀린 건 미국 공휴일일 수도 있다. 2일부터는 확실히 이상하다.
+    const cause = missed === 1
+      ? '미국 공휴일이었거나, 자동 갱신이 한 번 걸렀을 수 있습니다.'
+      : '자동 갱신이 멈췄을 가능성이 큽니다.';
+    text.innerHTML = `이 페이지의 해설·종목 선정은 <b>${escapeHtml(d.market_date)}</b> 장 마감 기준입니다. `
+      + `그 뒤로 거래일이 <b>${missed}일</b> 지났는데 갱신되지 않았습니다 — ${cause} `
+      + `화면 위쪽 가격은 최신이지만, 아래 해설과 뉴스는 그때 기준입니다.`;
   }
 
   // 시장 날짜는 실행 날짜가 아니다. 주말·공휴일 아침에 자동 갱신이 돌면 데이터는
@@ -1673,7 +1695,7 @@
 
   function render(d) {
     data = d;
-    checkStale(d.generated_at);
+    checkStale(d);
     document.getElementById('marketDate').textContent = marketDateLabel(d.market_date);
     document.getElementById('overviewText').textContent = d.overview;
     document.getElementById('updated').textContent = fmtUpdated(d.generated_at);
