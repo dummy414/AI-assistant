@@ -87,9 +87,21 @@ def _entry_from_cards(data: dict) -> dict:
     }
 
 
+def _today_data_path() -> str:
+    """오늘치 카드를 어디서 읽을지.
+
+    card_news/data.json은 '작성 중' 사본이고, card_news/dist/data.json이 실제로
+    배포되는 파일이다. 파이프라인 안에서는 둘이 같지만, 로컬에서 따로 돌릴 때는
+    루트 사본이 며칠 전 것으로 남아 있을 수 있다 — 그걸 읽으면 옛 종목이 오늘치로
+    기록된다. 그래서 **배포본을 먼저** 보고, 없을 때만 루트 사본으로 물러난다.
+    """
+    base = os.path.normpath(os.path.join(config.DATA_DIR, "..", "card_news"))
+    dist = os.path.join(base, "dist", "data.json")
+    return dist if os.path.exists(dist) else os.path.join(base, "data.json")
+
+
 def build(data_path: str | None = None) -> dict:
-    data_path = data_path or os.path.normpath(
-        os.path.join(config.DATA_DIR, "..", "card_news", "data.json"))
+    data_path = data_path or _today_data_path()
     with open(data_path, encoding="utf-8") as f:
         today = json.load(f)
 

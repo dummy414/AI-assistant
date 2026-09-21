@@ -1644,19 +1644,32 @@
   // 그대로 멈춰 있어서, 아무 문제가 없는데도 월요일이면 "자동 갱신이 멈췄을 수 있습니다"가
   // 뜬다. 정상 동작에 거짓 경고를 붙이면 진짜 고장났을 때 아무도 안 믿는다.
   //
-  // 그래서 market_date(데이터가 어느 거래일 것인지)와 오늘 사이에 **지나간 평일**을 센다.
+  // 그래서 market_date(데이터가 어느 거래일 것인지)와 오늘 사이에 **지나간 거래일**을 센다.
   // 금요일 데이터를 월요일 아침에 보는 건 0일(정상), 화요일 아침에도 금요일이면 1일 밀린 것.
+  //
+  // 실제 거래일 목록은 calendar 함수가 Alpaca 공식 달력에서 받아온다. 그게 있으면
+  // 추수감사절·크리스마스처럼 평일인데 장이 안 서는 날을 잘못 세지 않는다.
+  // 못 받아왔을 때만 '주말 빼고 평일'이라는 근사치로 물러난다.
+  let tradingDays = null;
+
   function missedWeekdays(marketDate) {
     const m = String(marketDate || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!m) return null;                       // 옛 형식이면 판단하지 않는다
-    const from = new Date(+m[1], +m[2] - 1, +m[3]);
     const today = new Date(); today.setHours(0, 0, 0, 0);
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    if (tradingDays && tradingDays.length) {
+      // 오늘은 아직 장이 안 끝났을 수 있으니 세지 않는다 (marketDate < d < today)
+      return tradingDays.filter((d) => d > marketDate && d < todayStr).length;
+    }
+
+    const from = new Date(+m[1], +m[2] - 1, +m[3]);
     let n = 0;
     for (let d = new Date(from); ; ) {
       d.setDate(d.getDate() + 1);
-      if (d >= today) break;                   // 오늘은 아직 장이 안 끝났을 수 있어 세지 않는다
+      if (d >= today) break;
       const wd = d.getDay();
-      if (wd !== 0 && wd !== 6) n++;           // 주말 제외
+      if (wd !== 0 && wd !== 6) n++;           // 주말 제외 (공휴일은 모른다)
     }
     return n;
   }
@@ -2190,6 +2203,13 @@
     if (i && i.symbols) insiderData = i.symbols;
   });
 
+  // 거래일 달력 — 공휴일을 '갱신이 밀린 날'로 잘못 세지 않기 위해 먼저 받아둔다.
+  // 실패해도 평일 근사치로 동작하므로 페이지를 막지 않는다.
+  const calendarReady = fetch('/.netlify/functions/calendar')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((c) => { if (c && Array.isArray(c.trading_days)) tradingDays = c.trading_days; })
+    .catch(() => {});
+
   const historyReady = Promise.all([
     fetch('history.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
     fetch('scorecard.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
@@ -2202,7 +2222,7 @@
     renderHistory();
   });
 
-  Promise.all([fetch('data.json').then(r => r.json()), historyReady, notesReady])
+  Promise.all([fetch('data.json').then(r => r.json()), historyReady, notesReady, calendarReady])
     .then(([d]) => {
       render(d);
       applyUrl(false);        // ?s=GNRC 로 들어왔으면 그 종목을 바로 연다
