@@ -25,6 +25,28 @@
 const FALLBACK_SYMBOLS = ["SPY", "QQQ", "AAPL", "MSFT", "NVDA"];
 const MAX_SYMBOLS = 40;   // Alpaca 스냅샷 한 번에 요청할 상한
 
+// **latestTrade를 쓰면 안 된다.** 그건 시간외 체결까지 포함한 '마지막 체결'이라,
+// 정규장 종가(dailyBar.c)와 다를 수 있다. 실제로 주말에 SPY의 latestTrade가
+// 전일 종가와 거의 같은 값이라 당일 등락이 -0.00%로 찍혔고, 그 결과 카드의
+// 'SPY 대비'가 등락률과 똑같이 나왔다(SPY가 0%니까).
+// dailyBar는 장중에도 실시간으로 갱신되므로 언제 쓰든 앞뒤가 맞는다.
+function toQuote(sym, s) {
+  // 종목명은 페이지가 이미 갖고 있다(카드 데이터). 여기서 이름표를 따로 들고
+  // 있으면 낡기만 하므로 심볼을 그대로 돌려준다.
+  if (!s) return { symbol: sym, name: sym, ok: false };
+  const bar = s.dailyBar || null;
+  const price = bar ? bar.c : null;
+  const prevClose = s.prevDailyBar ? s.prevDailyBar.c : null;
+  const dayReturn = price != null && prevClose ? price / prevClose - 1 : null;
+  return {
+    symbol: sym, name: sym, ok: price != null,
+    price, prev_close: prevClose, day_return: dayReturn,
+    as_of: bar ? bar.t : null,
+    // 시간외까지 포함한 마지막 체결 — 참고용으로만 내려보낸다
+    last_trade: s.latestTrade ? s.latestTrade.p : null,
+  };
+}
+
 function parseSymbols(event, key) {
   const raw = (event.queryStringParameters && event.queryStringParameters[key]) || "";
   return raw
@@ -56,28 +78,6 @@ exports.handler = async function (event) {
       { headers }
     );
     const snapData = await snapRes.json();
-
-    // **latestTrade를 쓰면 안 된다.** 그건 시간외 체결까지 포함한 '마지막 체결'이라,
-    // 정규장 종가(dailyBar.c)와 다를 수 있다. 실제로 주말에 SPY의 latestTrade가
-    // 전일 종가와 거의 같은 값이라 당일 등락이 -0.00%로 찍혔고, 그 결과 카드의
-    // 'SPY 대비'가 등락률과 똑같이 나왔다(SPY가 0%니까).
-    // dailyBar는 장중에도 실시간으로 갱신되므로 언제 쓰든 앞뒤가 맞는다.
-    function toQuote(sym, s) {
-      // 종목명은 페이지가 이미 갖고 있다(카드 데이터). 여기서 이름표를 따로 들고
-      // 있으면 낡기만 하므로 심볼을 그대로 돌려준다.
-      if (!s) return { symbol: sym, name: sym, ok: false };
-      const bar = s.dailyBar || null;
-      const price = bar ? bar.c : null;
-      const prevClose = s.prevDailyBar ? s.prevDailyBar.c : null;
-      const dayReturn = price != null && prevClose ? price / prevClose - 1 : null;
-      return {
-        symbol: sym, name: sym, ok: price != null,
-        price, prev_close: prevClose, day_return: dayReturn,
-        as_of: bar ? bar.t : null,
-        // 시간외까지 포함한 마지막 체결 — 참고용으로만 내려보낸다
-        last_trade: s.latestTrade ? s.latestTrade.p : null,
-      };
-    }
 
     const quotes = ALL_SYMBOLS.map((sym) => toQuote(sym, snapData[sym]));
     const spyQuote = toQuote(BENCHMARK, snapData[BENCHMARK]);
@@ -122,3 +122,7 @@ exports.handler = async function (event) {
     return { statusCode: 500, body: JSON.stringify({ error: String(err) }) };
   }
 };
+
+// 테스트에서 쓰기 위해 순수 함수만 내보낸다 (핸들러 동작에는 영향 없음)
+module.exports.toQuote = toQuote;
+module.exports.parseSymbols = parseSymbols;

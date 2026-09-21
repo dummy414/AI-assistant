@@ -112,6 +112,24 @@ async function listEightK(cik, rec, { days = 240, max = 6, withBody = false, bod
   }));
 }
 
+// XBRL 응답에서 '연간 수치'만 골라낸다. 같은 태그에 분기(3개월) 값과 연간(12개월)
+// 값이 섞여 들어오므로 기간 길이로 거른다 — 안 거르면 분기 매출이 연매출 자리에 앉는다.
+// 네트워크 없이 검증할 수 있도록 순수 함수로 떼어 두었다.
+function pickAnnual(units) {
+  const byYear = {};
+  for (const u of units || []) {
+    if (u.form !== "10-K" || !u.fy || u.val == null) continue;
+    if (u.start) {
+      const days = (new Date(u.end) - new Date(u.start)) / 864e5;
+      if (days < 300 || days > 400) continue;   // 연간 구간만 (분기 제외)
+    }
+    byYear[u.fy] = u.val;
+  }
+  const years = Object.keys(byYear).map(Number).sort((a, b) => b - a).slice(0, 4);
+  return years.length ? { years, byYear } : null;
+}
+
+
 async function fetchConcept(cik, tags) {
   for (const tag of tags) {
     try {
@@ -122,17 +140,8 @@ async function fetchConcept(cik, tags) {
       if (!r.ok) continue;
       const j = await r.json();
       const units = (j.units && (j.units.USD || Object.values(j.units)[0])) || [];
-      const byYear = {};
-      for (const u of units) {
-        if (u.form !== "10-K" || !u.fy || u.val == null) continue;
-        if (u.start) {
-          const days = (new Date(u.end) - new Date(u.start)) / 864e5;
-          if (days < 300 || days > 400) continue;   // 연간 구간만 (분기 제외)
-        }
-        byYear[u.fy] = u.val;
-      }
-      const years = Object.keys(byYear).map(Number).sort((a, b) => b - a).slice(0, 4);
-      if (years.length) return { years, byYear };
+      const picked = pickAnnual(units);
+      if (picked) return picked;
     } catch (e) { /* 다음 태그 시도 */ }
   }
   return null;
@@ -156,5 +165,5 @@ function edgarUrl(cik) {
 module.exports = {
   SEC_UA, ITEM_LABEL, NOTABLE_ITEMS, XBRL_CONCEPTS,
   stripHtml, tickerToCik, itemsToKorean, fetchSubmissions,
-  listEightK, fetchConcept, fetchFinancials, edgarUrl,
+  listEightK, pickAnnual, fetchConcept, fetchFinancials, edgarUrl,
 };

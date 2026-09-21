@@ -54,8 +54,23 @@ EVENT_TYPES = [
     # 놓쳤던 적이 있다. 금액이 함께 있을 때만 사건으로 보므로 넓게 잡아도 오탐이 적다.
     ("계약 수주",   "inflow",  r"\b(contract|awarded?|wins?|won|orders?|purchase agreement|backlog|task order|"
                                r"deals?|agreement|supply|selected by|partnership|collaborat\w+)\b"),
-    ("인수·합병",   "inflow",  r"\b(acquir\w+|acquisition|merger|to buy|takeover|stake in)\b"),
-    ("자금 조달",   "inflow",  r"\b(rais\w+|offering|private placement|financing|funding round|grant)\b"),
+    # "to buy"를 그냥 두면 애널리스트 투자의견 "Upgrades ... to Buy"를 인수로 오인한다
+    # (실제로 제네락이 그렇게 '인수·합병'으로 분류됐다). 뒤에 목적어가 와야만 인수로 본다:
+    #   "to buy Arduino"        → 인수 (o)
+    #   "Upgrades to Buy, ..."  → 투자의견 (x)
+    ("인수·합병",   "inflow",  r"(\bacquir\w+|\bacquisition\b|\bmerger\b|\btakeover\b|"
+                               r"\bstake in\b|\bto\s+buy\s+[A-Za-z])"),
+    # 예전 패턴은 `rais\w+|offering|grant`처럼 너무 헐거웠다. 그 결과 제네락 기사
+    # 279건 중 62건이 '자금 조달'로 잡혔는데 대부분 오탐이었다 —
+    # "Raises Price Target"(목표주가 상향), "offering customers"(고객에게 제공) 같은 것들.
+    # 돈이 실제로 오가는 표현일 때만 잡는다.
+    ("자금 조달",   "inflow",  r"(\brais\w+\s+(?:up\s+to\s+|about\s+|approximately\s+)?(?:US)?\$"
+                               r"|\brais\w+\s+(?:capital|funds?|financing|equity|debt)\b"
+                               r"|\b(?:public|private|secondary|follow-on|equity|debt|notes?|stock|"
+                               r"share|shelf|mixed\s+shelf)\s+offering\b"
+                               r"|\bprivate\s+placement\b|\b(?:funding|financing)\s+round\b"
+                               r"|\bprices?\s+(?:US)?\$[\d.,]+\s*(?:billion|million|[BM])\b"
+                               r"|\bgrant(?:ed|s)?\s+(?:of\s+)?(?:up\s+to\s+)?(?:US)?\$)"),
     ("소송·합의",   "outflow", r"\b(lawsuit|sued?|litigation|settle\w*|class action|verdict|damages)\b"),
     ("제재·벌금",   "outflow", r"\b(fine[sd]?|penalt\w+|sanction\w*|violation)\b"),
     ("리콜·결함",   "outflow", r"\b(recall\w*|defect\w*|safety issue)\b"),
