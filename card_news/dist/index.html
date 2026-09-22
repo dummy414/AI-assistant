@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0F1214" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F7F6F2" media="(prefers-color-scheme: light)">
+<link rel="canonical" href="https://today-watchlist-kr.netlify.app/">
 <title>오늘의 관심종목</title>
 <meta name="description" content="미국 주식을 회사가 SEC에 직접 낸 공시로 확인하는 곳. 매일 아침 화제 종목을 실제 뉴스와 함께 한국어로 정리합니다.">
 <!-- 카톡·슬랙·디스코드에 링크를 붙였을 때 제목 카드가 뜨게 한다.
@@ -19,38 +22,69 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="오늘의 관심종목">
 <meta name="twitter:description" content="미국 주식을 회사가 SEC에 직접 낸 공시로 확인하는 곳.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%B0%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23D9A441'/%3E%3Cg fill='none' stroke='%2314110A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 7h8l5 5v13H10z'/%3E%3Cpath d='M18 7v5h5'/%3E%3Cpath d='M13.5 18h6'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23D9A441'/%3E%3Cg fill='none' stroke='%2314110A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 7h8l5 5v13H10z'/%3E%3Cpath d='M18 7v5h5'/%3E%3Cpath d='M13.5 18h6'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;1,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
-  /* 다크가 기본. 밝은 테마는 data-theme="light"를 줄 때만 적용된다. */
+  /* ============================================================
+     디자인 토큰
+     ============================================================
+     강조색은 **황동(brass)**이다. 예전엔 #8AB4F8이었는데 그건 구글 블루 그대로라
+     "어디서 본 사이트"처럼 보였다. 이 사이트의 주제는 '회사가 제출한 서류'라서
+     장부·서류철의 색을 가져왔다. 금융 사이트가 대개 파랑·초록을 쓰는 것과도 갈린다.
+
+     색의 역할을 셋으로만 나눈다 — 섞이면 위계가 무너진다:
+       중립(neutral)  글·배경·경계
+       황동(accent)   **이 사이트가 가리키는 것** (링크, 현재 탭, 눈여겨볼 공시 항목)
+       등락(up/down)  시장이 움직인 방향. 오직 이것만.
+     그래서 예전의 --gold는 따로 두지 않고 accent와 같은 계열로 합쳤다. */
   :root {
-    --paper: #131314;
-    --surface: #1E1F20;
-    --surface-2: #282A2C;
-    --ink: #E3E3E3;
-    --ink-2: #9AA0A6;
-    --ink-3: #6F7479;
-    --line: #303134;
-    --accent: #8AB4F8;
-    --accent-soft: #1F2A3D;
-    --up: #34C77B;
-    --up-soft: #16281F;
-    --down: #F2685C;
-    --down-soft: #2E1A18;
-    --gold: #E2B64F;
-    --gold-soft: #2E2616;
+    /* 중립 — 순수 회색이 아니라 살짝 푸른 기를 넣어 '고른 색'으로 보이게 한다 */
+    --paper: #0F1214;
+    --surface: #171B1E;
+    --surface-2: #202529;
+    --ink: #E9ECEC;
+    --ink-2: #A2ACB2;
+    --ink-3: #6B757B;
+    --line: #272D32;
+
+    --accent: #D9A441;
+    --accent-soft: #2A2216;
+    --accent-ink: #14110A;        /* 황동 위에 얹는 글자색 */
+
+    --up: #3FB980;
+    --up-soft: #13291F;
+    --down: #E4705C;
+    --down-soft: #2C1A17;
+
+    /* 예전 이름 유지 — 눈여겨볼 항목은 '사이트가 가리키는 것'이라 accent와 한 계열 */
+    --gold: #D9A441;
+    --gold-soft: #2A2216;
+
+    /* 간격 — 눈대중 숫자를 흩뿌리지 않고 이 계단만 쓴다 */
+    --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+    --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+
+    /* 모서리 — 작은 칩 8, 버튼·입력 12, 카드 16, 모달 22 */
+    --r1: 8px; --r2: 12px; --r3: 16px; --r4: 22px; --rp: 999px;
+
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 20px -12px rgba(0,0,0,.6);
+    --shadow-lg: 0 2px 6px rgba(0,0,0,.35), 0 24px 48px -24px rgba(0,0,0,.75);
+
+    --dur: .16s;                  /* 상태가 바뀌는 속도. 전부 같아야 한 손에서 나온 것처럼 보인다 */
+    --topbar-h: 64px;             /* 고정 상단바 높이 — 아래에 붙는 것들이 이 값을 피해간다 */
   }
   :root[data-theme="light"] {
-    --paper: #F6F6F3; --surface: #FFFFFF; --surface-2: #EEEEEA;
-    --ink: #15171D; --ink-2: #5C5F68; --ink-3: #8C8F98; --line: #E3E3DE;
-    --accent: #2C3A73; --accent-soft: #E8EAF3;
-    --up: #1D7A57; --up-soft: #E2F2EA;
-    --down: #B03F27; --down-soft: #FBE8E2;
-    --gold: #A9791F; --gold-soft: #F5EBD6;
-    --shadow: 0 1px 2px rgba(20,20,15,.04), 0 10px 24px -12px rgba(20,20,15,.16);
+    --paper: #F7F6F2; --surface: #FFFFFF; --surface-2: #EFEDE7;
+    --ink: #14171A; --ink-2: #545B61; --ink-3: #868D92; --line: #E2DFD6;
+    --accent: #8A6415; --accent-soft: #F4EBD8; --accent-ink: #FFFFFF;
+    --up: #1C7A55; --up-soft: #E1F2EA;
+    --down: #AF3D24; --down-soft: #FAE7E1;
+    --gold: #8A6415; --gold-soft: #F4EBD8;
+    --shadow: 0 1px 2px rgba(20,20,15,.05), 0 10px 24px -14px rgba(20,20,15,.18);
+    --shadow-lg: 0 2px 8px rgba(20,20,15,.07), 0 28px 56px -28px rgba(20,20,15,.28);
   }
 
   * { box-sizing: border-box; }
@@ -61,43 +95,109 @@
     font-family: 'Archivo', system-ui, sans-serif;
     padding-inline: 16px;
     padding-block: 0;
+    /* 한글·숫자가 섞인 화면이라 글자 굵기가 들쭉날쭉해 보이기 쉽다 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    accent-color: var(--accent);
   }
   .wrap { max-width: 1180px; margin: 0 auto; }
+
+  /* 초점 표시 — 컴포넌트마다 따로 쓰던 걸 한 줄로 모았다.
+     :where()라 우선순위가 0이다. 특별한 사정이 있는 곳(:active 행 안쪽 등)은
+     자기 규칙으로 덮어쓰면 된다. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  ::selection { background: var(--accent-soft); color: var(--accent); }
+
+  /* 화면에는 안 보이지만 스크린리더와 검색엔진은 읽는 제목 */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* 화면 안쪽 패널의 스크롤바. 기본 스크롤바는 여기서 유독 투박하게 튄다. */
+  .nav-scroll, .related, .modal, .drawer {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+  .nav-scroll::-webkit-scrollbar, .related::-webkit-scrollbar,
+  .modal::-webkit-scrollbar, .drawer::-webkit-scrollbar { width: 10px; }
+  .nav-scroll::-webkit-scrollbar-thumb, .related::-webkit-scrollbar-thumb,
+  .modal::-webkit-scrollbar-thumb, .drawer::-webkit-scrollbar-thumb {
+    background: var(--line); border-radius: var(--rp);
+    border: 3px solid transparent; background-clip: content-box;
+  }
+  .nav-scroll:hover::-webkit-scrollbar-thumb, .related:hover::-webkit-scrollbar-thumb,
+  .modal:hover::-webkit-scrollbar-thumb, .drawer:hover::-webkit-scrollbar-thumb {
+    background: var(--ink-3); background-clip: content-box;
+  }
 
   .topbar {
     position: sticky;
     top: env(safe-area-inset-top, 0px);
     z-index: 20;
     background: color-mix(in srgb, var(--paper) 88%, transparent);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--line);
     margin-inline: -16px;
     padding: 14px 16px 12px;
   }
-  .topbar .row { max-width: 1180px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .brand { font-family: 'Newsreader', serif; font-weight: 600; font-size: 19px; letter-spacing: .2px; }
-  .brand span { color: var(--gold); }
-  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar .row { max-width: 1180px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+
+  /* 마스트헤드 — 글자만 있던 자리에 마크를 세운다.
+     마크는 서류에 찍는 도장에서 가져왔다: 네모난 문서 틀 안의 한 줄. */
+  .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .brand-mark {
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px;
+    background: var(--accent); color: var(--accent-ink);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .brand-text { display: flex; flex-direction: column; min-width: 0; }
+  .brand-name {
+    font-family: 'Newsreader', Georgia, serif; font-weight: 600; font-size: 18px;
+    line-height: 1.15; letter-spacing: .01em; white-space: nowrap;
+  }
+  .brand-tag {
+    font-size: 11px; color: var(--ink-3); line-height: 1.3; white-space: nowrap;
+    letter-spacing: .01em;
+  }
+  .topbar-right { display: flex; align-items: center; gap: var(--s2); }
   .updated { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* 상단바 아이콘 버튼들을 한 규격으로 */
+  .icon-btn {
+    width: 34px; height: 34px; flex: 0 0 auto; display: flex; align-items: center;
+    justify-content: center; border: 1px solid var(--line); border-radius: var(--r2);
+    background: var(--surface); color: var(--ink-2); cursor: pointer; padding: 0;
+    transition: background var(--dur), color var(--dur), border-color var(--dur);
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--ink); border-color: var(--ink-3); }
+  .icon-btn:active { transform: translateY(1px); }
+  .icon-btn svg { display: block; }
+  .theme-toggle .moon { display: none; }
+  :root[data-theme="light"] .theme-toggle .moon { display: block; }
+  :root[data-theme="light"] .theme-toggle .sun { display: none; }
 
   .live-badge { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-2); white-space: nowrap; }
   .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); flex: 0 0 auto; }
   .live-dot.on { background: var(--up); animation: livepulse 1.6s infinite; }
   @keyframes livepulse {
-    0% { box-shadow: 0 0 0 0 rgba(29,122,87,.45); }
-    70% { box-shadow: 0 0 0 6px rgba(29,122,87,0); }
-    100% { box-shadow: 0 0 0 0 rgba(29,122,87,0); }
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--up) 45%, transparent); }
+    70% { box-shadow: 0 0 0 6px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
   }
   @media (prefers-reduced-motion: reduce) { .live-dot.on { animation: none; } }
 
   .menu-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-    width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 10px;
+    width: 34px; height: 34px; border: 1px solid var(--line); border-radius: var(--r2);
     background: var(--surface); cursor: pointer; padding: 0;
   }
   .menu-btn span { display: block; width: 16px; height: 2px; background: var(--ink); border-radius: 1px; }
   .menu-btn:hover { background: var(--surface-2); }
-  .menu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media (min-width: 900px) { .menu-btn { display: none; } }
 
   .drawer-backdrop {
@@ -110,7 +210,7 @@
     background: var(--surface); z-index: 41; overflow-y: auto;
     padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
     transform: translateX(-104%); transition: transform .22s ease;
-    box-shadow: 10px 0 30px rgba(0, 0, 0, .18);
+    box-shadow: var(--shadow-lg);
   }
   .drawer.open { transform: translateX(0); }
   .drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
@@ -118,8 +218,9 @@
   .drawer-close {
     width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line);
     background: var(--surface-2); color: var(--ink); cursor: pointer; font-size: 14px;
+    transition: background var(--dur), color var(--dur);
   }
-  .drawer-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .drawer-close:hover { background: var(--line); }
   .drawer-list { display: flex; flex-direction: column; gap: 8px; }
   .drawer-list .nav-item { width: 100%; }
   .drawer-list .nav-name { display: block; }
@@ -130,7 +231,7 @@
   /* 자동화가 조용히 멈췄을 때 낡은 데이터를 오늘 것처럼 보여주지 않기 위한 경고 */
   .stale-banner {
     display: none; align-items: flex-start; gap: 10px;
-    margin: 12px 0 0; padding: 11px 14px; border-radius: 10px;
+    margin: 12px 0 0; padding: 11px 14px; border-radius: var(--r2);
     font-size: 12.5px; line-height: 1.5;
     background: var(--gold-soft); color: var(--gold); border: 1px solid transparent;
   }
@@ -139,28 +240,38 @@
   .stale-banner .icon { flex: 0 0 auto; font-size: 14px; line-height: 1.3; }
   .stale-banner b { font-variant-numeric: tabular-nums; }
 
+  /* 이모지 대신 선 아이콘. 이모지는 기기마다 다르게 그려지고, 무엇보다
+     '만들다 만 것' 같은 인상을 준다. */
   .tabbar {
-    display: flex; gap: 8px; padding: 14px 2px 6px;
+    display: flex; gap: var(--s1); padding: var(--s4) 0 var(--s2);
     overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    border-bottom: 1px solid var(--line);
   }
   .tabbar::-webkit-scrollbar { display: none; }
   .tab-btn {
-    flex: 0 0 auto; white-space: nowrap;
-    font-family: 'Archivo', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 14px;
-    border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); cursor: pointer;
+    flex: 0 0 auto; white-space: nowrap; display: inline-flex; align-items: center; gap: 7px;
+    font-family: inherit; font-size: 13px; font-weight: 600; padding: 9px 14px;
+    border-radius: var(--r2); border: 1px solid transparent; background: transparent;
+    color: var(--ink-3); cursor: pointer;
+    transition: color var(--dur), background var(--dur), border-color var(--dur);
   }
-  .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .tab-btn:hover:not(.active) { background: var(--surface-2); }
-  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab-btn svg { display: block; opacity: .85; }
+  .tab-btn:hover:not(.active) { color: var(--ink); background: var(--surface); }
+  .tab-btn.active {
+    background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft);
+  }
+  .tab-btn.active svg { opacity: 1; }
+  .tab-lock { color: var(--ink-3); opacity: .8; }
 
   /* 종목 한 장 */
   .stock-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
   .back-btn {
     font-family: 'Archivo', sans-serif; font-size: 12.5px; font-weight: 600;
-    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line);
+    padding: 6px 12px; border-radius: var(--rp); border: 1px solid var(--line);
     background: var(--surface); color: var(--ink-2); cursor: pointer;
+    transition: background var(--dur), color var(--dur), border-color var(--dur);
   }
-  .back-btn:hover { background: var(--surface-2); }
+  .back-btn:hover { background: var(--surface-2); color: var(--ink); border-color: var(--ink-3); }
   .stock-copied { font-size: 12px; color: var(--up); opacity: 0; transition: opacity .2s; }
   .stock-copied.show { opacity: 1; }
   .stock-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
@@ -188,27 +299,28 @@
   a.fil-date:hover { color: var(--accent); text-decoration: underline; }
   .fil-items { display: flex; flex-wrap: wrap; gap: 5px; }
   .fil-item {
-    font-size: 11.5px; padding: 2px 8px; border-radius: 6px;
+    font-size: 11.5px; padding: 2px 8px; border-radius: var(--r1);
     background: var(--surface-2); color: var(--ink-2); white-space: nowrap;
   }
   .fil-item.notable { background: var(--gold-soft); color: var(--gold); font-weight: 600; }
   .fil-item .code { font-family: 'IBM Plex Mono', monospace; opacity: .7; margin-right: 3px; }
   .ext-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
   .ext-link {
-    font-size: 12px; padding: 6px 11px; border-radius: 999px; text-decoration: none;
+    font-size: 12px; padding: 6px 11px; border-radius: var(--rp); text-decoration: none;
     border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+    transition: border-color var(--dur), color var(--dur), background var(--dur);
   }
-  .ext-link:hover { border-color: var(--accent); color: var(--accent); }
+  .ext-link:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
   /* 관리자 잠금 — 감추지 않고 왜 잠겼는지 보여준다 */
   .lockbox {
     display: flex; gap: 16px; align-items: flex-start; max-width: 560px;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
-    padding: 20px 22px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r3);
+    padding: var(--s5) 22px; box-shadow: var(--shadow);
   }
   .lockbox.hide { display: none; }
   .lock-icon {
-    flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px;
+    flex: 0 0 auto; width: 40px; height: 40px; border-radius: var(--r2);
     background: var(--surface-2); color: var(--ink-3);
     display: flex; align-items: center; justify-content: center;
   }
@@ -219,30 +331,89 @@
   .lock-form { display: flex; gap: 8px; flex-wrap: wrap; }
   .lock-form input {
     flex: 1 1 160px; min-width: 0; font-family: inherit; font-size: 13px; padding: 8px 12px;
-    border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+    border-radius: var(--r2); border: 1px solid var(--line); background: var(--paper); color: var(--ink);
   }
-  .lock-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .lock-form button {
     font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px;
-    border-radius: 8px; border: 0; background: var(--accent); color: #fff; cursor: pointer;
+    border-radius: var(--r2); border: 0; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink);
+    transition: filter var(--dur);
   }
+  .lock-form button:hover { filter: brightness(1.08); }
   .lock-again {
     margin-top: 14px; font-family: inherit; font-size: 12px; padding: 5px 11px;
-    border-radius: 999px; border: 1px solid var(--line); background: transparent;
+    border-radius: var(--rp); border: 1px solid var(--line); background: transparent;
     color: var(--ink-3); cursor: pointer;
   }
   .lock-again:hover { color: var(--ink-2); border-color: var(--ink-3); }
 
-  .quality-view { padding: 8px 2px 100px; }
+  /* 로딩 — "불러오는 중입니다…"라는 글자 대신 들어올 내용의 모양을 미리 보여준다.
+     화면이 어디로 채워질지 알 수 있어서 기다리는 느낌이 덜하다. */
+  .skel { background: var(--surface-2); border-radius: var(--r1); position: relative; overflow: hidden; }
+  .skel::after {
+    content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ink) 7%, transparent), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  @media (prefers-reduced-motion: reduce) { .skel::after { animation: none; } }
+  .skel-line { height: 12px; margin-bottom: var(--s2); }
+  .skel-stack { display: flex; flex-direction: column; gap: var(--s2); }
+  /* 목록 한 줄: 왼쪽 이름, 오른쪽 숫자 — 들어올 내용과 같은 자리에 같은 크기로 */
+  .skel-row {
+    display: grid; grid-template-columns: minmax(0, 1fr) 62px;
+    gap: var(--s3); align-items: center; padding: 10px 8px;
+  }
+  .skel-row span { height: 11px; display: block; }
+  .skel-nav { display: grid; grid-template-columns: 46px minmax(0,1fr); gap: var(--s2); align-items: center; padding: 9px 4px; }
+  .skel-nav span { height: 11px; display: block; }
+  .skel-detail { display: flex; flex-direction: column; gap: var(--s4); }
+  .skel-detail .t { height: 28px; width: 38%; border-radius: var(--r1); }
+  .skel-detail .p { height: 20px; width: 26%; border-radius: var(--r1); }
+  .skel-news { height: 52px; border-radius: var(--r2); }
+
+  /* 비어 있는 상태 — 여러 화면이 같이 쓴다. 작은 회색 글씨 한 줄로 두면
+     '아직 안 불러왔나' 싶으므로, 자리를 차지하는 하나의 블록으로 만든다. */
+  .news-empty {
+    font-size: 12.5px; color: var(--ink-3); line-height: 1.7;
+    padding: var(--s4) var(--s3); text-align: center;
+    background: var(--surface-2); border-radius: var(--r2);
+  }
+
+  /* 자료를 못 불러온 경우 */
+  .load-fail {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    gap: var(--s3); padding: var(--s7) var(--s4); color: var(--ink-2);
+  }
+  .load-fail svg { color: var(--ink-3); }
+  .load-fail h2 {
+    margin: 0; font-family: 'Newsreader', Georgia, serif; font-size: 20px;
+    font-weight: 600; color: var(--ink);
+  }
+  .load-fail p { margin: 0; font-size: 13.5px; line-height: 1.75; max-width: 32em; }
+  .retry-btn {
+    margin-top: var(--s2); font-family: inherit; font-size: 13px; font-weight: 600;
+    padding: 9px 18px; border-radius: var(--r2); border: 0;
+    background: var(--accent); color: var(--accent-ink); cursor: pointer;
+    transition: filter var(--dur);
+  }
+  .retry-btn:hover { filter: brightness(1.08); }
+
+  .quality-view { padding: 8px 2px var(--s6); }
   .quality-note {
-    font-size: 12.5px; color: var(--ink-3); background: var(--surface-2); border-radius: 10px;
-    padding: 10px 14px; margin-bottom: 16px; line-height: 1.5;
+    font-size: 12.5px; color: var(--ink-3); background: var(--surface-2);
+    border-radius: var(--r2); border-left: 3px solid var(--accent);
+    padding: var(--s3) var(--s4); margin-bottom: var(--s4); line-height: 1.6;
   }
   .quality-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
   .qcard {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px;
-    display: flex; flex-direction: column; gap: 10px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r3);
+    padding: var(--s4); display: flex; flex-direction: column; gap: 10px;
+    box-shadow: var(--shadow);
+    transition: border-color var(--dur), box-shadow var(--dur), transform var(--dur);
   }
+  .qcard[data-stock]:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+  @media (prefers-reduced-motion: reduce) { .qcard[data-stock]:hover { transform: none; } }
   .qcard-sym { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 17px; }
   .qcard-name { font-family: 'Newsreader', serif; font-size: 14px; color: var(--ink-2); margin-left: 6px; }
   .qcard-industry { font-size: 11px; color: var(--ink-3); margin-top: -6px; }
@@ -254,28 +425,34 @@
 
   /* ---- 종목 알아보기: 채팅형 Q&A ---- */
   .ask-chat { display: flex; flex-direction: column; gap: 12px; max-width: 640px; margin-bottom: 14px; min-height: 40px; }
-  .ask-msg { padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.6; max-width: 88%; white-space: pre-line; }
+  .ask-msg { padding: 10px 14px; border-radius: var(--r3); font-size: 14px; line-height: 1.7; max-width: 88%; white-space: pre-line; }
   .ask-msg.user { align-self: flex-end; background: var(--accent-soft); color: var(--accent); border-bottom-right-radius: 4px; }
   .ask-msg.bot { align-self: flex-start; background: var(--surface-2); color: var(--ink); border-bottom-left-radius: 4px; }
   .ask-msg.bot.loading { color: var(--ink-3); font-style: italic; }
   .ask-msg.bot.err { color: var(--down); }
   .ask-input-row { display: flex; gap: 8px; max-width: 640px; }
   .ask-input-row input {
-    flex: 1; min-width: 0; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line);
+    flex: 1; min-width: 0; padding: 10px 14px; border-radius: var(--r2); border: 1px solid var(--line);
     background: var(--surface); color: var(--ink); font-size: 14px; font-family: inherit;
   }
   .ask-input-row input:disabled { opacity: .5; }
-  .ask-input-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .ask-input-row button {
-    padding: 10px 18px; border-radius: 12px; border: none; background: var(--accent);
-    color: #fff; font-weight: 600; font-family: inherit; cursor: pointer;
+    padding: 10px 18px; border-radius: var(--r2); border: none; background: var(--accent);
+    color: var(--accent-ink); font-weight: 600; font-family: inherit; cursor: pointer;
+    transition: filter var(--dur), opacity var(--dur);
   }
   .ask-input-row button:disabled { opacity: .5; cursor: default; }
   .ask-input-row button:hover:not(:disabled) { filter: brightness(1.05); }
 
   /* ---- 구글 파이낸스풍 밀집 리스트 (가장 활동적인 / 상승 / 하락) ---- */
-  .movers { display: grid; grid-template-columns: 1fr; gap: 26px; padding: 6px 2px 20px; }
-  @media (min-width: 720px) { .movers { grid-template-columns: repeat(3, 1fr); gap: 22px; } }
+  .movers { display: grid; grid-template-columns: 1fr; gap: var(--s5); padding: 6px 2px var(--s5); }
+  @media (min-width: 720px) {
+    .movers { grid-template-columns: repeat(3, 1fr); gap: 0; }
+    /* 칸 사이 세로줄 — 신문에서 기사를 나누는 방식이다. 배경색으로 나누는 것보다 가볍다. */
+    .movers-col { padding-inline: var(--s5); border-left: 1px solid var(--line); }
+    .movers-col:first-child { padding-left: 0; border-left: none; }
+    .movers-col:last-child { padding-right: 0; }
+  }
   .movers-col h3 {
     font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 600;
     margin: 0 0 6px; color: var(--ink);
@@ -283,8 +460,9 @@
   .movers-col .sub { font-size: 11.5px; color: var(--ink-3); margin-bottom: 8px; }
   .mrow {
     display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; align-items: center;
-    padding: 9px 8px; border-radius: 8px; cursor: pointer; border: none;
+    padding: 9px 8px; border-radius: var(--r1); cursor: pointer; border: none;
     background: transparent; color: inherit; width: 100%; text-align: left; font: inherit;
+    transition: background var(--dur);
   }
   .mrow:hover { background: var(--surface-2); }
   .mrow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
@@ -294,7 +472,7 @@
   .mrow-px { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-variant-numeric: tabular-nums; }
   .mrow-chg {
     font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600;
-    font-variant-numeric: tabular-nums; padding: 2px 6px; border-radius: 6px; min-width: 66px; text-align: right;
+    font-variant-numeric: tabular-nums; padding: 2px 6px; border-radius: var(--r1); min-width: 66px; text-align: right;
   }
   .mrow-chg.up { color: var(--up); background: var(--up-soft); }
   .mrow-chg.down { color: var(--down); background: var(--down-soft); }
@@ -314,8 +492,8 @@
   @media (min-width: 900px) {
     .ticker-nav {
       display: flex; flex-direction: column; gap: 10px;
-      position: sticky; top: calc(64px + env(safe-area-inset-top, 0px));
-      max-height: calc(100vh - 96px);
+      position: sticky; top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px));
+      max-height: calc(100vh - var(--topbar-h) - 32px);
     }
   }
   .nav-scroll { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
@@ -324,16 +502,16 @@
   .add-ticker { display: flex; gap: 6px; }
   .add-ticker input {
     flex: 1; min-width: 0; font-size: 12.5px; font-family: 'IBM Plex Mono', monospace;
-    padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r2);
     background: var(--surface); color: var(--ink);
   }
   .add-ticker input::placeholder { color: var(--ink-3); font-family: 'Archivo', sans-serif; }
-  .add-ticker input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .add-ticker button {
-    flex: 0 0 auto; width: 34px; border: 1px solid var(--line); border-radius: 10px;
+    flex: 0 0 auto; width: 34px; border: 1px solid var(--line); border-radius: var(--r2);
     background: var(--accent-soft); color: var(--accent); font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: background var(--dur), color var(--dur);
   }
-  .add-ticker button:hover { filter: brightness(0.97); }
+  .add-ticker button:hover { background: var(--accent); color: var(--accent-ink); }
   .add-ticker-err { font-size: 11px; color: var(--down); margin-top: -4px; display: none; }
   .add-ticker-err.show { display: block; }
 
@@ -342,23 +520,23 @@
     font-size: 15px; line-height: 1; color: var(--ink-3); padding: 0; display: flex; align-items: center; justify-content: center;
   }
   .star-btn.on { color: var(--gold); }
-  .star-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .detail-star { width: 30px; height: 30px; font-size: 18px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); }
   .remove-btn {
     flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface);
     color: var(--ink-3); font-size: 13px; cursor: pointer;
+    transition: color var(--dur), background var(--dur), border-color var(--dur);
   }
-  .remove-btn:hover { color: var(--down); background: var(--down-soft); }
+  .remove-btn:hover { color: var(--down); background: var(--down-soft); border-color: var(--down); }
 
   .nav-item {
     flex: 0 0 auto; display: flex; align-items: center; gap: 6px;
     border: 1px solid transparent; background: transparent;
-    border-radius: 8px; padding: 8px 8px 8px 4px; cursor: pointer;
+    border-radius: var(--r1); padding: 8px 8px 8px 4px; cursor: pointer;
     font-family: inherit; color: var(--ink); text-align: left;
+    transition: background var(--dur), border-color var(--dur);
   }
   @media (min-width: 900px) { .nav-item { width: 100%; } }
   .nav-item:hover { background: var(--surface-2); }
-  .nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .nav-item.active { background: var(--accent-soft); border-color: var(--accent); }
   .nav-sym { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 13.5px; }
   .nav-name { display: none; font-size: 12.5px; color: var(--ink-2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -369,21 +547,22 @@
 
   /* 중앙: 상세 */
   .detail {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
-    padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 13px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r3);
+    padding: var(--s5) var(--s5) 18px; display: flex; flex-direction: column; gap: 13px;
+    box-shadow: var(--shadow);
   }
   .detail-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-  .tag { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: var(--gold-soft); color: var(--gold); }
+  .tag { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: var(--rp); background: var(--gold-soft); color: var(--gold); }
   .head-right { display: flex; align-items: center; gap: 10px; }
   .idx { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
   .arrows { display: flex; gap: 6px; }
   .arrow-btn {
     width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface);
     color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px;
+    transition: background var(--dur), border-color var(--dur);
   }
-  .arrow-btn:hover { background: var(--surface-2); }
+  .arrow-btn:hover:not(:disabled) { background: var(--surface-2); border-color: var(--ink-3); }
   .arrow-btn:disabled { opacity: .35; cursor: default; }
-  .arrow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .ticker-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .ticker { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 28px; }
@@ -392,7 +571,7 @@
 
   .price-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .price { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .chg { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; padding: 3px 9px; border-radius: 8px; font-variant-numeric: tabular-nums; }
+  .chg { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; padding: 3px 9px; border-radius: var(--r1); font-variant-numeric: tabular-nums; }
   .chg.up { color: var(--up); background: var(--up-soft); }
   .chg.down { color: var(--down); background: var(--down-soft); }
   /* 가격 아래 보조 정보 한 줄 — 텍스트와 배지가 섞이므로 flex로 세로 정렬을 맞춘다 */
@@ -405,7 +584,7 @@
   /* 며칠째 등장했는지 — 매일 새 목록만 보면 추적이 안 되므로 연속성을 표시한다 */
   .streak-badge {
     display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600;
-    padding: 3px 8px; border-radius: 999px; background: var(--gold-soft); color: var(--gold);
+    padding: 3px 8px; border-radius: var(--rp); background: var(--gold-soft); color: var(--gold);
     white-space: nowrap;
   }
   .streak-badge .since { font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
@@ -415,14 +594,14 @@
 
   /* 성적표 — 우리가 올린 종목이 그 뒤 어떻게 됐는지 (고르지 않고 전부) */
   .score-card {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
-    padding: 16px; margin-bottom: 18px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r3);
+    padding: var(--s4); margin-bottom: 18px; box-shadow: var(--shadow);
   }
   .score-grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: 12px; margin: 12px 0;
   }
-  .score-cell { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+  .score-cell { background: var(--surface-2); border-radius: var(--r2); padding: 10px 12px; }
   .score-cell .k { font-size: 11px; color: var(--ink-3); display: block; margin-bottom: 4px; }
   .score-cell .v {
     font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 600;
@@ -431,7 +610,7 @@
   .score-cell .v.up { color: var(--up); }
   .score-cell .v.down { color: var(--down); }
   .score-verdict {
-    font-size: 13px; line-height: 1.6; padding: 11px 13px; border-radius: 10px;
+    font-size: 13px; line-height: 1.6; padding: 11px 13px; border-radius: var(--r2);
     background: var(--accent-soft); color: var(--ink); margin-top: 4px;
   }
   .score-verdict b { color: var(--accent); }
@@ -452,7 +631,8 @@
   .hist-table { display: flex; flex-direction: column; gap: 2px; }
   .hist-row {
     display: grid; grid-template-columns: 72px minmax(0,1fr) auto; gap: 10px; align-items: center;
-    padding: 9px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line);
+    padding: 9px 10px; border-radius: var(--r1); background: var(--surface); border: 1px solid var(--line);
+    transition: border-color var(--dur), background var(--dur);
   }
   .hist-row .sym { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 13.5px; }
   .hist-row .meta { font-size: 11.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; }
@@ -469,8 +649,10 @@
   }
   .hist-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .hist-chip {
-    font-size: 11.5px; padding: 4px 9px; border-radius: 999px;
+    font-size: 11.5px; padding: 4px 9px; border-radius: var(--rp);
     background: var(--surface-2); color: var(--ink-2);
+    transition: border-color var(--dur), background var(--dur);
+    border: 1px solid transparent;
   }
   .hist-chip b { font-family: 'IBM Plex Mono', monospace; color: var(--ink); }
   .hist-chip .c { margin-left: 4px; font-variant-numeric: tabular-nums; }
@@ -481,7 +663,7 @@
   .context-row { display: flex; flex-wrap: wrap; gap: 8px; }
   .ctx {
     font-size: 11.5px; color: var(--ink-2); background: var(--surface-2);
-    border-radius: 8px; padding: 5px 9px; white-space: nowrap;
+    border-radius: var(--r1); padding: 5px 9px; white-space: nowrap;
   }
   .ctx b { color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
   .range52 { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--ink-3); }
@@ -522,7 +704,7 @@
   .spark-svg { flex: 0 0 auto; display: block; }
   .rel-badge {
     font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600;
-    padding: 4px 9px; border-radius: 8px; font-variant-numeric: tabular-nums; white-space: nowrap;
+    padding: 4px 9px; border-radius: var(--r1); font-variant-numeric: tabular-nums; white-space: nowrap;
   }
   .rel-badge.up { color: var(--up); background: var(--up-soft); }
   .rel-badge.down { color: var(--down); background: var(--down-soft); }
@@ -530,8 +712,8 @@
 
   /* 이 회사가 뭘 하는 곳인지 — 낯선 중소형주가 매일 올라오므로 기본 설명이 먼저 필요하다 */
   .primer {
-    background: var(--surface-2); border-radius: 10px; padding: 12px 14px;
-    font-size: 13.5px; line-height: 1.65; color: var(--ink-2);
+    background: var(--surface-2); border-radius: var(--r2); padding: var(--s3) var(--s4);
+    font-size: 13.5px; line-height: 1.7; color: var(--ink-2);
   }
   .primer .ph {
     display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em;
@@ -544,7 +726,7 @@
   /* 내부자 거래 (SEC Form 4) */
   .ins-head { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 9px; }
   .ins-pill {
-    font-size: 12px; padding: 5px 10px; border-radius: 999px; background: var(--surface-2);
+    font-size: 12px; padding: 5px 10px; border-radius: var(--rp); background: var(--surface-2);
     color: var(--ink-2); white-space: nowrap;
   }
   .ins-pill b { font-family: 'IBM Plex Mono', monospace; }
@@ -583,24 +765,30 @@
 
   /* 우측: 관련 뉴스 */
   .related {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
-    padding: 18px 16px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r3);
+    padding: 18px var(--s4); box-shadow: var(--shadow);
   }
   @media (min-width: 900px) {
-    .related { position: sticky; top: calc(64px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 96px); overflow-y: auto; }
+    .related {
+      position: sticky; top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px));
+      max-height: calc(100vh - var(--topbar-h) - 32px); overflow-y: auto;
+    }
   }
   .related-head { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); margin-bottom: 12px; }
   .related-head b { color: var(--ink); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0; }
   .news-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); }
   .news-list { display: flex; flex-direction: column; gap: 9px; }
-  .news-item { display: block; text-decoration: none; color: inherit; border-radius: 10px; padding: 10px 11px; background: var(--surface-2); }
+  .news-item {
+    display: block; text-decoration: none; color: inherit; border-radius: var(--r2);
+    padding: 10px 11px; background: var(--surface-2);
+    transition: background var(--dur), color var(--dur);
+  }
   button.news-item { border: none; width: 100%; text-align: left; font: inherit; cursor: pointer; }
   a.news-item:hover, button.news-item:hover { background: var(--accent-soft); }
-  button.news-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  a.news-item:hover .news-text, button.news-item:hover .news-text { color: var(--accent); }
   .news-text { font-size: 13.5px; line-height: 1.45; color: var(--ink); }
   .news-meta { font-size: 11px; color: var(--ink-3); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
   .news-meta .ext { margin-left: auto; }
-  .news-empty { font-size: 13px; color: var(--ink-3); padding: 6px 2px; }
 
   /* ---- 뉴스 상세 모달 (한국어 요약 + 이미지 + 원문 링크) ---- */
   .modal-backdrop {
@@ -611,8 +799,8 @@
   .modal {
     position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.98);
     width: min(520px, 92vw); max-height: 86vh; overflow-y: auto;
-    background: var(--surface); border-radius: 20px; box-shadow: var(--shadow);
-    z-index: 61; opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s;
+    background: var(--surface); border-radius: var(--r4); box-shadow: var(--shadow-lg);
+    border: 1px solid var(--line); z-index: 61; opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s;
   }
   .modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
   .modal-close {
@@ -627,31 +815,56 @@
   .modal-summary { font-size: 14.5px; line-height: 1.75; color: var(--ink-2); margin: 0 0 18px; white-space: pre-line; }
   .modal-link {
     display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
-    padding: 9px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--accent);
-    text-decoration: none;
+    padding: 9px 14px; border-radius: var(--r2); background: var(--accent-soft); color: var(--accent);
+    text-decoration: none; transition: background var(--dur), color var(--dur);
   }
-  .modal-link:hover { filter: brightness(0.97); }
+  .modal-link:hover { background: var(--accent); color: var(--accent-ink); }
   .modal-note { font-size: 11px; color: var(--ink-3); margin-top: 10px; }
 
-  footer.disclaimer {
-    position: fixed; left: 0; right: 0; bottom: 0;
-    background: color-mix(in srgb, var(--paper) 92%, transparent);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid var(--line);
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-    font-size: 11.5px; line-height: 1.4; color: var(--ink-3);
-    text-align: center;
+  /* 사이트 푸터 — 예전엔 화면 아래 고정된 얇은 띠였다. 늘 떠 있어서 모바일에서
+     공간을 먹었고, 무엇보다 '페이지가 여기서 끝난다'는 느낌을 못 줬다.
+     내용 끝에 제대로 된 푸터를 두고, 고지는 그 안에 넣는다. */
+  .site-footer {
+    margin-top: var(--s8); border-top: 1px solid var(--line);
+    padding: var(--s6) 0 calc(var(--s7) + env(safe-area-inset-bottom, 0px));
   }
-  footer.disclaimer strong { color: var(--ink-2); }
+  .footer-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: var(--s5) var(--s6); margin-bottom: var(--s5);
+  }
+  .footer-col h4 {
+    margin: 0 0 var(--s3); font-size: 11px; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  .footer-col p, .footer-col li { margin: 0; font-size: 12.5px; line-height: 1.65; color: var(--ink-2); }
+  .footer-col ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .footer-col a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line); }
+  .footer-col a:hover { color: var(--accent); border-color: var(--accent); }
+  .footer-brand { display: flex; align-items: center; gap: 9px; margin-bottom: var(--s3); }
+  .footer-brand .brand-mark { width: 26px; height: 26px; border-radius: 7px; }
+  .footer-brand span { font-family: 'Newsreader', Georgia, serif; font-size: 15px; font-weight: 600; }
+  .footer-note {
+    border-top: 1px solid var(--line); padding-top: var(--s4);
+    font-size: 11.5px; line-height: 1.6; color: var(--ink-3);
+  }
+  .footer-note strong { color: var(--ink-2); }
 
   @media (max-width: 460px) {
-    .detail { padding: 18px 16px 16px; }
+    .detail { padding: 18px var(--s4) var(--s4); }
     .ticker { font-size: 24px; }
     .qcard { padding: 14px; }
     .tab-btn { padding: 7px 12px; font-size: 12.5px; }
     .hook { font-size: 15.5px; }
     .modal-headline { font-size: 17px; }
-    .modal-body { padding: 16px 16px 18px; }
+    .modal-body { padding: var(--s4) var(--s4) 18px; }
+    .lockbox { flex-direction: column; gap: var(--s3); padding: 18px var(--s4); }
+    .related { padding: var(--s4) 14px; }
+    .brand-tag { display: none; }        /* 두 줄짜리 브랜드가 상단바를 밀어낸다 */
+    .site-footer { margin-top: var(--s6); }
+    .footer-grid { gap: var(--s5) var(--s4); }
+    /* 손가락으로 누르는 곳은 최소 크기를 지킨다 */
+    .mrow { padding: 11px 8px; }
+    .nav-item { padding: 10px 8px 10px 4px; }
   }
 
   /* 아주 좁은 화면에서는 상단바가 붐비지 않도록 보조 텍스트를 숨긴다 (브랜드+메뉴 버튼 우선) */
@@ -665,18 +878,40 @@
 </head>
 <body>
 
-<div class="topbar">
+<header class="topbar">
   <div class="row">
-    <div class="brand">오늘의 관심종목<span>.</span></div>
+    <a class="brand" href="./" aria-label="오늘의 관심종목 홈">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 3h8l4 4v14H6z"></path>
+          <path d="M14 3v4h4"></path>
+          <path d="M9.5 13.5h5"></path>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">오늘의 관심종목</span>
+        <span class="brand-tag">회사가 낸 공시로 읽는 미국 주식</span>
+      </span>
+    </a>
     <div class="topbar-right">
       <span class="live-badge"><span class="live-dot" id="liveDot"></span><span id="liveStatus">연결 중…</span></span>
-      <button class="menu-btn" id="menuBtn" aria-label="종목 목록 열기" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
       <div class="updated" id="updated">불러오는 중…</div>
+      <button class="icon-btn theme-toggle" id="themeToggle" aria-label="밝게/어둡게 바꾸기">
+        <svg class="sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"></path></svg>
+        <svg class="moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg>
+      </button>
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="종목 목록 열기" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </button>
     </div>
   </div>
-</div>
+</header>
 
 <div class="drawer-backdrop" id="drawerBackdrop"></div>
 <aside class="drawer" id="drawer" aria-label="종목 목록" aria-hidden="true">
@@ -694,38 +929,84 @@
 
 <div class="wrap">
   <div class="stale-banner" id="staleBanner" role="status">
-    <span class="icon">⚠️</span>
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+        <path d="M12 9v4M12 17h.01"></path></svg>
+    </span>
     <span id="staleText"></span>
   </div>
 
-  <div class="tabbar">
-    <button class="tab-btn active" id="tabToday">오늘의 관심종목</button>
-    <button class="tab-btn" id="tabQuality">우량주</button>
-    <button class="tab-btn" id="tabRadar">📡 레이더 포착</button>
-    <button class="tab-btn" id="tabAsk">🔎 종목 알아보기</button>
-    <button class="tab-btn" id="tabHistory">📅 히스토리</button>
-  </div>
+  <nav class="tabbar" aria-label="화면 전환">
+    <button class="tab-btn active" id="tabToday">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"
+           stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 6-7"></path><path d="M14 8h5v5"></path></svg>
+      오늘의 관심종목</button>
+    <button class="tab-btn" id="tabQuality">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"
+           stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>
+      우량주</button>
+    <button class="tab-btn" id="tabRadar">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"
+           stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle>
+        <circle cx="12" cy="12" r="4"></circle><path d="M12 12l6-4"></path></svg>
+      레이더 포착</button>
+    <button class="tab-btn" id="tabAsk">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"
+           stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+      종목 알아보기
+      <svg class="tab-lock" id="tabAskLock" viewBox="0 0 24 24" width="12" height="12" fill="none"
+           stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></button>
+    <button class="tab-btn" id="tabHistory">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"
+           stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle>
+        <path d="M12 7v5l3 2"></path></svg>
+      히스토리</button>
+  </nav>
+
+  <main id="mainContent">
+  <h1 class="sr-only">오늘의 관심종목 — 회사가 SEC에 낸 공시로 읽는 미국 주식</h1>
 
   <div class="overview">
     <div class="date" id="marketDate">—</div>
-    <p id="overviewText">데이터를 불러오는 중입니다…</p>
+    <p id="overviewText"><span class="skel skel-line" style="width:92%;display:block"></span><span class="skel skel-line" style="width:64%;display:block"></span></p>
   </div>
 
   <section class="movers" id="movers" aria-label="오늘의 종목 요약">
     <div class="movers-col">
       <h3>가장 활동적인</h3>
       <div class="sub">거래량이 평소 대비 많은 순</div>
-      <div id="moversActive"></div>
+      <div id="moversActive">
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+      </div>
     </div>
     <div class="movers-col">
       <h3>상승 종목</h3>
       <div class="sub">오늘 등락률 상위</div>
-      <div id="moversUp"></div>
+      <div id="moversUp">
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+      </div>
     </div>
     <div class="movers-col">
       <h3>하락 종목</h3>
       <div class="sub">오늘 등락률 하위</div>
-      <div id="moversDown"></div>
+      <div id="moversDown">
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-row"><span class="skel"></span><span class="skel"></span></div>
+      </div>
     </div>
   </section>
 
@@ -736,10 +1017,33 @@
         <button type="submit" aria-label="추가">+</button>
       </form>
       <div class="add-ticker-err" id="addTickerErrDesktop"></div>
-      <div class="nav-scroll" id="tickerNav"></div>
+      <div class="nav-scroll" id="tickerNav">
+        <div class="skel-nav"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-nav"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-nav"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-nav"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-nav"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-nav"><span class="skel"></span><span class="skel"></span></div>
+        <div class="skel-nav"><span class="skel"></span><span class="skel"></span></div>
+      </div>
     </nav>
-    <main class="detail" id="detail"></main>
-    <aside class="related" id="related"></aside>
+    <article class="detail" id="detail">
+      <div class="skel-detail">
+        <span class="skel t"></span>
+        <span class="skel p"></span>
+        <div class="skel-stack">
+          <span class="skel skel-line" style="width:100%"></span>
+          <span class="skel skel-line" style="width:96%"></span>
+          <span class="skel skel-line" style="width:78%"></span>
+        </div>
+      </div>
+    </article>
+    <aside class="related" id="related">
+      <div class="skel skel-news" style="margin-bottom:9px"></div>
+      <div class="skel skel-news" style="margin-bottom:9px"></div>
+      <div class="skel skel-news" style="margin-bottom:9px"></div>
+      <div class="skel skel-news" style="margin-bottom:9px"></div>
+    </aside>
   </div>
 
   <section class="quality-view hide" id="qualityView">
@@ -764,7 +1068,7 @@
   <section class="quality-view hide" id="stockView">
     <div class="stock-bar">
       <button class="back-btn" id="stockBack">← 돌아가기</button>
-      <button class="back-btn" id="stockShare">🔗 링크 복사</button>
+      <button class="back-btn" id="stockShare"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"></path><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"></path></svg>링크 복사</button>
       <span class="stock-copied" id="stockCopied">복사됐습니다</span>
     </div>
     <div id="stockBody"></div>
@@ -826,11 +1130,47 @@
     </div>
     <div id="historyBody"></div>
   </section>
-</div>
+  </main>
 
-<footer class="disclaimer">
-  <strong>정보 제공 목적</strong> · 실제 뉴스를 요약한 페이지이며 특정 종목의 매수·매도를 권유하지 않습니다. 투자 판단과 책임은 본인에게 있습니다.
-</footer>
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 3h8l4 4v14H6z"></path><path d="M14 3v4h4"></path><path d="M9.5 13.5h5"></path>
+            </svg>
+          </span>
+          <span>오늘의 관심종목</span>
+        </div>
+        <p>기사를 요약하지 않고, 회사가 SEC에 직접 제출한 서류를 읽습니다.
+           매일 아침 7시에 자동으로 갱신되고, 미국 증시가 쉬는 날은 건너뜁니다.</p>
+      </div>
+      <div class="footer-col">
+        <h4>자료 출처</h4>
+        <ul>
+          <li><a href="https://www.sec.gov/edgar" target="_blank" rel="noopener noreferrer">SEC EDGAR</a> — 공시·재무보고 원문</li>
+          <li>Alpaca — 시세·뉴스·거래일</li>
+          <li>Finnhub — 뉴스 보강·실적 일정</li>
+          <li>Financial Modeling Prep — 재무비율</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>이 사이트가 하지 않는 것</h4>
+        <ul>
+          <li>주가가 오를지 내릴지 예측</li>
+          <li>매수·매도 추천, 목표주가</li>
+          <li>성적이 나쁠 때 숫자를 감추기</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-note">
+      <strong>정보 제공 목적</strong> · 실제 공시와 뉴스를 정리한 페이지이며 특정 종목의 매수·매도를 권유하지 않습니다.
+      투자 판단과 책임은 본인에게 있습니다. 화면의 수치는 지연될 수 있으며 매매의 근거로 쓰기에 충분하지 않습니다.
+    </div>
+  </footer>
+</div>
 
 <div class="modal-backdrop" id="newsBackdrop"></div>
 <div class="modal" id="newsModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modalHeadline">
@@ -977,7 +1317,7 @@
       const dir = st.change_since_first >= 0 ? 'up' : 'down';
       since = `<span class="since ${dir}">첫 등장 이후 ${pct(st.change_since_first)}</span>`;
     }
-    return `<span class="streak-badge">📌 ${bits.join(' · ')}${since ? ' ' + since : ''}</span>`;
+    return `<span class="streak-badge"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px"><path d="M12 17v5"></path><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z"></path></svg>${bits.join(' · ')}${since ? ' ' + since : ''}</span>`;
   }
 
   // 뉴스 항목 클릭 시 열 모달 내용을 key로 찾기 위한 조회 테이블
@@ -1464,13 +1804,42 @@
     const unlocked = isUnlocked();
     const lock = document.getElementById('askLock');
     const panel = document.getElementById('askPanel');
+    const tabLock = document.getElementById('tabAskLock');
     if (lock) lock.classList.toggle('hide', unlocked);
     if (panel) panel.classList.toggle('hide', !unlocked);
+    if (tabLock) tabLock.style.display = unlocked ? 'none' : '';
     document.querySelectorAll('[data-owner-only]').forEach((el) => {
       el.classList.toggle('hide', !unlocked);
     });
     if (stockSymbol) renderStock();     // 종목 한 장이 열려 있으면 다시 그린다
   }
+
+  // ---- 테마 ----
+  // 밝은 테마 CSS는 원래 있었는데 켤 방법이 없어서 아무도 못 쓰는 상태였다.
+  // 처음 방문은 기기 설정을 따르고, 한 번 고르면 그 선택을 기억한다.
+  const THEME_LS = 'wl_theme';
+  function applyTheme(t) {
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    else document.documentElement.removeAttribute('data-theme');
+    const meta = document.querySelector('meta[name="color-scheme"]');
+    if (meta) meta.setAttribute('content', t === 'light' ? 'light' : 'dark');
+  }
+  function currentTheme() {
+    const saved = (() => { try { return localStorage.getItem(THEME_LS); } catch (e) { return null; } })();
+    if (saved) return saved;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  function wireTheme() {
+    applyTheme(currentTheme());
+    const btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const next = currentTheme() === 'light' ? 'dark' : 'light';
+      try { localStorage.setItem(THEME_LS, next); } catch (e) {}
+      applyTheme(next);
+    });
+  }
+  wireTheme();
 
   function wireLock() {
     const form = document.getElementById('lockForm');
@@ -1656,6 +2025,7 @@
 
   function renderDetail() {
     const c = data.cards[active];
+    if (!c) return;                          // 목록이 비면 그릴 게 없다
     const dirClass = c.day_return >= 0 ? 'up' : 'down';
     const arrow = c.day_return >= 0 ? '▲' : '▼';
     const fav = isFavorite(c.symbol);
@@ -1743,6 +2113,7 @@
 
   function renderRelated() {
     const c = data.cards[active];
+    if (!c) return;
     const newsHtml = c.bullets.length
       ? c.bullets.map(b => newsItemHtml(b, 'related-' + active)).join('')
       : '<div class="news-empty">관련 뉴스가 확인되지 않았습니다.</div>';
@@ -1848,12 +2219,31 @@
     return label;
   }
 
+  // 조건에 맞는 종목이 하루도 안 나올 수 있다 (거래가 아주 한산한 날, 필터가 다 걸러낸 날).
+  // 그 날을 '고장'처럼 보이게 두지 않는다.
+  function renderEmptyDay() {
+    navEl.innerHTML = '';
+    document.getElementById('movers').classList.add('hide');
+    relatedEl.classList.add('hide');
+    detailEl.innerHTML =
+      '<div class="load-fail">'
+      + '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor"'
+      + ' stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+      + '<path d="M6 3h8l4 4v14H6z"></path><path d="M14 3v4h4"></path>'
+      + '<path d="M9.5 13.5h5"></path></svg>'
+      + '<h2>오늘은 올라온 종목이 없습니다</h2>'
+      + '<p>조건에 맞는 종목이 나오지 않은 날입니다. 억지로 채우지 않습니다.'
+      + ' 지난 기록은 히스토리 탭에서 계속 보실 수 있습니다.</p>'
+      + '</div>';
+  }
+
   function render(d) {
     data = d;
     checkStale(d);
     document.getElementById('marketDate').textContent = marketDateLabel(d.market_date);
-    document.getElementById('overviewText').textContent = d.overview;
+    document.getElementById('overviewText').textContent = d.overview || '';
     document.getElementById('updated').textContent = fmtUpdated(d.generated_at);
+    if (!d.cards || !d.cards.length) { renderEmptyDay(); return; }
     renderNav();
     renderDetail();
     renderRelated();
@@ -1861,7 +2251,7 @@
   }
 
   document.addEventListener('keydown', (e) => {
-    if (!data) return;
+    if (!data || !data.cards || !data.cards.length) return;
     if (e.key === 'ArrowRight') select(active + 1);
     if (e.key === 'ArrowLeft') select(active - 1);
   });
@@ -2399,8 +2789,28 @@
       applyUrl(false);        // ?s=GNRC 로 들어왔으면 그 종목을 바로 연다
       pollLive().finally(scheduleLive);
     })
-    .catch(() => {
-      document.getElementById('overviewText').textContent = '데이터를 불러오지 못했습니다. data.json 파일을 확인해주세요.';
+    .catch((err) => {
+      // 방문자에게 "data.json을 확인하세요"라고 할 수는 없다. 그건 내가 볼 말이다.
+      console.error('자료 로드 실패:', err);
+      document.getElementById('marketDate').textContent = '';
+      document.getElementById('overviewText').textContent = '';
+      document.getElementById('movers').classList.add('hide');
+      document.getElementById('related').classList.add('hide');
+      document.getElementById('tickerNav').innerHTML = '';
+      const d = document.getElementById('detail');
+      d.innerHTML =
+        '<div class="load-fail">'
+        + '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor"'
+        + ' stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+        + '<path d="M6 3h8l4 4v14H6z"></path><path d="M14 3v4h4"></path>'
+        + '<path d="M9.5 12.5h5M9.5 16.5h3"></path></svg>'
+        + '<h2>오늘 자료를 불러오지 못했습니다</h2>'
+        + '<p>잠시 후 다시 시도해 주세요. 이 페이지는 매일 아침 7시에 자동으로 갱신되고,'
+        + ' 미국 증시가 쉬는 날은 갱신을 건너뜁니다.</p>'
+        + '<button class="retry-btn" type="button">다시 시도</button>'
+        + '</div>';
+      const btn = d.querySelector('.retry-btn');
+      if (btn) btn.addEventListener('click', () => location.reload());
     });
 })();
 </script>
