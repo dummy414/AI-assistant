@@ -5,8 +5,8 @@ import vm from "node:vm";
 import fs from "node:fs";
 import { loadFunctions, callAsOf, inlineScripts, INDEX } from "./extract.mjs";
 
-const ctx = loadFunctions(["missedWeekdays", "marketDateLabel"], { tradingDays: null },
-                          ["WEEKDAY_KO"]);
+const ctx = loadFunctions(["missedWeekdays", "sessionDueAt", "marketDateLabel"],
+                          { tradingDays: null }, ["WEEKDAY_KO", "UPDATE_DUE_UTC_HOUR"]);
 
 /** 거래일 목록을 넣거나 빼고 함수를 부른다. */
 function withCalendar(days, fn) {
@@ -14,24 +14,48 @@ function withCalendar(days, fn) {
   try { return fn(); } finally { ctx.tradingDays = null; }
 }
 
-// 2026-09-18은 금요일, 09-21은 월요일
-test("주말에는 밀린 거래일이 없다 — 거짓 경고를 띄우면 안 된다", () => {
-  for (const today of ["2026-09-19", "2026-09-20", "2026-09-21"]) {
-    assert.equal(callAsOf(ctx, today, `missedWeekdays("2026-09-18")`), 0, today);
+// 2026-09-18은 금요일, 09-21 월, 09-22 화. 미국 장은 20:00 UTC 마감, 자동화는 22:00 UTC.
+const WEEK = ["2026-09-18", "2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24"];
+
+test("장중에는 그날을 밀린 것으로 세지 않는다 — 실제로 겪은 거짓 경고", () => {
+  // 09-22 15:17 UTC = 한국 09-23 새벽 0시 17분. 한국은 날짜가 넘어갔지만
+  // 미국은 화요일 장이 한창 열려 있다. 월요일 데이터가 최신인 게 맞다.
+  const got = withCalendar(WEEK,
+    () => callAsOf(ctx, "2026-09-22T15:17:00Z", `missedWeekdays("2026-09-21")`));
+  assert.equal(got, 0, "한국 날짜만 보고 세면 1이 나온다 — 그게 버그였다");
+});
+
+test("장 마감 뒤 자동화가 돌 시간이 지나면 그때부터 센다", () => {
+  const before = withCalendar(WEEK,
+    () => callAsOf(ctx, "2026-09-22T21:00:00Z", `missedWeekdays("2026-09-21")`));
+  assert.equal(before, 0, "22:00 UTC 실행 전이라 아직 아니다");
+  const after = withCalendar(WEEK,
+    () => callAsOf(ctx, "2026-09-23T02:00:00Z", `missedWeekdays("2026-09-21")`));
+  assert.equal(after, 1, "23:00 UTC가 지났는데 화요일 데이터가 없으면 밀린 것");
+});
+
+test("주말에는 밀린 거래일이 없다", () => {
+  for (const t of ["2026-09-19T00:00:00Z", "2026-09-20T12:00:00Z", "2026-09-21T09:00:00Z"]) {
+    assert.equal(withCalendar(WEEK, () => callAsOf(ctx, t, `missedWeekdays("2026-09-18")`)), 0, t);
   }
 });
 
-test("화요일 아침에도 금요일 데이터면 1일 밀린 것", () => {
-  assert.equal(callAsOf(ctx, "2026-09-22", `missedWeekdays("2026-09-18")`), 1);
+test("이틀 밀리면 2 — 확실히 이상하다", () => {
+  const got = withCalendar(WEEK,
+    () => callAsOf(ctx, "2026-09-24T02:00:00Z", `missedWeekdays("2026-09-21")`));
+  assert.equal(got, 2, "09-22, 09-23 둘 다 놓쳤다");
 });
 
-test("수요일까지 금요일 데이터면 2일 — 확실히 이상하다", () => {
-  assert.equal(callAsOf(ctx, "2026-09-23", `missedWeekdays("2026-09-18")`), 2);
+test("정상 갱신 직후는 0", () => {
+  const got = withCalendar(WEEK,
+    () => callAsOf(ctx, "2026-09-22T23:30:00Z", `missedWeekdays("2026-09-22")`));
+  assert.equal(got, 0);
 });
 
-test("평일 정상 갱신은 0", () => {
-  assert.equal(callAsOf(ctx, "2026-09-22", `missedWeekdays("2026-09-21")`), 0);
-  assert.equal(callAsOf(ctx, "2026-09-23", `missedWeekdays("2026-09-22")`), 0);
+test("달력이 없어도 장중 오판은 하지 않는다", () => {
+  // 달력 없이 평일 근사치로 돌 때도 같은 마감 기준이 걸려야 한다
+  assert.equal(callAsOf(ctx, "2026-09-22T15:17:00Z", `missedWeekdays("2026-09-21")`), 0);
+  assert.equal(callAsOf(ctx, "2026-09-23T02:00:00Z", `missedWeekdays("2026-09-21")`), 1);
 });
 
 // --- 거래일 달력이 있을 때: 공휴일을 '밀린 날'로 세지 않는다 ---
@@ -41,25 +65,19 @@ const THANKSGIVING_WEEK = ["2026-11-23", "2026-11-24", "2026-11-25", "2026-11-27
 test("공휴일은 밀린 거래일로 세지 않는다", () => {
   // 수요일(11-25) 데이터를 추수감사절 다음날 아침에 봄 → 그 사이에 장이 선 날이 없다
   const got = withCalendar(THANKSGIVING_WEEK,
-    () => callAsOf(ctx, "2026-11-27", `missedWeekdays("2026-11-25")`));
+    () => callAsOf(ctx, "2026-11-27T12:00:00Z", `missedWeekdays("2026-11-25")`));
   assert.equal(got, 0, "11-26은 휴장이므로 밀린 것이 아니다");
 });
 
 test("달력이 없으면 평일을 세다가 공휴일을 잘못 센다 — 그래서 달력이 필요하다", () => {
-  const got = callAsOf(ctx, "2026-11-27", `missedWeekdays("2026-11-25")`);
+  const got = callAsOf(ctx, "2026-11-27T12:00:00Z", `missedWeekdays("2026-11-25")`);
   assert.equal(got, 1, "근사치 동작(11-26을 평일로 셈). 달력이 있으면 0이 된다");
 });
 
 test("달력이 있어도 진짜 밀린 것은 잡는다", () => {
   const got = withCalendar(THANKSGIVING_WEEK,
-    () => callAsOf(ctx, "2026-11-30", `missedWeekdays("2026-11-25")`));
+    () => callAsOf(ctx, "2026-11-30T12:00:00Z", `missedWeekdays("2026-11-25")`));
   assert.equal(got, 1, "11-27에 장이 섰는데 갱신이 없었다");
-});
-
-test("오늘은 아직 장이 안 끝났을 수 있으니 세지 않는다", () => {
-  const got = withCalendar(THANKSGIVING_WEEK,
-    () => callAsOf(ctx, "2026-11-27", `missedWeekdays("2026-11-24")`));
-  assert.equal(got, 1, "11-25만 셈 (오늘인 11-27은 제외)");
 });
 
 test("옛 한국어 날짜 형식은 판단하지 않는다(null)", () => {

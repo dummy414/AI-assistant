@@ -51,13 +51,21 @@ export function loadFunctions(names, extraContext = {}, consts = []) {
   return ctx;
 }
 
-/** 특정 날짜를 '오늘'로 고정해 함수를 부른다 (날짜 로직 테스트용). */
-export function callAsOf(ctx, isoDate, expr) {
-  const [y, m, d] = isoDate.split("-").map(Number);
+/** 특정 시각을 '지금'으로 고정해 함수를 부른다.
+ *
+ *  시각은 **UTC**로 준다. 브라우저 로컬 시간으로 고정하면 실행하는 기계의 시간대에 따라
+ *  결과가 달라져서, 정작 잡아야 할 시간대 버그를 못 잡는다 (실제로 한국 시간 자정 넘은
+ *  새벽에 미국 장이 열려 있는 상황에서 거짓 경고가 떴다).
+ *  `isoUtc` 예: "2026-09-22T15:17:00Z"
+ */
+export function callAsOf(ctx, isoUtc, expr) {
+  const fixed = new Date(isoUtc.length <= 10 ? `${isoUtc}T09:00:00Z` : isoUtc).getTime();
   const Real = Date;
   ctx.Date = class extends Real {
-    constructor(...a) { if (!a.length) super(y, m - 1, d, 9, 0, 0); else super(...a); }
-    static now() { return new Real(y, m - 1, d, 9, 0, 0).getTime(); }
+    constructor(...a) { if (!a.length) super(fixed); else super(...a); }
+    static now() { return fixed; }
+    static UTC(...a) { return Real.UTC(...a); }
+    static parse(s) { return Real.parse(s); }
   };
   try {
     return vm.runInContext(expr, ctx);

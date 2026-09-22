@@ -1652,24 +1652,41 @@
   // 못 받아왔을 때만 '주말 빼고 평일'이라는 근사치로 물러난다.
   let tradingDays = null;
 
+  // 어떤 거래일이 '사이트에 올라와 있어야 하는' 시점.
+  //
+  // 처음엔 브라우저의 '오늘'과 날짜만 비교했는데, 그게 틀렸다. 브라우저는 한국 시간이라
+  // 자정만 넘으면 '오늘'이 하루 넘어가는데 미국 장은 그때 한창 열려 있다. 그래서 화요일
+  // 장중(한국 수요일 새벽)에 "화요일 데이터가 없다"는 거짓 경고가 떴다.
+  //
+  // 기준은 날짜가 아니라 **시각**이어야 한다: 미국 장은 20:00 UTC에 닫고 자동화는
+  // 22:00 UTC에 돈다. 넉넉히 한 시간을 더 줘서 23:00 UTC가 지나야 '올라와 있어야 할
+  // 데이터'로 본다.
+  const UPDATE_DUE_UTC_HOUR = 23;
+
+  function sessionDueAt(dateStr) {
+    const m = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return Infinity;
+    return Date.UTC(+m[1], +m[2] - 1, +m[3], UPDATE_DUE_UTC_HOUR, 0, 0);
+  }
+
   function missedWeekdays(marketDate) {
     const m = String(marketDate || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!m) return null;                       // 옛 형식이면 판단하지 않는다
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const now = Date.now();
 
     if (tradingDays && tradingDays.length) {
-      // 오늘은 아직 장이 안 끝났을 수 있으니 세지 않는다 (marketDate < d < today)
-      return tradingDays.filter((d) => d > marketDate && d < todayStr).length;
+      return tradingDays.filter((d) => d > marketDate && sessionDueAt(d) < now).length;
     }
 
-    const from = new Date(+m[1], +m[2] - 1, +m[3]);
+    // 달력을 못 받았을 때의 근사치 — 주말만 빼고 같은 마감 기준을 적용한다
     let n = 0;
-    for (let d = new Date(from); ; ) {
-      d.setDate(d.getDate() + 1);
-      if (d >= today) break;
-      const wd = d.getDay();
-      if (wd !== 0 && wd !== 6) n++;           // 주말 제외 (공휴일은 모른다)
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    for (let i = 0; i < 30; i++) {
+      d.setUTCDate(d.getUTCDate() + 1);
+      const iso = d.toISOString().slice(0, 10);
+      if (sessionDueAt(iso) >= now) break;
+      const wd = d.getUTCDay();
+      if (wd !== 0 && wd !== 6) n++;
     }
     return n;
   }
