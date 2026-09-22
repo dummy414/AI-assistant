@@ -46,6 +46,51 @@ test("정의한 토큰은 전부 쓰인다", () => {
   assert.deepEqual(dead, [], `아무도 안 쓰는 토큰: ${dead.join(", ")}`);
 });
 
+// ---- 명암비 ----
+// 색을 고를 때 가장 하기 쉬운 실수는 '보기 좋은 회색'을 골랐는데 정작 안 읽히는 것이다.
+// 어두운 화면에서 괜찮아 보이던 회색이 밝은 테마로 가면 거의 사라진다.
+// 눈으로는 "좀 연하네" 정도로만 느껴져서 그냥 넘어가기 쉬우니 숫자로 못 박는다.
+function luminance(hex) {
+  const h = hex.replace("#", "");
+  const full = h.length === 3 ? [...h].map((c) => c + c).join("") : h;
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const x = parseInt(full.slice(i, i + 2), 16) / 255;
+    return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function contrast(a, b) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+// 글자색 → 그 글자가 얹힐 수 있는 배경들
+const TEXT_ON = {
+  "--ink": ["--paper", "--surface", "--surface-2"],
+  "--ink-2": ["--paper", "--surface", "--surface-2"],
+  "--ink-3": ["--paper", "--surface", "--surface-2"],   // 11px 각주에 쓴다. 제일 위험하다
+  "--accent": ["--accent-soft", "--surface", "--paper"],
+  "--accent-ink": ["--accent"],
+  "--up": ["--up-soft", "--surface"],
+  "--down": ["--down-soft", "--surface"],
+  "--gold": ["--gold-soft"],
+};
+
+for (const [themeName, base] of [["어두운", dark], ["밝은", { ...dark, ...light }]]) {
+  test(`${themeName} 테마의 글자가 배경 위에서 읽힌다 (4.5:1)`, () => {
+    const fails = [];
+    for (const [fg, bgs] of Object.entries(TEXT_ON)) {
+      if (!base[fg] || !base[fg].startsWith("#")) continue;
+      for (const bg of bgs) {
+        if (!base[bg] || !base[bg].startsWith("#")) continue;
+        const r = contrast(base[fg], base[bg]);
+        if (r < 4.5) fails.push(`${fg}(${base[fg]}) on ${bg}(${base[bg]}) = ${r.toFixed(2)}:1`);
+      }
+    }
+    assert.deepEqual(fails, [], "기준(4.5:1)에 못 미치는 조합:\n  " + fails.join("\n  "));
+  });
+}
+
 test("모서리 값은 토큰으로만 쓴다", () => {
   // 8·10·12가 제각각 박혀 있으면 한 화면 안에서 카드마다 둥글기가 달라진다.
   const hard = [...style.matchAll(/border-radius:\s*([\d.]+px)/g)].map((m) => m[1]);

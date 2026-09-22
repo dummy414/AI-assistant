@@ -47,7 +47,9 @@
     --surface-2: #202529;
     --ink: #E9ECEC;
     --ink-2: #A2ACB2;
-    --ink-3: #6B757B;
+    /* ink-3는 11~12px 작은 글자(회사 이름, 각주, 항목 이름)에 쓴다.
+       원래 #6B757B였는데 배경과의 명암비가 3.3:1이라 잘 안 읽혔다 — 4.5:1을 넘도록 계산해 올렸다. */
+    --ink-3: #868F95;
     --line: #272D32;
 
     --accent: #D9A441;
@@ -78,7 +80,7 @@
   }
   :root[data-theme="light"] {
     --paper: #F7F6F2; --surface: #FFFFFF; --surface-2: #EFEDE7;
-    --ink: #14171A; --ink-2: #545B61; --ink-3: #868D92; --line: #E2DFD6;
+    --ink: #14171A; --ink-2: #545B61; --ink-3: #636A6F; --line: #E2DFD6;
     --accent: #8A6415; --accent-soft: #F4EBD8; --accent-ink: #FFFFFF;
     --up: #1C7A55; --up-soft: #E1F2EA;
     --down: #AF3D24; --down-soft: #FAE7E1;
@@ -99,8 +101,12 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     accent-color: var(--accent);
+    /* 내용이 짧은 화면에서도 푸터가 맨 아래에 붙어 있게 한다.
+       예전엔 잠긴 '종목 알아보기' 탭에서 푸터가 화면 한가운데 떠 있었다. */
+    display: flex; flex-direction: column; min-height: 100vh;
   }
-  .wrap { max-width: 1180px; margin: 0 auto; }
+  .wrap { max-width: 1180px; width: 100%; margin: 0 auto; flex: 1 0 auto; display: flex; flex-direction: column; }
+  #mainContent { flex: 1 0 auto; }
 
   /* 초점 표시 — 컴포넌트마다 따로 쓰던 걸 한 줄로 모았다.
      :where()라 우선순위가 0이다. 특별한 사정이 있는 곳(:active 행 안쪽 등)은
@@ -149,7 +155,10 @@
 
   /* 마스트헤드 — 글자만 있던 자리에 마크를 세운다.
      마크는 서류에 찍는 도장에서 가져왔다: 네모난 문서 틀 안의 한 줄. */
-  .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .brand {
+    display: flex; align-items: center; gap: 10px; min-width: 0;
+    color: inherit; text-decoration: none;   /* <a>라서 그냥 두면 파란 밑줄이 그어진다 */
+  }
   .brand-mark {
     flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px;
     background: var(--accent); color: var(--accent-ink);
@@ -262,6 +271,15 @@
   }
   .tab-btn.active svg { opacity: 1; }
   .tab-lock { color: var(--ink-3); opacity: .8; }
+  /* 좁은 화면에서는 탭 5개가 다 안 들어간다. 오른쪽 끝을 흐리게 해서
+     "옆으로 더 있다"는 걸 알린다 — 스크롤바를 숨겨놨기 때문에 이 표시가 없으면
+     종목 알아보기·히스토리 탭이 있는 줄도 모른다. */
+  @media (max-width: 760px) {
+    .tabbar {
+      -webkit-mask-image: linear-gradient(to right, #000 84%, transparent);
+      mask-image: linear-gradient(to right, #000 84%, transparent);
+    }
+  }
 
   /* 종목 한 장 */
   .stock-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
@@ -400,6 +418,11 @@
   .retry-btn:hover { filter: brightness(1.08); }
 
   .quality-view { padding: 8px 2px var(--s6); }
+  /* 넓은 화면에서 한 줄이 1300px까지 늘어나면 눈이 다음 줄 첫 글자를 못 찾는다.
+     카드가 격자로 깔리는 우량주·레이더는 넓을수록 좋으므로 그대로 두고,
+     글과 표로 된 화면만 폭을 묶는다. */
+  #stockView, #historyView { max-width: 900px; }
+  .quality-note { max-width: 900px; }
   .quality-note {
     font-size: 12.5px; color: var(--ink-3); background: var(--surface-2);
     border-radius: var(--r2); border-left: 3px solid var(--accent);
@@ -466,10 +489,22 @@
   }
   .mrow:hover { background: var(--surface-2); }
   .mrow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  /* 왼쪽 칸: 티커는 제 크기대로, 회사 이름은 남는 만큼만 쓰고 넘치면 말줄임.
+     예전엔 인라인 span에 min-width:0을 줬는데 인라인 요소에는 듣지 않는다.
+     그래서 긴 이름("...each representing one Class A ordinary share")이
+     칸을 넘어 옆 칸 위로 흘렀다. */
+  .mrow-left {
+    display: grid; grid-template-columns: auto minmax(0, 1fr);
+    gap: 7px; align-items: baseline; min-width: 0;
+  }
   .mrow-sym { font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; font-weight: 600; }
   .mrow-name { font-size: 11.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mrow-right { text-align: right; display: flex; align-items: center; gap: 10px; }
-  .mrow-px { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-variant-numeric: tabular-nums; }
+  /* 값이 제각각인 가격도 한 줄로 맞춰 세운다 — 숫자는 눈으로 훑을 수 있어야 한다 */
+  .mrow-px {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    font-variant-numeric: tabular-nums; min-width: 72px; text-align: right;
+  }
   .mrow-chg {
     font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600;
     font-variant-numeric: tabular-nums; padding: 2px 6px; border-radius: var(--r1); min-width: 66px; text-align: right;
@@ -477,9 +512,16 @@
   .mrow-chg.up { color: var(--up); background: var(--up-soft); }
   .mrow-chg.down { color: var(--down); background: var(--down-soft); }
 
-  .overview { padding: 20px 2px 18px; max-width: 760px; }
+  .overview { padding: var(--s5) 2px 18px; max-width: 760px; }
   .overview .date { font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
-  .overview p { font-family: 'Newsreader', serif; font-size: 18px; line-height: 1.5; margin: 8px 0 0; text-wrap: balance; }
+  .overview p { font-family: 'Newsreader', serif; font-size: 18px; line-height: 1.55; margin: var(--s2) 0 0; text-wrap: balance; }
+  /* 휴대폰에서는 이 문단 하나가 첫 화면을 통째로 차지해서, 종목을 하나도 못 본 채
+     스크롤을 시작하게 된다. 글자를 줄이고 자간 넓은 날짜 줄도 함께 줄인다. */
+  @media (max-width: 560px) {
+    .overview { padding: var(--s4) 2px var(--s3); }
+    .overview .date { font-size: 11px; letter-spacing: .04em; }
+    .overview p { font-size: 15.5px; line-height: 1.65; }
+  }
 
   /* ---- 3열 뉴스 포털 레이아웃 (좌: 종목목록 / 중앙: 상세 / 우: 관련뉴스) ---- */
   .layout { display: grid; grid-template-columns: 1fr; gap: 16px; padding-bottom: 88px; }
@@ -515,12 +557,20 @@
   .add-ticker-err { font-size: 11px; color: var(--down); margin-top: -4px; display: none; }
   .add-ticker-err.show { display: block; }
 
+  /* 24px는 손가락으로 누를 수 있는 최소 크기다. 20px였다 — 아이콘은 그대로 15px이고
+     누를 수 있는 범위만 넓힌다. */
   .star-btn {
-    flex: 0 0 auto; width: 20px; height: 20px; border: none; background: transparent; cursor: pointer;
-    font-size: 15px; line-height: 1; color: var(--ink-3); padding: 0; display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto; width: 24px; height: 24px; border: none; background: transparent; cursor: pointer;
+    line-height: 1; color: var(--ink-3); padding: 0; display: flex; align-items: center; justify-content: center;
+    transition: color var(--dur);
   }
-  .star-btn.on { color: var(--gold); }
-  .detail-star { width: 30px; height: 30px; font-size: 18px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); }
+  .star-btn svg { width: 15px; height: 15px; display: block; }
+  .star-btn:hover { color: var(--ink-2); }
+  .star-btn.on, .star-btn.on:hover { color: var(--gold); }
+  .detail-star {
+    width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface);
+  }
+  .detail-star svg { width: 17px; height: 17px; }
   .remove-btn {
     flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface);
     color: var(--ink-3); font-size: 13px; cursor: pointer;
@@ -1246,6 +1296,14 @@
 
   function pct(x) { return (x >= 0 ? '+' : '') + (x * 100).toFixed(2) + '%'; }
 
+  // 별을 ★☆ 문자로 찍으면 글꼴마다 굵기와 크기가 달라 다른 아이콘들과 따로 논다.
+  function starSvg(on) {
+    return '<svg viewBox="0 0 24 24" fill="' + (on ? 'currentColor' : 'none')
+      + '" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true">'
+      + '<path d="M12 3.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8-5.2-2.75-5.2 2.75 1-5.8-4.2-4.1 5.8-.85z"></path>'
+      + '</svg>';
+  }
+
   // 외부 뉴스(헤드라인·이미지·URL)는 우리가 통제할 수 없는 데이터이므로, innerHTML에
   // 꽂아넣기 전에 반드시 이스케이프한다 (XSS 방지). href/src에는 http(s) URL만 허용.
   const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -1254,8 +1312,10 @@
 
   function fmtUpdated(iso) {
     try {
+      // Intl의 ko-KR 숫자 형식은 "9. 22. 07:16"처럼 나온다. 직접 쓴다.
       const d = new Date(iso);
-      return '해설 ' + new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(d) + ' 작성';
+      const p = (n) => String(n).padStart(2, '0');
+      return `해설 ${d.getMonth() + 1}월 ${d.getDate()}일 ${p(d.getHours())}:${p(d.getMinutes())} 작성`;
     } catch (e) { return ''; }
   }
 
@@ -1401,7 +1461,7 @@
       const fav = isFavorite(c.symbol);
       return `
         <button class="nav-item${i === active ? ' active' : ''}" data-i="${i}">
-          <span class="star-btn${fav ? ' on' : ''}" data-star="${escapeHtml(c.symbol)}" role="button" aria-label="즐겨찾기">${fav ? '★' : '☆'}</span>
+          <span class="star-btn${fav ? ' on' : ''}" data-star="${escapeHtml(c.symbol)}" role="button" aria-label="즐겨찾기">${starSvg(fav)}</span>
           <span class="nav-sym">${escapeHtml(c.symbol)}</span>
           <span class="nav-name">${escapeHtml(c.name)}</span>
           ${(historyStats[c.symbol] && historyStats[c.symbol].streak >= 2)
@@ -1435,7 +1495,7 @@
     const i = data.cards.indexOf(c);
     return `
       <button class="mrow" data-i="${i}">
-        <span style="min-width:0">
+        <span class="mrow-left">
           <span class="mrow-sym" data-stock="${escapeHtml(c.symbol)}">${escapeHtml(c.symbol)}</span>
           <span class="mrow-name">${escapeHtml(c.name)}</span>
         </span>
@@ -1766,7 +1826,7 @@
       <div class="stock-head">
         <span class="ticker">${escapeHtml(sym)}</span>
         <span class="cname">${escapeHtml(name)}</span>
-        <button class="star-btn${fav ? ' on' : ''}" id="stockStar" aria-label="즐겨찾기">${fav ? '★' : '☆'}</button>
+        <button class="star-btn${fav ? ' on' : ''}" id="stockStar" aria-label="즐겨찾기">${starSvg(fav)}</button>
       </div>
       ${sic ? `<div class="stock-sic">${escapeHtml(sic)}</div>` : ''}
       ${priceRow}
@@ -2046,7 +2106,7 @@
       <div class="detail-head">
         <span class="tag">${escapeHtml(c.tag)}</span>
         <div class="head-right">
-          <button class="star-btn detail-star${fav ? ' on' : ''}" id="starBtn" aria-label="즐겨찾기">${fav ? '★' : '☆'}</button>
+          <button class="star-btn detail-star${fav ? ' on' : ''}" id="starBtn" aria-label="즐겨찾기">${starSvg(fav)}</button>
           ${c.custom ? '<button class="remove-btn" id="removeBtn" aria-label="제거" title="관심종목에서 제거">✕</button>' : ''}
           <span class="idx">${String(active + 1).padStart(2, '0')} / ${String(data.cards.length).padStart(2, '0')}</span>
           <div class="arrows">
