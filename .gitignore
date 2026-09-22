@@ -21,3 +21,8 @@ models/*.npz
 
 # Netlify 로컬 연결 상태 (사이트 ID 등, 기기별)
 .netlify/
+
+# 화면 확인 도구 (node tools/screenshot.mjs)
+node_modules/
+package-lock.json
+tools/shots/
