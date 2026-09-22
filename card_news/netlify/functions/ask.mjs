@@ -19,10 +19,19 @@
 // 자료 수집 단계에서 실패하면 스트림을 열기 전에 JSON 오류로 돌려준다 (상태코드를
 // 바꿀 수 있는 마지막 시점이기 때문이다).
 //
-// 필요한 환경변수: ALPACA_API_KEY, ALPACA_SECRET_KEY, ANTHROPIC_API_KEY
+// **이 기능만 부를 때마다 실제로 돈이 나간다** (Claude API + 웹검색, 질문 한 번에
+// 약 $0.07). 사이트는 공개돼 있으므로 인증이 없으면 누구나 무한정 쓸 수 있고 청구서는
+// 주인에게 간다. 그래서 소유자 키를 요구하고, 키가 새더라도 폭주하지 못하게
+// 호출 제한을 한 겹 더 둔다.
+//
+// 필요한 환경변수: ALPACA_API_KEY, ALPACA_SECRET_KEY, ANTHROPIC_API_KEY, OWNER_KEY
 // FMP_API_KEY는 선택 (없으면 시가총액·PER 없이 답변)
 
 import sec from "./lib/sec.js";
+import guard from "./lib/guard.js";
+
+// 소유자용이라 넉넉하지만, 실수로 반복 호출되는 상황은 막을 만큼 좁게.
+const RATE = { max: 12, windowMs: 5 * 60 * 1000 };   // 5분에 12번
 
 const MODEL = "claude-sonnet-5";
 // **thinking 블록이 max_tokens를 함께 쓴다.** 1200으로 두었더니 사고와 웹검색
@@ -222,6 +231,16 @@ function jsonError(status, message) {
 
 export default async function handler(request) {
   if (request.method !== "POST") return jsonError(405, "POST만 허용됩니다.");
+
+  // --- 여기서 돈이 나간다. 통과 조건을 먼저 본다. ---
+  if (!guard.isOwner(request)) {
+    return jsonError(401, "이 기능은 사이트 관리자만 사용할 수 있습니다. "
+      + "질문 한 번에 실제 비용이 들어서 공개하지 않았습니다.");
+  }
+  const rl = guard.rateLimit("ask:" + guard.clientId(request), RATE);
+  if (rl.limited) {
+    return jsonError(429, `너무 자주 호출했습니다. ${rl.retryAfter}초 뒤에 다시 시도해 주세요.`);
+  }
 
   const API_KEY = process.env.ALPACA_API_KEY;
   const SECRET_KEY = process.env.ALPACA_SECRET_KEY;

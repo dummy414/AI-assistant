@@ -22,8 +22,20 @@
 // 필요한 환경변수 (Netlify 대시보드 또는 `netlify env:set`으로 설정):
 //   ALPACA_API_KEY, ALPACA_SECRET_KEY
 
+const guard = require("./lib/guard");
+
 const FALLBACK_SYMBOLS = ["SPY", "QQQ", "AAPL", "MSFT", "NVDA"];
 const MAX_SYMBOLS = 40;   // Alpaca 스냅샷 한 번에 요청할 상한
+
+// **이 함수가 부하의 급소다.** 페이지가 45초마다 부르므로 방문자가 100명이면
+// 분당 133회가 된다. Alpaca 무료 플랜 한도를 금방 먹는다.
+//
+// 그래서 CDN에 짧게 캐시한다. 같은 종목 목록을 보는 방문자는 전부 같은 주소를
+// 부르므로, 몇 명이 보든 Alpaca로 나가는 호출은 캐시 주기마다 한 번뿐이다.
+// 시세가 20초 늦는 건 이 사이트 용도에서 문제가 되지 않는다.
+const CACHE_SECONDS = 20;
+// 캐시를 우회하는 요청(매번 다른 종목 조합)이 쏟아지는 경우를 대비한 최후 방어선
+const RATE = { max: 60, windowMs: 60 * 1000 };
 
 // **latestTrade를 쓰면 안 된다.** 그건 시간외 체결까지 포함한 '마지막 체결'이라,
 // 정규장 종가(dailyBar.c)와 다를 수 있다. 실제로 주말에 SPY의 latestTrade가
@@ -63,6 +75,15 @@ exports.handler = async function (event) {
     return { statusCode: 500, body: JSON.stringify({ error: "서버에 ALPACA API 키가 설정되지 않았습니다." }) };
   }
 
+  const rl = guard.rateLimit("live:" + guard.clientId(event), RATE);
+  if (rl.limited) {
+    return {
+      statusCode: 429,
+      headers: { "Content-Type": "application/json", "Retry-After": String(rl.retryAfter) },
+      body: JSON.stringify({ error: "요청이 너무 잦습니다." }),
+    };
+  }
+
   const requested = [...parseSymbols(event, "symbols"), ...parseSymbols(event, "extra")];
   const ALL_SYMBOLS = [...new Set(requested.length ? requested : FALLBACK_SYMBOLS)].slice(0, MAX_SYMBOLS);
 
@@ -71,13 +92,24 @@ exports.handler = async function (event) {
   const symbolsParam = ALL_SYMBOLS.join(",");
 
   try {
-    // 1) 실시간 시세 스냅샷 (최신 체결가 + 당일봉 + 직전봉 — 등락률 계산용)
+    // 1) 실시간 시세 스냅샷 + 장이 열려 있는지 (Alpaca 공식 시계)
     //    SPY도 함께 받아서 상대강도(rel_strength) 계산에 쓴다.
-    const snapRes = await fetch(
-      `https://data.alpaca.markets/v2/stocks/snapshots?symbols=${symbolsParam},${BENCHMARK}&feed=iex`,
-      { headers }
-    );
+    //    장이 닫혀 있으면 페이지가 폴링을 크게 늦춘다 — 한국에서 보는 시간대는
+    //    대부분 미국 장이 닫혀 있어서, 이것만으로 호출이 몇십 분의 일로 준다.
+    const [snapRes, clockRes] = await Promise.all([
+      fetch(`https://data.alpaca.markets/v2/stocks/snapshots?symbols=${symbolsParam},${BENCHMARK}&feed=iex`,
+            { headers }),
+      fetch("https://api.alpaca.markets/v2/clock", { headers }).catch(() => null),
+    ]);
     const snapData = await snapRes.json();
+    let marketOpen = null, nextOpen = null;
+    if (clockRes && clockRes.ok) {
+      try {
+        const c = await clockRes.json();
+        marketOpen = !!c.is_open;
+        nextOpen = c.next_open || null;
+      } catch (e) { /* 시계를 못 읽어도 시세는 내려보낸다 */ }
+    }
 
     const quotes = ALL_SYMBOLS.map((sym) => toQuote(sym, snapData[sym]));
     const spyQuote = toQuote(BENCHMARK, snapData[BENCHMARK]);
@@ -107,7 +139,12 @@ exports.handler = async function (event) {
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+      headers: {
+        "Content-Type": "application/json",
+        // 같은 종목 목록을 보는 방문자는 전부 같은 주소를 부르므로, 몇 명이 보든
+        // Alpaca로 나가는 호출은 이 주기마다 한 번뿐이다.
+        "Cache-Control": `public, max-age=${CACHE_SECONDS}, s-maxage=${CACHE_SECONDS}`,
+      },
       body: JSON.stringify({
         fetched_at: new Date().toISOString(),
         quotes,
@@ -116,6 +153,8 @@ exports.handler = async function (event) {
         // 이 시세가 '어느 거래일' 것인지. 주말·공휴일에는 직전 거래일이 내려온다.
         // 페이지는 이 값으로 '실시간'과 '장 마감'을 구분한다.
         session_date: spyQuote.as_of ? String(spyQuote.as_of).slice(0, 10) : null,
+        market_open: marketOpen,
+        next_open: nextOpen,
       }),
     };
   } catch (err) {

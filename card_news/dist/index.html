@@ -200,6 +200,39 @@
   }
   .ext-link:hover { border-color: var(--accent); color: var(--accent); }
 
+  /* 관리자 잠금 — 감추지 않고 왜 잠겼는지 보여준다 */
+  .lockbox {
+    display: flex; gap: 16px; align-items: flex-start; max-width: 560px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .lockbox.hide { display: none; }
+  .lock-icon {
+    flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px;
+    background: var(--surface-2); color: var(--ink-3);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lock-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .lock-body h3 { margin: 0; font-size: 15px; font-weight: 700; }
+  .lock-body p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--ink-3); }
+  .lock-body p b { color: var(--ink-2); }
+  .lock-form { display: flex; gap: 8px; flex-wrap: wrap; }
+  .lock-form input {
+    flex: 1 1 160px; min-width: 0; font-family: inherit; font-size: 13px; padding: 8px 12px;
+    border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+  }
+  .lock-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .lock-form button {
+    font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px;
+    border-radius: 8px; border: 0; background: var(--accent); color: #fff; cursor: pointer;
+  }
+  .lock-again {
+    margin-top: 14px; font-family: inherit; font-size: 12px; padding: 5px 11px;
+    border-radius: 999px; border: 1px solid var(--line); background: transparent;
+    color: var(--ink-3); cursor: pointer;
+  }
+  .lock-again:hover { color: var(--ink-2); border-color: var(--ink-3); }
+
   .quality-view { padding: 8px 2px 100px; }
   .quality-note {
     font-size: 12.5px; color: var(--ink-3); background: var(--surface-2); border-radius: 10px;
@@ -744,17 +777,45 @@
       그래서 답변에 <b>제출일과 항목번호</b>가 함께 붙습니다.
       "지금 사도 될까요?"처럼 오를지 내릴지 예측하거나 매수·매도를 추천하는 답은 하지 않습니다.
     </div>
-    <form class="add-ticker" id="askSymbolForm" style="max-width:220px;margin-bottom:14px">
-      <input id="askSymbolInput" placeholder="티커 입력 (예: AAPL)" maxlength="8" autocomplete="off">
-      <button type="submit" aria-label="조회">→</button>
-    </form>
-    <div class="add-ticker-err" id="askSymbolErr"></div>
-    <div id="askSymbolLabel" style="font-size:13px;color:var(--ink-3);margin:2px 0 10px"></div>
-    <div class="ask-chat" id="askChat"></div>
-    <form class="ask-input-row" id="askForm">
-      <input id="askInput" placeholder="종목을 먼저 조회하세요" autocomplete="off" disabled>
-      <button type="submit" id="askSendBtn" disabled>보내기</button>
-    </form>
+    <!-- 잠겨 있을 때 보이는 화면. 기능을 감추지 않고, 왜 잠겼는지 밝힌다. -->
+    <div class="lockbox" id="askLock">
+      <div class="lock-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="10" width="16" height="10" rx="2"></rect>
+          <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+        </svg>
+      </div>
+      <div class="lock-body">
+        <h3>관리자 전용 기능입니다</h3>
+        <p>
+          이 기능은 질문할 때마다 SEC 공시를 읽고 AI가 답을 쓰기 때문에
+          <b>호출 한 번에 실제 비용이 발생합니다.</b> 그래서 공개하지 않았습니다.
+          나머지 기능은 모두 자유롭게 보실 수 있습니다.
+        </p>
+        <form class="lock-form" id="lockForm">
+          <input id="lockInput" type="password" placeholder="관리자 키" autocomplete="off"
+                 aria-label="관리자 키">
+          <button type="submit">잠금 해제</button>
+        </form>
+        <div class="add-ticker-err" id="lockErr"></div>
+      </div>
+    </div>
+
+    <div id="askPanel" class="hide">
+      <form class="add-ticker" id="askSymbolForm" style="max-width:220px;margin-bottom:14px">
+        <input id="askSymbolInput" placeholder="티커 입력 (예: AAPL)" maxlength="8" autocomplete="off">
+        <button type="submit" aria-label="조회">→</button>
+      </form>
+      <div class="add-ticker-err" id="askSymbolErr"></div>
+      <div id="askSymbolLabel" style="font-size:13px;color:var(--ink-3);margin:2px 0 10px"></div>
+      <div class="ask-chat" id="askChat"></div>
+      <form class="ask-input-row" id="askForm">
+        <input id="askInput" placeholder="종목을 먼저 조회하세요" autocomplete="off" disabled>
+        <button type="submit" id="askSendBtn" disabled>보내기</button>
+      </form>
+      <button class="lock-again" id="lockAgain">이 브라우저에서 잠그기</button>
+    </div>
   </section>
 
   <section class="quality-view hide" id="historyView">
@@ -800,6 +861,20 @@
   // ---- 즐겨찾기·직접추가 종목 (브라우저 로컬 저장, 서버에는 안 감) ----
   function loadLS(key) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { return []; } }
   function saveLS(key, arr) { try { localStorage.setItem(key, JSON.stringify(arr)); } catch (e) {} }
+
+  // ---- 관리자 잠금 ----
+  // 사이트는 공개돼 있고 대부분의 기능은 공짜 데이터라 누가 봐도 상관없다.
+  // 그런데 '종목 알아보기'만은 질문할 때마다 실제로 돈이 나간다(약 $0.07).
+  // 그래서 이 기능만 키를 가진 사람에게 연다. 키는 이 브라우저에만 저장되고
+  // 서버에는 우리 함수로만 전달된다.
+  //
+  // 여는 방법: 주소 끝에 ?unlock=<키> 를 붙이거나, 아래 잠금 화면에서 입력.
+  const OWNER_KEY_LS = 'wl_owner_key';
+  function getOwnerKey() { try { return localStorage.getItem(OWNER_KEY_LS) || ''; } catch (e) { return ''; } }
+  function setOwnerKey(k) {
+    try { if (k) localStorage.setItem(OWNER_KEY_LS, k); else localStorage.removeItem(OWNER_KEY_LS); } catch (e) {}
+  }
+  function isUnlocked() { return !!getOwnerKey(); }
   let favorites = loadLS('wl_favorites');
   let customSymbols = loadLS('wl_custom');
   function isFavorite(sym) { return favorites.includes(sym); }
@@ -1362,7 +1437,8 @@
       ${insiderHtml(sym)}
       ${appearanceHtml(sym)}
       ${newsBlock}
-      <div class="sec">
+      ${isUnlocked() ? `
+      <div class="sec" data-owner-only>
         <div class="sec-title">이 종목에 대해 물어보기</div>
         <div class="sec-body">
           <div class="body-text" style="margin-bottom:10px;color:var(--ink-3);font-size:12.5px">
@@ -1374,13 +1450,57 @@
           </form>
           <div class="ask-chat" id="stockAskChat" style="margin-top:12px"></div>
         </div>
-      </div>`;
+      </div>` : ''}`;
 
     wireNewsItems(el);
     const star = el.querySelector('#stockStar');
     if (star) star.addEventListener('click', () => { toggleFavorite(sym); renderStock(); });
     const form = el.querySelector('#stockAskForm');
     if (form) form.addEventListener('submit', (e) => { e.preventDefault(); stockAsk(sym); });
+  }
+
+  // 잠금 상태를 화면에 반영한다. 종목 한 장의 '물어보기' 상자도 같이 따라간다.
+  function applyLockState() {
+    const unlocked = isUnlocked();
+    const lock = document.getElementById('askLock');
+    const panel = document.getElementById('askPanel');
+    if (lock) lock.classList.toggle('hide', unlocked);
+    if (panel) panel.classList.toggle('hide', !unlocked);
+    document.querySelectorAll('[data-owner-only]').forEach((el) => {
+      el.classList.toggle('hide', !unlocked);
+    });
+    if (stockSymbol) renderStock();     // 종목 한 장이 열려 있으면 다시 그린다
+  }
+
+  function wireLock() {
+    const form = document.getElementById('lockForm');
+    const input = document.getElementById('lockInput');
+    const err = document.getElementById('lockErr');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const k = input.value.trim();
+        if (!k) return;
+        setOwnerKey(k);
+        input.value = '';
+        hideErr(err);
+        applyLockState();
+      });
+    }
+    const again = document.getElementById('lockAgain');
+    if (again) {
+      again.addEventListener('click', () => { setOwnerKey(''); applyLockState(); });
+    }
+    // 주소로 여는 길: ?unlock=<키>. 키가 주소창에 남지 않도록 바로 지운다.
+    const p = new URLSearchParams(location.search);
+    const fromUrl = p.get('unlock');
+    if (fromUrl) {
+      setOwnerKey(fromUrl.trim());
+      p.delete('unlock');
+      const qs = p.toString();
+      history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+    }
+    applyLockState();
   }
 
   // 답변은 한 번에 오지 않고 흘러 들어온다. 서버가 SEC 공시를 읽고 Sonnet이
@@ -1399,10 +1519,15 @@
 
     return fetch('/.netlify/functions/ask', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Owner-Key': getOwnerKey() },
       body: JSON.stringify({ symbol, question, history: history || [] }),
     })
       .then(async (r) => {
+        if (r.status === 401) {
+          setOwnerKey('');                    // 키가 틀렸으면 지우고 다시 잠근다
+          applyLockState();
+          throw new Error('관리자 전용 기능입니다. 키를 다시 입력해 주세요.');
+        }
         if (!r.ok) {
           const j = await r.json().catch(() => ({}));
           throw new Error(j.error || ('요청이 실패했습니다 (' + r.status + ')'));
@@ -1806,12 +1931,40 @@
     return LIVE_ENDPOINT + (syms.length ? ('?symbols=' + encodeURIComponent(syms.join(','))) : '');
   }
 
+  // 폴링은 이 사이트에서 가장 비용이 큰 동작이다. 방문자가 늘면 그만큼 배로 늘어난다.
+  // 세 가지로 줄인다:
+  //   1) 탭이 안 보이면 아예 쉰다 (배경 탭이 45초마다 부르는 건 순수한 낭비다)
+  //   2) 장이 닫혀 있으면 5분으로 늦춘다 — 한국에서 보는 시간대는 대부분 닫혀 있다
+  //   3) 서버가 20초 CDN 캐시를 주므로, 여러 명이 봐도 실제 조회는 그 주기마다 한 번
+  let liveTimer = null;
+  let marketOpen = null;
+
+  function pollDelay() {
+    if (document.hidden) return 60000;              // 안 보이는 동안은 최소한으로
+    return marketOpen === false ? 300000 : LIVE_INTERVAL_MS;
+  }
+
+  function scheduleLive() {
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(runLive, pollDelay());
+  }
+
+  function runLive() {
+    if (document.hidden) { scheduleLive(); return; }   // 숨어 있으면 건너뛰고 다시 예약
+    pollLive().finally(scheduleLive);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) { runLive(); }               // 돌아오면 즉시 한 번 갱신
+  });
+
   function pollLive() {
-    return fetch(liveUrl(), { cache: 'no-store' })
+    return fetch(liveUrl())
       .then(r => (r.ok ? r.json() : Promise.reject(new Error('bad status'))))
       .then(live => {
         if (live.error) return Promise.reject(new Error(live.error));
         mergeLive(live);
+        if (typeof live.market_open === 'boolean') marketOpen = live.market_open;
         renderNav(); renderDetail(); renderRelated(); renderMovers();
         // 시세가 페이지와 같은 거래일 것이면 '실시간'이 아니라 그냥 그날 종가다.
         // 주말·공휴일에 '실시간'이라고 띄우면 새 정보가 있는 것처럼 오해하게 된다.
@@ -2242,9 +2395,9 @@
   Promise.all([fetch('data.json').then(r => r.json()), historyReady, notesReady, calendarReady])
     .then(([d]) => {
       render(d);
+      wireLock();             // 관리자 잠금 상태를 먼저 반영 (?unlock= 처리 포함)
       applyUrl(false);        // ?s=GNRC 로 들어왔으면 그 종목을 바로 연다
-      pollLive();
-      setInterval(pollLive, LIVE_INTERVAL_MS);
+      pollLive().finally(scheduleLive);
     })
     .catch(() => {
       document.getElementById('overviewText').textContent = '데이터를 불러오지 못했습니다. data.json 파일을 확인해주세요.';

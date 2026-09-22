@@ -11,12 +11,25 @@
 // SEC를 다시 부르지 않는다.
 
 const sec = require("./lib/sec");
+const guard = require("./lib/guard");
+
+// 30분 CDN 캐시가 1차 방어다. 이건 캐시를 우회하는 요청(매번 다른 티커)을 막는 장치 —
+// SEC는 초당 10건을 권고하므로 우리 쪽에서 먼저 조여둔다.
+const RATE = { max: 40, windowMs: 60 * 1000 };
 
 exports.handler = async function (event) {
   const raw = (event.queryStringParameters && event.queryStringParameters.symbol) || "";
   const symbol = String(raw).trim().toUpperCase();
   if (!/^[A-Z.]{1,8}$/.test(symbol)) {
     return { statusCode: 400, body: JSON.stringify({ error: "올바른 티커가 아닙니다." }) };
+  }
+  const rl = guard.rateLimit("filings:" + guard.clientId(event), RATE);
+  if (rl.limited) {
+    return {
+      statusCode: 429,
+      headers: { "Content-Type": "application/json", "Retry-After": String(rl.retryAfter) },
+      body: JSON.stringify({ error: "요청이 너무 잦습니다." }),
+    };
   }
 
   try {
