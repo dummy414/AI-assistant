@@ -107,10 +107,12 @@ def check() -> bool:
 
 
 def deploy() -> None:
-    print("1) 배포본의 최신 시세를 로컬로 가져옵니다 (자동화 결과를 덮어쓰지 않도록)")
+    # flush: 아래 subprocess가 화면에 바로 쓰므로, 이 줄이 뒤로 밀리지 않게 한다
+    print("1) 배포본의 최신 시세를 로컬로 가져옵니다 (자동화 결과를 덮어쓰지 않도록)\n",
+          flush=True)
     subprocess.run([sys.executable, "pull_live.py"], cwd=ROOT, check=True)
 
-    print("\n2) 배포합니다 (함수 캐시는 항상 무시합니다)")
+    print("\n2) 배포합니다 (함수 캐시는 항상 무시합니다)", flush=True)
     cmd = [
         "npx", "--yes", "netlify-cli@latest", "deploy", "--prod",
         "--dir", "dist",
