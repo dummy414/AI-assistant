@@ -47,8 +47,9 @@ function toQuote(sym, s) {
   // 있으면 낡기만 하므로 심볼을 그대로 돌려준다.
   if (!s) return { symbol: sym, name: sym, ok: false };
   const bar = s.dailyBar || null;
+  const prev = s.prevDailyBar || null;
   const price = bar ? bar.c : null;
-  const prevClose = s.prevDailyBar ? s.prevDailyBar.c : null;
+  const prevClose = prev ? prev.c : null;
   const dayReturn = price != null && prevClose ? price / prevClose - 1 : null;
   return {
     symbol: sym, name: sym, ok: price != null,
@@ -56,6 +57,26 @@ function toQuote(sym, s) {
     as_of: bar ? bar.t : null,
     // 시간외까지 포함한 마지막 체결 — 참고용으로만 내려보낸다
     last_trade: s.latestTrade ? s.latestTrade.p : null,
+
+    // --- 장중 사실 ---
+    // 화면의 '지금 장중' 탭이 쓴다. 전부 계산하지 않은 원본 값이고,
+    // 해석은 화면에서 한다.
+    //
+    // **호가(latestQuote)는 일부러 내려보내지 않는다.** 무료 IEX 피드는 전체
+    // 거래의 일부만 보므로 스프레드가 실제보다 훨씬 넓게 찍힌다 — NVDA가
+    // 1센트짜리 스프레드인데 $1.30으로 나온다. 그걸 '매매 비용'처럼 보여주면
+    // 사실이 아니라 틀린 정보가 된다.
+    //
+    // 거래량도 같은 피드라 절대값은 전체 거래량이 아니다. 다만 어제와 오늘을
+    // **같은 피드끼리** 비교하는 비율은 의미가 있어서 둘 다 그대로 넘긴다.
+    open: bar ? bar.o : null,
+    high: bar ? bar.h : null,
+    low: bar ? bar.l : null,
+    volume: bar ? bar.v : null,
+    prev_open: prev ? prev.o : null,
+    prev_high: prev ? prev.h : null,
+    prev_low: prev ? prev.l : null,
+    prev_volume: prev ? prev.v : null,
   };
 }
 

@@ -467,6 +467,53 @@
   .ask-input-row button:disabled { opacity: .5; cursor: default; }
   .ask-input-row button:hover:not(:disabled) { filter: brightness(1.05); }
 
+  /* ---- 지금 장중 ---- */
+  .intra-note-row { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s4); }
+  .intra-state {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600;
+    padding: 7px 13px; border-radius: var(--rp);
+  }
+  .intra-state.open { background: var(--up-soft); color: var(--up); }
+  .intra-state.closed { background: var(--surface-2); color: var(--ink-2); }
+  .intra-state .d { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .intra-sort { font-size: 12px; color: var(--ink-3); align-self: center; }
+
+  .intra-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r3);
+    padding: var(--s4); display: flex; flex-direction: column; gap: 11px;
+    box-shadow: var(--shadow);
+    transition: border-color var(--dur), box-shadow var(--dur);
+  }
+  .intra-card:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); }
+  .intra-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .intra-sym { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 17px; }
+  .intra-name { font-size: 12px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+  .intra-px { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; margin-left: auto; }
+  /* 이름표·숫자·설명 세 칸을 카드 안에서 줄 맞춰 세운다.
+     flex로 두었더니 이름표가 칸에 안 맞아 두 줄로 접히고("어제 종가→시 / 가"),
+     숫자도 단위만 떨어져 나갔다("0.14 / 배").
+     격자를 부모에 두고 각 행은 display:contents로 부모 격자에 얹는다 —
+     그래야 행마다 따로 놀지 않고 세 칸이 위아래로 정렬된다. */
+  .intra-rows {
+    display: grid; grid-template-columns: auto auto minmax(0, 1fr);
+    gap: 7px 9px; align-items: baseline; font-size: 12.5px;
+  }
+  .intra-row { display: contents; }
+  .intra-row .k { color: var(--ink-3); white-space: nowrap; }
+  .intra-row .v {
+    font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;
+    font-weight: 600; white-space: nowrap;
+  }
+  /* 숫자 뒤 '배' 같은 한글 단위. IBM Plex Mono에는 한글이 없어서 그 글자만
+     대체 글꼴로 빠지고, 기준선이 달라 한 칸 내려앉은 것처럼 보였다. */
+  .intra-row .v .u { font-family: 'Archivo', system-ui, sans-serif; font-weight: 600; }
+  .intra-row .v.up { color: var(--up); }
+  .intra-row .v.down { color: var(--down); }
+  .intra-row .sub { color: var(--ink-3); font-family: 'Archivo', sans-serif; font-weight: 400; font-size: 11.5px; }
+  /* 오늘 폭이 평소보다 확실히 클 때만 눈에 띄게 한다 — '좋다'는 뜻이 아니라 '평소와 다르다'는 표시다 */
+  .intra-row .v.wide { color: var(--accent); }
+  .intra-empty { grid-column: 1 / -1; }
+
   /* ---- 구글 파이낸스풍 밀집 리스트 (가장 활동적인 / 상승 / 하락) ---- */
   .movers { display: grid; grid-template-columns: 1fr; gap: var(--s5); padding: 6px 2px var(--s5); }
   @media (min-width: 720px) {
@@ -993,6 +1040,10 @@
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"
            stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 6-7"></path><path d="M14 8h5v5"></path></svg>
       오늘의 관심종목</button>
+    <button class="tab-btn" id="tabIntraday">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"
+           stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-8 4 16 3-8h6"></path></svg>
+      지금 장중</button>
     <button class="tab-btn" id="tabQuality">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"
            stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>
@@ -1095,6 +1146,23 @@
       <div class="skel skel-news" style="margin-bottom:9px"></div>
     </aside>
   </div>
+
+  <!-- 지금 장중 — 오늘 올라온 종목들이 '지금' 어떻게 움직이는지.
+       오를지 내릴지는 말하지 않는다. 관측된 값과, 관측값끼리의 비율뿐이다. -->
+  <section class="quality-view hide" id="intradayView">
+    <div class="quality-note">
+      오늘 올라온 종목들이 <b>지금 이 순간</b> 어떻게 움직이고 있는지를 사실로만 보여줍니다.
+      어느 것이 오를지, 사고팔기 좋은지는 <b>말하지 않습니다</b> — 이 화면에 그런 판단은 없습니다.
+      <br><br>
+      <b>변동폭이 평소보다 크다는 건 오르는 폭도 내리는 폭도 같이 커졌다는 뜻</b>이지,
+      오를 가능성이 높다는 뜻이 아닙니다.
+      거래량은 무료 시세(IEX)라 시장 전체 거래량이 아닙니다. 같은 기준끼리 비교하는
+      <b>비율만</b> 의미가 있어서 배수로만 적었습니다. 화면은 45초마다 갱신되고 시세는
+      최대 20초 지연되므로 실제 매매 속도와는 무관합니다.
+    </div>
+    <div class="intra-note-row" id="intraState"></div>
+    <div class="quality-grid" id="intraGrid"></div>
+  </section>
 
   <section class="quality-view hide" id="qualityView">
     <div class="quality-note">
@@ -2047,7 +2115,7 @@
     const s = p.get('s');
     if (s && /^[A-Za-z.]{1,8}$/.test(s)) { openStock(s, push); return true; }
     const tab = p.get('tab');
-    if (tab && ['quality', 'radar', 'ask', 'history'].includes(tab)) { showTab(tab); return true; }
+    if (tab && ['intraday', 'quality', 'radar', 'ask', 'history'].includes(tab)) { showTab(tab); return true; }
     showTab('today');
     return false;
   }
@@ -2368,6 +2436,133 @@
     });
   }
 
+  // ---- 지금 장중 ----
+  // 마지막 실시간 응답을 그대로 들고 있는다. 카드(data.cards)는 해설이 붙은 '오늘의 기사'라
+  // 시세만 덮어쓰지만, 이 화면은 장중 원본값(시가·고가·저가·거래량)이 통째로 필요하다.
+  let liveSnapshot = null;
+
+  function pct1(x) { return (x >= 0 ? '+' : '') + (x * 100).toFixed(2) + '%'; }
+
+  function intraCardHtml(q, card) {
+    const price = q.price;
+    const fromOpen = q.open ? price / q.open - 1 : null;
+    const gap = (q.open && q.prev_close) ? q.open / q.prev_close - 1 : null;
+    const hasRange = q.high != null && q.low != null && q.high > q.low;
+    const pos = hasRange ? (price - q.low) / (q.high - q.low) : null;
+    const rangePct = (hasRange && q.open) ? (q.high - q.low) / q.open : null;
+    // 평소 하루 변동폭은 data.json이 이미 갖고 있다 (과거 변동성으로 계산한 값).
+    // 여기서 새로 계산하지 않는다 — 같은 숫자를 두 군데서 따로 만들면 언젠가 갈라진다.
+    const usual = card && card.stats && card.stats.expected_move
+      ? card.stats.expected_move['1d'] : null;
+    const rangeVsUsual = (rangePct != null && usual) ? rangePct / usual : null;
+    const volVsPrev = (q.volume && q.prev_volume) ? q.volume / q.prev_volume : null;
+
+    const rows = [];
+    if (fromOpen != null) {
+      rows.push(`<div class="intra-row"><span class="k">시가 대비</span>`
+        + `<span class="v ${fromOpen >= 0 ? 'up' : 'down'}">${pct1(fromOpen)}</span>`
+        + `<span class="sub">시가 $${q.open.toFixed(2)}</span></div>`);
+    }
+    if (gap != null) {
+      // '갭'이라는 말은 안 쓴다 — 이 사이트 독자는 주식을 처음 보는 사람이다
+      rows.push(`<div class="intra-row"><span class="k">오늘 출발</span>`
+        + `<span class="v ${gap >= 0 ? 'up' : 'down'}">${pct1(gap)}</span>`
+        + `<span class="sub">어제 종가보다 ${gap >= 0 ? '높게' : '낮게'} 시작</span></div>`);
+    }
+    if (rangePct != null) {
+      // 2배가 넘을 때만 색을 준다. '평소와 확실히 다르다'는 선이고, 좋다는 뜻이 아니다.
+      const wide = rangeVsUsual != null && rangeVsUsual >= 2;
+      rows.push(`<div class="intra-row"><span class="k">오늘 폭</span>`
+        + `<span class="v ${wide ? 'wide' : ''}">${(rangePct * 100).toFixed(2)}%</span>`
+        + (rangeVsUsual != null
+            ? `<span class="sub">평소 하루 움직임의 ${rangeVsUsual.toFixed(1)}배</span>` : '')
+        + `</div>`);
+    }
+    if (volVsPrev != null) {
+      rows.push(`<div class="intra-row"><span class="k">거래량</span>`
+        + `<span class="v">${volVsPrev.toFixed(2)}<span class="u">배</span></span>`
+        + `<span class="sub">어제 하루 전체 대비</span></div>`);
+    }
+
+    // '지금 위치'는 다른 값들과 같은 격자 안에 있어야 줄이 맞는다.
+    // 예전엔 막대와 함께 .intra-rows 밖에 있어서 그 행만 세 줄로 흩어졌다.
+    if (pos != null) {
+      rows.unshift(`<div class="intra-row"><span class="k">지금 위치</span>`
+        + `<span class="v">${Math.round(pos * 100)}%</span>`
+        + `<span class="sub">오늘 저가(0%)~고가(100%) 사이</span></div>`);
+    }
+
+    const rangeBar = hasRange
+      ? `<div class="range52">
+           <span class="edge">$${q.low.toFixed(2)}</span>
+           <span class="bar"><span class="dot" style="left:${(pos * 100).toFixed(1)}%"></span></span>
+           <span class="edge">$${q.high.toFixed(2)}</span>
+         </div>`
+      : '';
+
+    return `
+      <div class="intra-card" data-stock="${escapeHtml(q.symbol)}">
+        <div class="intra-top">
+          <span class="intra-sym">${escapeHtml(q.symbol)}</span>
+          <span class="intra-name">${escapeHtml(card ? card.name : '')}</span>
+          <span class="intra-px">$${price.toFixed(2)}</span>
+        </div>
+        ${rangeBar}
+        <div class="intra-rows">${rows.join('')}</div>
+      </div>`;
+  }
+
+  function renderIntraday() {
+    const grid = document.getElementById('intraGrid');
+    const state = document.getElementById('intraState');
+    if (!grid) return;
+
+    if (!liveSnapshot) {
+      state.innerHTML = '';
+      grid.innerHTML = '<div class="news-empty intra-empty">시세를 불러오는 중입니다…</div>';
+      return;
+    }
+
+    // 장이 닫혀 있으면 '지금'이 아니다. 그걸 숨기지 않고 먼저 말한다.
+    const open = liveSnapshot.market_open === true;
+    const when = liveSnapshot.session_date
+      ? String(liveSnapshot.session_date).replace(/^\d{4}-(\d{2})-(\d{2})$/, '$1/$2') : '';
+    state.innerHTML = open
+      ? `<span class="intra-state open"><span class="d"></span>미국 장이 열려 있습니다 · ${fmtClock(liveSnapshot.fetched_at)} 기준</span>`
+        + `<span class="intra-sort">평소보다 크게 움직인 순</span>`
+      : `<span class="intra-state closed"><span class="d"></span>지금은 미국 장이 열려 있지 않습니다`
+        + (when ? ` · 아래는 ${when} 거래일 기준입니다` : '') + `</span>`
+        + `<span class="intra-sort">평소보다 크게 움직인 순</span>`;
+
+    const cardBySymbol = {};
+    ((data && data.cards) || []).forEach((c) => { cardBySymbol[c.symbol] = c; });
+
+    // 시가·고가·저가가 다 있어야 장중 이야기를 할 수 있다. 없는 종목은 뺀다
+    // (장 시작 전이거나, 그 티커의 시세가 안 잡히는 경우).
+    const rows = (liveSnapshot.quotes || [])
+      .filter((q) => q.ok && q.price != null && q.open != null && q.high != null && q.low != null)
+      .map((q) => {
+        const card = cardBySymbol[q.symbol] || null;
+        const usual = card && card.stats && card.stats.expected_move
+          ? card.stats.expected_move['1d'] : null;
+        const rangePct = q.open ? (q.high - q.low) / q.open : null;
+        return { q, card, sortKey: (rangePct != null && usual) ? rangePct / usual : -1 };
+      })
+      .sort((a, b) => b.sortKey - a.sortKey);
+
+    if (!rows.length) {
+      grid.innerHTML = '<div class="news-empty intra-empty">'
+        + '장중 값이 아직 없습니다. 미국 장이 열리면 시가·고가·저가가 채워집니다.</div>';
+      return;
+    }
+
+    grid.innerHTML = rows.map(({ q, card }) => intraCardHtml(q, card)).join('');
+    // 티커를 누르면 '종목 한 장'으로 — 사이트 어디서나 같게 동작한다
+    grid.querySelectorAll('[data-stock]').forEach((el) => {
+      el.addEventListener('click', () => openStock(el.dataset.stock));
+    });
+  }
+
   // 실시간 시세는 **화면에 띄우고 있는 종목**을 물어봐야 한다.
   // 예전에는 사용자가 직접 추가한 종목만 보냈고, 서버가 옛날 10종목을 하드코딩해두고
   // 있어서 오늘 카드 16개 중 우연히 겹치는 2개만 갱신됐다 — 나머지는 전날 종가인데
@@ -2415,7 +2610,8 @@
         if (live.error) return Promise.reject(new Error(live.error));
         mergeLive(live);
         if (typeof live.market_open === 'boolean') marketOpen = live.market_open;
-        renderNav(); renderDetail(); renderRelated(); renderMovers();
+        liveSnapshot = live;              // '지금 장중'은 장중 원본값이 통째로 필요하다
+        renderNav(); renderDetail(); renderRelated(); renderMovers(); renderIntraday();
         // 시세가 페이지와 같은 거래일 것이면 '실시간'이 아니라 그냥 그날 종가다.
         // 주말·공휴일에 '실시간'이라고 띄우면 새 정보가 있는 것처럼 오해하게 된다.
         const closed = live.session_date && data && live.session_date === data.market_date;
@@ -2469,6 +2665,7 @@
 
   // ---- 우량주 탭 (실제 재무데이터, 예측 아님) ----
   const tabToday = document.getElementById('tabToday');
+  const tabIntraday = document.getElementById('tabIntraday');
   const tabQuality = document.getElementById('tabQuality');
   const tabRadar = document.getElementById('tabRadar');
   const tabAsk = document.getElementById('tabAsk');
@@ -2476,6 +2673,7 @@
   const overviewEl = document.querySelector('.overview');
   const layoutEl = document.querySelector('.layout');
   const moversEl = document.getElementById('movers');
+  const intradayViewEl = document.getElementById('intradayView');
   const qualityViewEl = document.getElementById('qualityView');
   const radarViewEl = document.getElementById('radarView');
   const askViewEl = document.getElementById('askView');
@@ -2485,6 +2683,7 @@
 
   function showTab(name) {
     const isToday = name === 'today';
+    const isIntraday = name === 'intraday';
     const isQuality = name === 'quality';
     const isRadar = name === 'radar';
     const isAsk = name === 'ask';
@@ -2493,19 +2692,29 @@
     overviewEl.classList.toggle('hide', !isToday);
     layoutEl.classList.toggle('hide', !isToday);
     moversEl.classList.toggle('hide', !isToday);
+    intradayViewEl.classList.toggle('hide', !isIntraday);
     qualityViewEl.classList.toggle('hide', !isQuality);
     radarViewEl.classList.toggle('hide', !isRadar);
     askViewEl.classList.toggle('hide', !isAsk);
     historyViewEl.classList.toggle('hide', !isHistory);
     stockViewEl.classList.toggle('hide', !isStock);
     tabToday.classList.toggle('active', isToday);
+    tabIntraday.classList.toggle('active', isIntraday);
     tabQuality.classList.toggle('active', isQuality);
     tabRadar.classList.toggle('active', isRadar);
     tabAsk.classList.toggle('active', isAsk);
     tabHistory.classList.toggle('active', isHistory);
   }
-  function goTab(name) { showTab(name); stockSymbol = null; setUrl({ tab: name }); }
+  function goTab(name) {
+    showTab(name);
+    stockSymbol = null;
+    setUrl({ tab: name });
+    // 탭을 열자마자 최신 상태를 보여준다. 폴링 주기(45초)를 기다리면
+    // 처음 들어온 사람은 '불러오는 중'만 보게 된다.
+    if (name === 'intraday') { renderIntraday(); runLive(); }
+  }
   tabToday.addEventListener('click', () => goTab('today'));
+  tabIntraday.addEventListener('click', () => goTab('intraday'));
   tabQuality.addEventListener('click', () => goTab('quality'));
   tabRadar.addEventListener('click', () => goTab('radar'));
   tabAsk.addEventListener('click', () => goTab('ask'));
