@@ -31,7 +31,7 @@ DIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "card_news", "di
 FILES = [
     "data.json", "radar.json", "quality.json",
     "history.json", "company_notes.json", "insider.json",
-    "scorecard.json",
+    "scorecard.json", "drops.json",
 ]
 
 

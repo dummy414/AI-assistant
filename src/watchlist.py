@@ -339,6 +339,125 @@ def screen_anomalies(top_n: int = 8, lookback_days: int = 260, min_price: float 
     return candidates[:top_n]
 
 
+def screen_drops(top_n: int = 10, lookback_days: int = 260, min_price: float = 5.0) -> list[dict]:
+    """"많이 떨어진 종목" — 그 종목 **자신의 평소**와 비교해 이례적으로 떨어진 것만.
+
+    screen_anomalies와 비슷해 보이지만 묻는 것이 다르다. 저쪽은 "평소와 다른가"라
+    오르는 것도 같이 잡는다. 여기는 떨어진 것만 보고, 서로 다른 세 가지 낙폭을
+    따로 잰다 — 이야기가 다르기 때문이다:
+
+      오늘      하루 만에 평소 변동폭 대비 몇 배 떨어졌나  (return_z)
+      최근 5일  한 주 누적 낙폭이 평소 5일 움직임 대비 몇 배인가  (ret5_z)
+      연속      며칠째 내리 떨어지고 있나  (down_streak)
+
+    **고점 대비 낙폭(drawdown)은 뽑는 조건에 넣지 않는다.** 그것만 보면 1년 내내
+    반토막인 종목이 매일 올라온다 — 오늘 아무 일도 없었는데. 설명할 뉴스도 없다.
+    대신 '지금 어디까지 내려와 있나'라는 맥락으로 값만 같이 실어 보낸다.
+
+    싸다/살 때다 같은 판단은 하지 않는다. 얼마나, 며칠째, 평소 대비 몇 배인지가 전부다.
+    """
+    names = active_universe()
+    symbols = list(names)
+    bars = _fetch_batch_bars(symbols, lookback_days=lookback_days)
+    available = set(bars.index.get_level_values(0)) if not bars.empty else set()
+
+    candidates = []
+    for sym in symbols:
+        if sym not in available:
+            continue
+        df = bars.loc[sym].sort_index()
+        if len(df) < 40:            # 5일 누적을 평소와 비교하려면 표본이 좀 더 필요하다
+            continue
+        close = df["close"].values
+        volume = df["volume"].values
+        last_close = close[-1]
+        if last_close < min_price:
+            continue
+
+        rets = close[1:] / close[:-1] - 1
+        today_ret = float(rets[-1])
+        baseline = rets[:-1]
+        ret_std = baseline.std()
+        return_z = float((today_ret - baseline.mean()) / ret_std) if ret_std > 0 else 0.0
+
+        # 5일 누적. 겹치는 창으로 만든 분포와 비교한다 — '평소 한 주'가 기준이다.
+        ret5 = float(close[-1] / close[-6] - 1) if len(close) >= 6 else 0.0
+        win5 = close[5:] / close[:-5] - 1
+        base5 = win5[:-1]
+        std5 = base5.std()
+        ret5_z = float((ret5 - base5.mean()) / std5) if std5 > 0 else 0.0
+
+        today_vol = volume[-1]
+        vol_base = volume[:-1]
+        vol_std = vol_base.std()
+        vol_z = float((today_vol - vol_base.mean()) / vol_std) if vol_std > 0 else 0.0
+
+        down_streak = 0
+        for r in reversed(rets):
+            if r < 0:
+                down_streak += 1
+            else:
+                break
+
+        window = close[-252:] if len(close) >= 252 else close
+        high_w = float(window.max())
+        low_w = float(window.min())
+        drawdown = float(last_close / high_w - 1) if high_w > 0 else 0.0
+
+        # 최근에 이례적으로 떨어졌는가 — 이 중 하나는 걸려야 한다
+        if not (return_z <= -2.0 or ret5_z <= -2.0 or down_streak >= 4):
+            continue
+
+        reasons = []
+        if return_z <= -2.0:
+            reasons.append({
+                "type": "return_z", "value": round(return_z, 2),
+                "text": f"오늘 하루 {abs(today_ret) * 100:.1f}% 떨어졌습니다. "
+                        f"이 종목의 평소 하루 움직임보다 {abs(return_z):.1f}배 큰 낙폭입니다.",
+            })
+        if ret5_z <= -2.0:
+            reasons.append({
+                "type": "ret5_z", "value": round(ret5_z, 2),
+                "text": f"최근 5거래일 동안 {abs(ret5) * 100:.1f}% 내렸습니다. "
+                        f"평소 5일 움직임보다 {abs(ret5_z):.1f}배 큽니다.",
+            })
+        if down_streak >= 4:
+            reasons.append({
+                "type": "down_streak", "value": down_streak,
+                "text": f"{down_streak}일 연속으로 내리 떨어졌습니다.",
+            })
+        if vol_z >= 3.0:
+            reasons.append({
+                "type": "vol_z", "value": round(vol_z, 2),
+                "text": f"거래량이 평소보다 {vol_z:.1f}표준편차 많습니다 — "
+                        f"많은 사람이 평소와 다르게 움직였다는 뜻입니다.",
+            })
+        if last_close <= low_w * 1.02:
+            reasons.append({
+                "type": "near_low", "value": round(float(last_close / low_w), 4),
+                "text": "최근 1년 최저가 근처입니다.",
+            })
+
+        drop_score = (max(0.0, -return_z)
+                      + max(0.0, -ret5_z) * 0.7
+                      + max(vol_z, 0.0) / 3
+                      + (1.5 if down_streak >= 4 else 0.0))
+
+        candidates.append({
+            "symbol": sym, "name": names[sym], "price": round(float(last_close), 2),
+            "day_return": round(today_ret, 4), "return_z": round(return_z, 2),
+            "return_5d": round(ret5, 4), "ret5_z": round(ret5_z, 2),
+            "down_streak": int(down_streak), "vol_z": round(vol_z, 2),
+            # 맥락: 지금 어디까지 내려와 있나 (뽑는 조건은 아니다)
+            "drawdown": round(drawdown, 4),
+            "high_52w": round(high_w, 2), "low_52w": round(low_w, 2),
+            "reasons": reasons, "drop_score": round(drop_score, 2),
+        })
+
+    candidates.sort(key=lambda c: c["drop_score"], reverse=True)
+    return candidates[:top_n]
+
+
 if __name__ == "__main__":
     t = screen()
     print(t[["symbol", "name", "price", "day_return", "return_5d", "volume_ratio"]]

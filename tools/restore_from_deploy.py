@@ -34,7 +34,7 @@ DIST = os.path.join(ROOT, "card_news", "dist")
 SITE = "today-watchlist-kr.netlify.app"
 
 FILES = ["data.json", "quality.json", "radar.json", "history.json",
-         "company_notes.json", "insider.json", "scorecard.json"]
+         "company_notes.json", "insider.json", "scorecard.json", "drops.json"]
 
 
 def fetch(url: str):

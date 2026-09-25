@@ -467,6 +467,60 @@
   .ask-input-row button:disabled { opacity: .5; cursor: default; }
   .ask-input-row button:hover:not(:disabled) { filter: brightness(1.05); }
 
+  /* ---- 많이 떨어진 종목 ---- */
+  .drop-list { display: flex; flex-direction: column; gap: var(--s4); max-width: 900px; }
+  .drop-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r3);
+    padding: var(--s5); box-shadow: var(--shadow);
+  }
+  .drop-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; margin-bottom: var(--s3); }
+  .drop-sym { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 19px; }
+  .drop-name { font-size: 13px; color: var(--ink-2); }
+  .drop-px { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .drop-chg {
+    font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600;
+    padding: 3px 9px; border-radius: var(--r1); font-variant-numeric: tabular-nums;
+    color: var(--down); background: var(--down-soft);
+  }
+
+  /* 숫자 네 칸. '얼마나 떨어졌나'를 기간별로 갈라서 보여준다 —
+     하루 급락과 한 달째 흘러내림은 다른 이야기다. */
+  .drop-nums {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+    gap: var(--s2); margin-bottom: var(--s3);
+  }
+  .drop-num { background: var(--surface-2); border-radius: var(--r2); padding: 9px 11px; }
+  .drop-num .k { display: block; font-size: 11px; color: var(--ink-3); margin-bottom: 3px; }
+  .drop-num .v {
+    font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .drop-num .v.down { color: var(--down); }
+  .drop-num .n { display: block; font-size: 10.5px; color: var(--ink-3); margin-top: 2px; }
+
+  .drop-reasons { display: flex; flex-direction: column; gap: 5px; margin-bottom: var(--s4); }
+  .drop-reason { font-size: 12.5px; line-height: 1.6; color: var(--ink-2); padding-left: 13px; position: relative; }
+  .drop-reason::before {
+    content: ''; position: absolute; left: 0; top: .62em;
+    width: 5px; height: 5px; border-radius: 50%; background: var(--ink-3);
+  }
+
+  /* 왜 떨어졌는가 — 이 화면의 핵심이다. 기사가 없으면 없다고 적는다. */
+  .drop-why {
+    border-left: 3px solid var(--down); background: var(--down-soft);
+    border-radius: var(--r2); padding: var(--s3) var(--s4); margin-bottom: var(--s3);
+  }
+  .drop-why.unknown { border-left-color: var(--ink-3); background: var(--surface-2); }
+  .drop-why .ph {
+    display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px;
+  }
+  .drop-why p { margin: 0; font-size: 13.5px; line-height: 1.75; color: var(--ink); }
+  .drop-why.unknown p { color: var(--ink-2); }
+
+  .drop-news { display: flex; flex-direction: column; gap: 8px; }
+  .drop-news .news-label { margin-bottom: 2px; }
+
   /* ---- 지금 장중 ---- */
   .intra-note-row { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s4); }
   .intra-state {
@@ -1048,6 +1102,10 @@
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"
            stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>
       우량주</button>
+    <button class="tab-btn" id="tabDrops">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"
+           stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l6 7 4-4 8 8"></path><path d="M21 13v5h-5"></path></svg>
+      많이 떨어진 종목</button>
     <button class="tab-btn" id="tabRadar">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"
            stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle>
@@ -1170,6 +1228,22 @@
       "이 종목이 계속 오른다"는 걸 예측하거나 보장하지 않습니다. 재무제표는 분기 단위라 매일 크게 바뀌지 않습니다.
     </div>
     <div class="quality-grid" id="qualityGrid"></div>
+  </section>
+
+  <!-- 많이 떨어진 종목 — 뉴스로 고르지 않는다. 먼저 '평소보다 크게 떨어진 것'을
+       통계로 고르고, 그다음에 기사를 찾아 이유를 붙인다. 못 찾으면 못 찾았다고 쓴다. -->
+  <section class="quality-view hide" id="dropsView">
+    <div class="quality-note">
+      <b>많이 떨어졌다는 것이 싸다는 뜻은 아닙니다.</b> 떨어진 데는 이유가 있고,
+      그 이유가 사라졌는지 아닌지는 이 사이트가 알 수 없습니다.
+      여기는 <b>살 때인지 말하지 않습니다.</b>
+      <br><br>
+      뉴스로 종목을 고르지 않습니다. 먼저 <b>그 종목 자신의 평소 움직임과 비교해</b>
+      이례적으로 떨어진 것을 찾고, 그다음에 기사를 뒤져 이유를 붙입니다.
+      그래서 <b>이유를 못 찾은 종목도 그대로 올라옵니다</b> — 억지로 갖다 붙이는 것보다
+      모른다고 하는 편이 정확합니다.
+    </div>
+    <div class="drop-list" id="dropsList"></div>
   </section>
 
   <section class="quality-view hide" id="radarView">
@@ -2115,7 +2189,7 @@
     const s = p.get('s');
     if (s && /^[A-Za-z.]{1,8}$/.test(s)) { openStock(s, push); return true; }
     const tab = p.get('tab');
-    if (tab && ['intraday', 'quality', 'radar', 'ask', 'history'].includes(tab)) { showTab(tab); return true; }
+    if (tab && ['intraday', 'drops', 'quality', 'radar', 'ask', 'history'].includes(tab)) { showTab(tab); return true; }
     showTab('today');
     return false;
   }
@@ -2436,6 +2510,95 @@
     });
   }
 
+  // ---- 많이 떨어진 종목 ----
+  let dropsData = null;
+
+  function dropNum(label, value, note, isDown) {
+    if (value == null) return '';
+    return `<div class="drop-num"><span class="k">${escapeHtml(label)}</span>`
+      + `<span class="v ${isDown ? 'down' : ''}">${pct1(value)}</span>`
+      + (note ? `<span class="n">${escapeHtml(note)}</span>` : '')
+      + `</div>`;
+  }
+
+  function dropCardHtml(it) {
+    const nums = [
+      dropNum('오늘', it.day_return, it.return_z != null ? `평소의 ${Math.abs(it.return_z).toFixed(1)}배` : '', true),
+      dropNum('최근 5일', it.return_5d, it.ret5_z != null ? `평소의 ${Math.abs(it.ret5_z).toFixed(1)}배` : '', true),
+      dropNum('1년 고점 대비', it.drawdown, it.high_52w ? `고점 $${it.high_52w.toFixed(2)}` : '', true),
+    ].join('');
+
+    const streak = it.down_streak >= 2
+      ? `<div class="drop-num"><span class="k">연속 하락</span>`
+        + `<span class="v down">${it.down_streak}일</span>`
+        + `<span class="n">내리 떨어진 날</span></div>`
+      : '';
+
+    const reasons = (it.reasons || [])
+      .map((r) => `<div class="drop-reason">${escapeHtml(r.text)}</div>`).join('');
+
+    const found = it.why_found === true;
+    const why = it.why
+      ? `<div class="drop-why ${found ? '' : 'unknown'}">`
+        + `<span class="ph">${found ? '기사들이 말하는 이유' : '이유'}</span>`
+        + `<p>${escapeHtml(it.why)}</p></div>`
+      : '';
+
+    // 설명이 붙은 기사를 먼저 보여준다. 그게 '왜 떨어졌나'에 답하는 기사고,
+    // 나머지는 같은 날 같이 걸려온 일반 시황이다. 순서대로 두면 정작 이유를 말하는
+    // 기사가 세 번째에 묻힌다 (실제로 SNX가 그랬다).
+    const newsSorted = [...(it.news || [])]
+      .sort((a, b) => (b.korean_summary ? 1 : 0) - (a.korean_summary ? 1 : 0));
+    const news = newsSorted.length
+      ? `<div class="drop-news"><div class="news-label">관련 기사</div>`
+        + `<div class="news-list">`
+        + newsSorted.map((n) => {
+            const url = safeUrl(n.url);
+            const meta = [n.source, n.published_at ? fmtShortDate(n.published_at) : '']
+              .filter(Boolean).map(escapeHtml).join(' · ');
+            const body = n.korean_summary
+              ? `<div class="news-meta" style="margin-top:6px;display:block;line-height:1.7">${escapeHtml(n.korean_summary)}</div>`
+              : '';
+            const inner = `<div class="news-text">${escapeHtml(n.headline || '')}</div>`
+              + (meta ? `<div class="news-meta">${meta}</div>` : '') + body;
+            return url
+              ? `<a class="news-item" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
+              : `<div class="news-item">${inner}</div>`;
+          }).join('')
+        + `</div></div>`
+      : '<div class="news-empty">관련 기사를 찾지 못했습니다.</div>';
+
+    return `
+      <div class="drop-card">
+        <div class="drop-head">
+          <span class="drop-sym" data-stock="${escapeHtml(it.symbol)}">${escapeHtml(it.symbol)}</span>
+          <span class="drop-name">${escapeHtml(it.name || '')}</span>
+          <span class="drop-px">$${Number(it.price).toFixed(2)}</span>
+          <span class="drop-chg">${pct1(it.day_return)}</span>
+        </div>
+        <div class="drop-nums">${nums}${streak}</div>
+        <div class="drop-reasons">${reasons}</div>
+        ${why}
+        ${news}
+      </div>`;
+  }
+
+  function renderDrops() {
+    const el = document.getElementById('dropsList');
+    if (!el) return;
+    if (!dropsData) {
+      el.innerHTML = '<div class="news-empty">불러오는 중…</div>';
+      return;
+    }
+    const items = dropsData.items || [];
+    if (!items.length) {
+      el.innerHTML = '<div class="news-empty">'
+        + '오늘은 평소보다 크게 떨어진 종목이 없습니다. 억지로 채우지 않습니다.</div>';
+      return;
+    }
+    el.innerHTML = items.map(dropCardHtml).join('');
+  }
+
   // ---- 지금 장중 ----
   // 마지막 실시간 응답을 그대로 들고 있는다. 카드(data.cards)는 해설이 붙은 '오늘의 기사'라
   // 시세만 덮어쓰지만, 이 화면은 장중 원본값(시가·고가·저가·거래량)이 통째로 필요하다.
@@ -2667,6 +2830,7 @@
   const tabToday = document.getElementById('tabToday');
   const tabIntraday = document.getElementById('tabIntraday');
   const tabQuality = document.getElementById('tabQuality');
+  const tabDrops = document.getElementById('tabDrops');
   const tabRadar = document.getElementById('tabRadar');
   const tabAsk = document.getElementById('tabAsk');
   const tabHistory = document.getElementById('tabHistory');
@@ -2675,6 +2839,7 @@
   const moversEl = document.getElementById('movers');
   const intradayViewEl = document.getElementById('intradayView');
   const qualityViewEl = document.getElementById('qualityView');
+  const dropsViewEl = document.getElementById('dropsView');
   const radarViewEl = document.getElementById('radarView');
   const askViewEl = document.getElementById('askView');
   const historyViewEl = document.getElementById('historyView');
@@ -2685,6 +2850,7 @@
     const isToday = name === 'today';
     const isIntraday = name === 'intraday';
     const isQuality = name === 'quality';
+    const isDrops = name === 'drops';
     const isRadar = name === 'radar';
     const isAsk = name === 'ask';
     const isHistory = name === 'history';
@@ -2694,6 +2860,7 @@
     moversEl.classList.toggle('hide', !isToday);
     intradayViewEl.classList.toggle('hide', !isIntraday);
     qualityViewEl.classList.toggle('hide', !isQuality);
+    dropsViewEl.classList.toggle('hide', !isDrops);
     radarViewEl.classList.toggle('hide', !isRadar);
     askViewEl.classList.toggle('hide', !isAsk);
     historyViewEl.classList.toggle('hide', !isHistory);
@@ -2701,6 +2868,7 @@
     tabToday.classList.toggle('active', isToday);
     tabIntraday.classList.toggle('active', isIntraday);
     tabQuality.classList.toggle('active', isQuality);
+    tabDrops.classList.toggle('active', isDrops);
     tabRadar.classList.toggle('active', isRadar);
     tabAsk.classList.toggle('active', isAsk);
     tabHistory.classList.toggle('active', isHistory);
@@ -2716,6 +2884,7 @@
   tabToday.addEventListener('click', () => goTab('today'));
   tabIntraday.addEventListener('click', () => goTab('intraday'));
   tabQuality.addEventListener('click', () => goTab('quality'));
+  tabDrops.addEventListener('click', () => goTab('drops'));
   tabRadar.addEventListener('click', () => goTab('radar'));
   tabAsk.addEventListener('click', () => goTab('ask'));
   tabHistory.addEventListener('click', () => goTab('history'));
@@ -3038,6 +3207,13 @@
     .then((r) => (r.ok ? r.json() : null))
     .then((c) => { if (c && Array.isArray(c.trading_days)) tradingDays = c.trading_days; })
     .catch(() => {});
+
+  // 많이 떨어진 종목. 하루 한 번 자동화가 만든다.
+  // 없거나 실패해도 페이지는 그대로 뜬다 — 그 탭만 '없습니다'가 된다.
+  const dropsReady = fetch('drops.json')
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null)
+    .then((d) => { dropsData = d || { items: [] }; renderDrops(); });
 
   const historyReady = Promise.all([
     fetch('history.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
